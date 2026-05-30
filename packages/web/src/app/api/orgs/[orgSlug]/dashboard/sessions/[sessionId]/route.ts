@@ -43,9 +43,16 @@ export async function GET(
       return forbiddenByRole(access.role, '본인 세션만 열람 가능')
     }
 
-    const totalInput = session.usageRecords.reduce((sum, r) => sum + r.inputTokens, 0)
-    const totalOutput = session.usageRecords.reduce((sum, r) => sum + r.outputTokens, 0)
-    const totalCost = session.usageRecords.reduce((sum, r) => sum + (r.estimatedCostUsd ?? 0), 0)
+    let totalInput = 0
+    let totalOutput = 0
+    let totalCost = 0
+
+    for (let i = 0; i < session.usageRecords.length; i++) {
+      const r = session.usageRecords[i]
+      totalInput += r.inputTokens
+      totalOutput += r.outputTokens
+      totalCost += r.estimatedCostUsd ?? 0
+    }
 
     const usageTimeline: SessionTimelineUsage[] = session.usageRecords.map((r) => ({
       timestamp: r.timestamp.toISOString(),

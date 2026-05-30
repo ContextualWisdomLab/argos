@@ -33,14 +33,18 @@ const sessionInclude = {
 type SessionWithInclude = Prisma.ClaudeSessionGetPayload<{ include: typeof sessionInclude }>
 
 function getSessionTotals(session: SessionWithInclude) {
-  return {
-    inputTokens: session.usageRecords.reduce((sum, r) => sum + r.inputTokens, 0),
-    outputTokens: session.usageRecords.reduce((sum, r) => sum + r.outputTokens, 0),
-    estimatedCostUsd: session.usageRecords.reduce(
-      (sum, r) => sum + (r.estimatedCostUsd ?? 0),
-      0,
-    ),
+  let inputTokens = 0
+  let outputTokens = 0
+  let estimatedCostUsd = 0
+
+  for (let i = 0; i < session.usageRecords.length; i++) {
+    const r = session.usageRecords[i]
+    inputTokens += r.inputTokens
+    outputTokens += r.outputTokens
+    estimatedCostUsd += r.estimatedCostUsd ?? 0
   }
+
+  return { inputTokens, outputTokens, estimatedCostUsd }
 }
 
 function mapSessionItem(session: SessionWithInclude): SessionItem {
