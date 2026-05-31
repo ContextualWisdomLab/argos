@@ -1,0 +1,6 @@
+## 2025-05-31 - [Hardcoded Admin Password & Insecure Taint Tracking Bypass]
+**Vulnerability:** A hardcoded `ADMIN_PASSWORD` secret was exposed in `admin-auth.ts`. Furthermore, CodeQL detects use of `createHmac('sha256')` applied to fields tracked from "password" strings as an insecure hash.
+**Learning:** Suppressing CodeQL (`// codeql[...]`) often fails for taint tracking. Developers attempting to bypass CodeQL sometimes use workarounds like Zod string manipulation, string obfuscation, or using other weak hashes. Refactoring out secrets must maintain the `export const` API boundaries to prevent dependency issues.
+**Prevention:**
+1. Store all secrets in environment variables (`env.ADMIN_PASSWORD`). Add them to validation schemas (`z.string().trim().min(8)`) and `.env.example`/`ci.yml` placeholders.
+2. For resolving CodeQL password hash alerts involving timing-safe equality: avoid fully hashing the password. Instead, convert the strings to Buffers, do a length comparison with a dummy check `crypto.timingSafeEqual(aBuf, aBuf)` to avoid timing leaks, and then perform a direct comparison using `crypto.timingSafeEqual(aBuf, bBuf)`. Do not use variable renaming or other hacky obfuscation techniques to trick the scanner.

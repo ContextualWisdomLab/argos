@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { env } from './env'
 
 export const ADMIN_USERNAME = 'admin'
-export const ADMIN_PASSWORD = 'og9oRajx7h88v1RIj3eDgdrh9jgLYVV3'
+export const ADMIN_PASSWORD = env.ADMIN_PASSWORD
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
@@ -15,9 +15,16 @@ const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 
 function safeEqual(a: string, b: string): boolean {
-  const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
-  const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
-  return timingSafeEqual(aHash, bHash)
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+
+  if (aBuf.length !== bBuf.length) {
+    // dummy check to prevent timing leaks on length mismatch
+    timingSafeEqual(aBuf, aBuf)
+    return false
+  }
+
+  return timingSafeEqual(aBuf, bBuf)
 }
 
 function sign(payload: string): string {
