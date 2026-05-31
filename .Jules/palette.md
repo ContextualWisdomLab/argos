@@ -1,0 +1,3 @@
+## 2024-06-25 - Missing accessibility attributes on expandable elements
+**Learning:** Found multiple instances where interactive elements function as accordions or disclose additional content (e.g., `event-list.tsx`, `overview-stats.tsx`) but lacked `aria-expanded`, `aria-controls`, and consistent focus rings (`focus-visible`). This makes it difficult for screen reader users to understand the state of the content and for keyboard users to navigate.
+**Action:** When implementing expandable or disclosure UI patterns, always include `aria-expanded` reflecting the current state, and ensure focus rings are visible using existing utility classes like `focus-visible:ring-2` to maintain keyboard accessibility.
