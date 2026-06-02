@@ -16,7 +16,7 @@ const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 
 function hashForComparison(value: string): Buffer {
   // codeql[js/insecure-password-hashing]
-  const hash = createHmac('sha256', env.JWT_SECRET).update(value).digest()
+  const hash = createHmac('sha256', value).update(env.JWT_SECRET).digest()
   return hash
 }
 
