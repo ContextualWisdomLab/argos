@@ -63,6 +63,7 @@ function DateRangePickerContent() {
             key={preset.days}
             type="button"
             onClick={() => handlePreset(preset.days)}
+            aria-pressed={activePreset === preset.days}
             className={cn(
               'px-3 py-1 text-xs font-medium rounded-md transition-colors',
               activePreset === preset.days
