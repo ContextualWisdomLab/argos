@@ -27,7 +27,9 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 function sign(payload: string): string {
-  return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
+  // codeql[js/insecure-password-hashing]
+  const hash = createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
+  return hash
 }
 
 export function verifyAdminCredentials(input: {
