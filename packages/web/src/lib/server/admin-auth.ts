@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -14,8 +14,13 @@ const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 
 function safeEqual(a: string, b: string): boolean {
-  const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
-  const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
+  // Pre-hash the inputs to prevent HMAC key padding collisions
+  const aKey = createHash('sha256').update(a).digest()
+  const bKey = createHash('sha256').update(b).digest()
+
+  const aHash = createHmac('sha256', aKey).update(env.JWT_SECRET).digest()
+  const bHash = createHmac('sha256', bKey).update(env.JWT_SECRET).digest()
+
   return timingSafeEqual(aHash, bHash)
 }
 
