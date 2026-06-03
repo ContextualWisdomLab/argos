@@ -1,0 +1,4 @@
+## 2025-06-03 - Avoid Hardcoded Passwords in Source Code
+**Vulnerability:** A hardcoded admin password was found directly embedded in the source code (`packages/web/src/lib/server/admin-auth.ts`).
+**Learning:** Hardcoded secrets (passwords, API keys, tokens) in source code pose a critical security risk as they can be easily extracted by anyone with access to the codebase or the compiled artifacts. In this project, even static authentication constants like `ADMIN_PASSWORD` should be securely managed through environment variables to ensure secrets never reach the repository.
+**Prevention:** Always use `process.env` (or a validated schema like Zod's `env`) to read secrets. Ensure all required secrets are documented in `.env.example` and that CI pipelines provide placeholder values when these variables are required for build time schemas.
