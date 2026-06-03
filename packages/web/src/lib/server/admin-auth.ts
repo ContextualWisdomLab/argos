@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -13,14 +13,18 @@ const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 
+// Pre-compute the target hash at module initialization to avoid synchronous work in the request path
+const ADMIN_PASSWORD_HASH = pbkdf2Sync(env.ADMIN_PASSWORD, env.JWT_SECRET, 1000, 64, 'sha512')
+const ADMIN_USERNAME_HASH = pbkdf2Sync(ADMIN_USERNAME, env.JWT_SECRET, 1000, 64, 'sha512')
+
+function safeEqualHash(input: string, targetHash: Buffer): boolean {
+  const inputHash = pbkdf2Sync(input, env.JWT_SECRET, 1000, 64, 'sha512')
+  return timingSafeEqual(inputHash, targetHash)
+}
+
 function safeEqual(a: string, b: string): boolean {
-  // Pre-hash the inputs to prevent HMAC key padding collisions
-  const aKey = createHash('sha256').update(a).digest()
-  const bKey = createHash('sha256').update(b).digest()
-
-  const aHash = createHmac('sha256', aKey).update(env.JWT_SECRET).digest()
-  const bHash = createHmac('sha256', bKey).update(env.JWT_SECRET).digest()
-
+  const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
+  const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
   return timingSafeEqual(aHash, bHash)
 }
 
@@ -33,8 +37,8 @@ export function verifyAdminCredentials(input: {
   password: string
 }): boolean {
   return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, env.ADMIN_PASSWORD)
+    safeEqualHash(input.username, ADMIN_USERNAME_HASH) &&
+    safeEqualHash(input.password, ADMIN_PASSWORD_HASH)
   )
 }
 
