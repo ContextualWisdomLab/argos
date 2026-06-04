@@ -1,7 +1,8 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, pbkdf2, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
+import { promisify } from 'util'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { env } from './env'
@@ -20,18 +21,30 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(aHash, bHash)
 }
 
+// Pre-compute the admin password hash at module initialization to avoid blocking the event loop
+// during requests. A fixed salt derived from JWT_SECRET is used for consistency.
+const PBKDF2_ITERATIONS = 100000
+const PBKDF2_KEYLEN = 64
+const PASSWORD_SALT = createHmac('sha256', env.JWT_SECRET).update('admin-password-salt').digest()
+const ADMIN_PASSWORD_HASH = pbkdf2Sync(ADMIN_PASSWORD, PASSWORD_SALT, PBKDF2_ITERATIONS, PBKDF2_KEYLEN, 'sha512')
+
+const pbkdf2Async = promisify(pbkdf2)
+
+async function securePasswordEqual(inputPassword: string): Promise<boolean> {
+  const inputHash = await pbkdf2Async(inputPassword, PASSWORD_SALT, PBKDF2_ITERATIONS, PBKDF2_KEYLEN, 'sha512')
+  return timingSafeEqual(inputHash as Buffer, ADMIN_PASSWORD_HASH)
+}
+
 function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
-  )
+}): Promise<boolean> {
+  if (!safeEqual(input.username, ADMIN_USERNAME)) return false
+  return securePasswordEqual(input.password)
 }
 
 export function createAdminSessionCookieValue(): string {
