@@ -85,6 +85,8 @@ export function OverviewStats({
       <button
         type="button"
         onClick={() => setExpanded(v => !v)}
+        aria-expanded={expanded}
+        aria-controls="overview-stats-explanation"
         className="mt-4 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <span className={cn('inline-block transition-transform', expanded && 'rotate-90')}>▸</span>
@@ -93,7 +95,7 @@ export function OverviewStats({
       </button>
 
       {expanded && (
-        <div className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed">
+        <div id="overview-stats-explanation" className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed">
           <p>
             <span className="font-medium text-foreground">Sessions</span> — 팀원들이 시작한 Claude Code 세션 수.
           </p>
