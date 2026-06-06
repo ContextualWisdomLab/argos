@@ -1,6 +1,7 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, pbkdf2Sync, pbkdf2, randomBytes, timingSafeEqual } from 'crypto'
+import { promisify } from 'util'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -14,6 +15,18 @@ const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 
+// Pre-compute the target hash for the admin password to prevent timing attacks.
+// We use pbkdf2Sync since it's at module initialization.
+const ADMIN_PASSWORD_TARGET_HASH = pbkdf2Sync(
+  ADMIN_PASSWORD,
+  env.JWT_SECRET, // using JWT_SECRET as salt for the in-memory hash
+  100000,
+  64,
+  'sha512'
+)
+
+const pbkdf2Async = promisify(pbkdf2)
+
 function safeEqual(a: string, b: string): boolean {
   const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
   const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
@@ -24,14 +37,23 @@ function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
+}): Promise<boolean> {
+  if (!safeEqual(input.username, ADMIN_USERNAME)) {
+    return false
+  }
+
+  const inputPasswordHash = await pbkdf2Async(
+    input.password,
+    env.JWT_SECRET,
+    100000,
+    64,
+    'sha512'
   )
+
+  return timingSafeEqual(inputPasswordHash, ADMIN_PASSWORD_TARGET_HASH)
 }
 
 export function createAdminSessionCookieValue(): string {
