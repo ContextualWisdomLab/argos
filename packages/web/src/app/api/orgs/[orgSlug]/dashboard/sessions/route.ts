@@ -33,13 +33,21 @@ const sessionInclude = {
 type SessionWithInclude = Prisma.ClaudeSessionGetPayload<{ include: typeof sessionInclude }>
 
 function getSessionTotals(session: SessionWithInclude) {
+  // ⚡ Bolt: Use a single loop to calculate totals, avoiding 3 iteration passes over the array.
+  let inputTokens = 0
+  let outputTokens = 0
+  let estimatedCostUsd = 0
+
+  for (const r of session.usageRecords) {
+    inputTokens += r.inputTokens
+    outputTokens += r.outputTokens
+    estimatedCostUsd += r.estimatedCostUsd ?? 0
+  }
+
   return {
-    inputTokens: session.usageRecords.reduce((sum, r) => sum + r.inputTokens, 0),
-    outputTokens: session.usageRecords.reduce((sum, r) => sum + r.outputTokens, 0),
-    estimatedCostUsd: session.usageRecords.reduce(
-      (sum, r) => sum + (r.estimatedCostUsd ?? 0),
-      0,
-    ),
+    inputTokens,
+    outputTokens,
+    estimatedCostUsd,
   }
 }
 
