@@ -1,0 +1,3 @@
+## 2024-06-09 - Avoid Multiple Iteration Passes Over In-Memory Relations
+**Learning:** Found several places where the application performs multiple chained array iteration passes (like `.reduce()`, `.map()`) over potentially large datasets from Prisma `include` blocks. This increases memory overhead and iteration time, introducing performance bottlenecks specific to how Prisma handles relations in memory.
+**Action:** When processing datasets from Prisma `include` blocks (like `usageRecords` or `thisWeekRollups`), combine calculations into a single `for...of` loop instead of multiple `.reduce()` or `.map()` passes to minimize iteration overhead.
