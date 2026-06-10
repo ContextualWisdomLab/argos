@@ -1,0 +1,3 @@
+## 2025-06-10 - Push stale record filtering to database
+**Learning:** In-memory JavaScript filtering of database results (e.g., iterating through `findMany` results and skipping rows based on `computedAt`) leads to unnecessary memory footprint and network transfer, pulling stale records from the DB just to discard them in Node.
+**Action:** Always push simple exclusion filters down to the database level using Prisma's `where` clause (e.g., translating `if (row.computedAt < INVALIDATION_AT) continue` into `where: { computedAt: { gte: INVALIDATION_AT } }`) to let the database engine perform the filtering efficiently before transmission.

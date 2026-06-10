@@ -498,6 +498,7 @@ export async function getDailyRollups(
       where: {
         projectId,
         date: { gte: fromDay, lte: toDay },
+        computedAt: { gte: SKILL_COUNTS_INVALIDATION_AT },
       },
     })
 
@@ -505,9 +506,6 @@ export async function getDailyRollups(
       // Stale 가드: SKILL_COUNTS_INVALIDATION_AT 이전에 계산된 row 는 구 정의(isSkillCall=true only) 임.
       // fresh 한 row 만 cache hit 으로 처리하고, stale row 는 missingDays 로 낙하 → 자연 재계산.
       // computedAt 단일 조건만 사용 (skillCounts === '{}' 같은 합성 조건 없음).
-      if (row.computedAt < SKILL_COUNTS_INVALIDATION_AT) {
-        continue // stale → missingDays 에서 재계산됨
-      }
       const rollup = rowToRollup(row)
       cachedResults.set(rollup.date, rollup)
     }
