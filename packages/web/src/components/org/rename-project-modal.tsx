@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -24,18 +24,17 @@ export function RenameProjectModal({
   onClose,
 }: RenameProjectModalProps) {
   const [name, setName] = useState('')
-  const [prevProject, setPrevProject] = useState<{ id: string; name: string } | null>(null)
   const mutation = useUpdateProject(project?.id ?? '')
 
-  if (project !== prevProject) {
-    setPrevProject(project)
+  useEffect(() => {
     if (project) {
       setName(project.name)
     } else {
       setName('')
       mutation.reset()
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project])
 
   const handleOpenChange = (next: boolean) => {
     if (next) return
