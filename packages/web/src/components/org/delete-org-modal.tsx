@@ -31,14 +31,15 @@ export function DeleteOrgModal({
   const router = useRouter()
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteOrg()
+  const { reset } = mutation
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line
       setConfirmName('')
-      mutation.reset()
+      reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [open, reset])
 
   const handleOpenChange = (next: boolean) => {
     if (!next && mutation.isPending) return
