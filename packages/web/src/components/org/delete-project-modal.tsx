@@ -28,13 +28,18 @@ export function DeleteProjectModal({
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteProject()
 
+  // Destructure reset from mutation to use in the dependency array
+  const { reset } = mutation
+
   useEffect(() => {
     if (!project) {
-      setConfirmName('')
-      mutation.reset()
+      // Clear input state and reset mutation via microtask to avoid React synchronous rendering warnings
+      queueMicrotask(() => {
+        setConfirmName('')
+      })
+      reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project])
+  }, [project, reset])
 
   const handleOpenChange = (next: boolean) => {
     if (next) return
