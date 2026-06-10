@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveFields } from './events'
+import { deriveFields, truncateToolResponse } from './events'
 
 describe('deriveFields', () => {
   it('marks normalized slash commands as skill calls', () => {
@@ -65,5 +65,33 @@ describe('deriveFields', () => {
       agentType: null,
       agentDesc: null,
     })
+  })
+})
+
+
+describe('truncateToolResponse', () => {
+  it('returns undefined if response is undefined', () => {
+    expect(truncateToolResponse(undefined)).toBeUndefined()
+  })
+
+  it('returns undefined if response is empty string', () => {
+    expect(truncateToolResponse('')).toBeUndefined()
+  })
+
+  it('returns the same string if length is less than 2000', () => {
+    const shortString = 'Hello, world!'
+    expect(truncateToolResponse(shortString)).toBe(shortString)
+  })
+
+  it('returns the same string if length is exactly 2000', () => {
+    const exactString = 'a'.repeat(2000)
+    expect(truncateToolResponse(exactString)).toBe(exactString)
+  })
+
+  it('truncates the string to 2000 characters if length is greater than 2000', () => {
+    const longString = 'a'.repeat(2500)
+    const truncated = truncateToolResponse(longString)
+    expect(truncated).toBe('a'.repeat(2000))
+    expect(truncated?.length).toBe(2000)
   })
 })

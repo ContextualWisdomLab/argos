@@ -1,0 +1,12 @@
+🎯 **What:** The testing gap addressed
+Added tests for the `truncateToolResponse` function in `packages/web/src/lib/server/events.ts`.
+
+📊 **Coverage:** What scenarios are now tested
+- `undefined` input.
+- Empty string input.
+- Strings shorter than the 2000 character limit.
+- Strings exactly 2000 characters long.
+- Strings longer than the 2000 character limit, confirming they are correctly truncated.
+
+✨ **Result:** The improvement in test coverage
+The `truncateToolResponse` function is now fully tested, ensuring that responses are appropriately truncated without causing errors across various edge cases and standard input sizes.
