@@ -1,0 +1,6 @@
+🧹 Fix missing dependencies and setState in useEffect anti-pattern
+
+🎯 What: Refactored CreateProjectModal to replace an anti-pattern `useEffect` with explicit state reset in the `handleOpenChange` event handler.
+💡 Why: Resolves a "Missing Dependencies in useEffect" code health issue. By handling side effects directly in response to user actions rather than watching state variables, we avoid redundant runs, prevent infinite loops, and eliminate the cascading renders caused by calling setState synchronously inside an effect.
+✅ Verification: Ran `pnpm eslint` locally for the component to ensure all React hooks warnings are resolved. Verified tests and Next.js production build pass cleanly. Code behavior remains unchanged while cleanly passing static analysis.
+✨ Result: The code is simpler, aligns with React best practices ("You Might Not Need an Effect"), and fixes static analysis warnings while preventing potential stale closure bugs.

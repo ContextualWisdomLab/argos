@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,18 +28,17 @@ export function CreateProjectModal({
   const [name, setName] = useState('')
   const mutation = useCreateProject(orgSlug)
 
-  useEffect(() => {
-    if (!open) {
-      setName('')
-      mutation.reset()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
-    onOpenChange(next)
-  }
+  const handleOpenChange = useCallback(
+    (next: boolean) => {
+      if (!next && mutation.isPending) return
+      if (!next) {
+        setName('')
+        mutation.reset()
+      }
+      onOpenChange(next)
+    },
+    [mutation, onOpenChange]
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +48,7 @@ export function CreateProjectModal({
       { name: trimmed },
       {
         onSuccess: () => {
-          onOpenChange(false)
+          handleOpenChange(false)
         },
       }
     )
@@ -95,7 +94,7 @@ export function CreateProjectModal({
               variant="outline"
               size="sm"
               disabled={mutation.isPending}
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
             >
               취소
             </Button>
