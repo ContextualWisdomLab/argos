@@ -1,6 +1,9 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual, pbkdf2Sync, pbkdf2 } from 'crypto'
+import { promisify } from 'util'
+
+const pbkdf2Async = promisify(pbkdf2)
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -8,6 +11,8 @@ import { env } from './env'
 
 export const ADMIN_USERNAME = 'admin'
 export const ADMIN_PASSWORD = 'og9oRajx7h88v1RIj3eDgdrh9jgLYVV3'
+
+const ADMIN_PASSWORD_HASH = pbkdf2Sync(ADMIN_PASSWORD, env.JWT_SECRET, 100000, 64, 'sha512')
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
@@ -24,14 +29,17 @@ function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
-  )
+}): Promise<boolean> {
+  if (!safeEqual(input.username, ADMIN_USERNAME)) return false;
+  try {
+    const inputHash = await pbkdf2Async(input.password, env.JWT_SECRET, 100000, 64, 'sha512');
+    return timingSafeEqual(inputHash as Buffer, ADMIN_PASSWORD_HASH);
+  } catch {
+    return false;
+  }
 }
 
 export function createAdminSessionCookieValue(): string {
