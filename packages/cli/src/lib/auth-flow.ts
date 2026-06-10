@@ -1,15 +1,11 @@
-import { exec } from 'child_process'
+import open from 'open'
 import chalk from 'chalk'
 import ora from 'ora'
 import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  const cmd =
-    process.platform === 'darwin' ? 'open' :
-    process.platform === 'win32' ? 'start ""' :
-    'xdg-open'
-  exec(`${cmd} "${url}"`)
+  open(url).catch(() => {})
 }
 
 /**
