@@ -1,0 +1,50 @@
+<<<<<<< SEARCH
+function safeEqual(a: string, b: string): boolean {
+  const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
+  const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
+  return timingSafeEqual(aHash, bHash)
+}
+
+function sign(payload: string): string {
+  return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
+}
+
+export function verifyAdminCredentials(input: {
+  username: string
+  password: string
+}): boolean {
+  return (
+    safeEqual(input.username, ADMIN_USERNAME) &&
+    safeEqual(input.password, ADMIN_PASSWORD)
+  )
+}
+=======
+import { pbkdf2Sync, pbkdf2 } from 'crypto'
+import { promisify } from 'util'
+
+const pbkdf2Async = promisify(pbkdf2)
+
+const ADMIN_PASSWORD_HASH = pbkdf2Sync(env.ADMIN_PASSWORD, env.JWT_SECRET, 100000, 64, 'sha256')
+
+function safeEqual(a: string, b: string): boolean {
+  const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
+  const bHash = createHmac('sha256', env.JWT_SECRET).update(b).digest()
+  return timingSafeEqual(aHash, bHash)
+}
+
+function sign(payload: string): string {
+  return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
+}
+
+export async function verifyAdminCredentials(input: {
+  username: string
+  password: string
+}): Promise<boolean> {
+  const passHash = await pbkdf2Async(input.password, env.JWT_SECRET, 100000, 64, 'sha256')
+
+  return (
+    safeEqual(input.username, ADMIN_USERNAME) &&
+    timingSafeEqual(passHash, ADMIN_PASSWORD_HASH)
+  )
+}
+>>>>>>> REPLACE
