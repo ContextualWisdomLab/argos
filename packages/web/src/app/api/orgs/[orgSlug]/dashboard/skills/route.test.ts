@@ -32,7 +32,6 @@ vi.mock('@/lib/server/dashboard-route-helper', () => ({
 // error-helper 가 'server-only' 를 transitively import 하지 않도록 모킹.
 vi.mock('@/lib/server/error-helper', () => ({
   handleRouteError: (err: unknown) => {
-    console.error('[test] handleRouteError:', err)
     return NextResponse.json({ error: 'internal' }, { status: 500 })
   },
 }))
