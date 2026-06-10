@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveFields } from './events'
+import { deriveFields, truncateMessageContent } from './events'
 
 describe('deriveFields', () => {
   it('marks normalized slash commands as skill calls', () => {
@@ -65,5 +65,25 @@ describe('deriveFields', () => {
       agentType: null,
       agentDesc: null,
     })
+  })
+})
+
+
+describe('truncateMessageContent', () => {
+  it('returns content as-is if length is less than 50000', () => {
+    const content = 'a'.repeat(49999)
+    expect(truncateMessageContent(content)).toBe(content)
+  })
+
+  it('returns content as-is if length is exactly 50000', () => {
+    const content = 'b'.repeat(50000)
+    expect(truncateMessageContent(content)).toBe(content)
+  })
+
+  it('truncates content to 50000 characters if length is greater than 50000', () => {
+    const content = 'c'.repeat(50001)
+    const truncated = truncateMessageContent(content)
+    expect(truncated).toHaveLength(50000)
+    expect(truncated).toBe('c'.repeat(50000))
   })
 })
