@@ -13,10 +13,8 @@ description: 잠재고객 페르소나 기반으로 현재 서비스/신규 기�
 세션 시작 시 **반드시 가장 먼저** Bash tool로 다음을 실행해 모드를 확정한다:
 
 ```bash
-echo "HEADLESS=${HARNESS_HEADLESS:-${BET_HEADLESS:-0}}"
+echo "HEADLESS=${HARNESS_HEADLESS:-0}"
 ```
-
-<!-- @TODO REMOVE LEGACY: `${BET_HEADLESS:-0}` fallback은 rename 이전 run-server.py가 주입하던 구명(舊名) 호환용. 모든 run-server.py 프로세스가 HARNESS_HEADLESS 로 재시작된 뒤 제거. -->
 
 출력이 `HEADLESS=1` 이면 이 세션은 **무인 서버 세션**이며, 다음 상호작용 지점이 모두 무효화된다:
 
