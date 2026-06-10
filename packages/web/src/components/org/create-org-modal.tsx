@@ -46,7 +46,7 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
 
     try {
       const result = await mutation.mutateAsync({ name: trimmed });
-      handleOpenChange(false);
+      onOpenChange(false);
       if (result?.org?.slug) {
         router.push(`/dashboard/${result.org.slug}`);
       }
@@ -102,7 +102,7 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
               variant="outline"
               size="sm"
               disabled={mutation.isPending}
-              onClick={() => handleOpenChange(false)}
+              onClick={() => onOpenChange(false)}
             >
               취소
             </Button>
