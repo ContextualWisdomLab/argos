@@ -26,15 +26,16 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
   const [name, setName] = useState('')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mutation = useCreateOrg()
+  const { reset } = mutation
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('')
       setErrorMessage(null)
-      mutation.reset()
+      reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [open, reset])
 
   const handleOpenChange = (next: boolean) => {
     if (!next && mutation.isPending) return
