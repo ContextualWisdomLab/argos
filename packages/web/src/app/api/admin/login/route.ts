@@ -20,7 +20,8 @@ const AdminLoginSchema = z.object({
 export async function POST(req: Request) {
   try {
     const input = AdminLoginSchema.parse(await req.json())
-    if (!verifyAdminCredentials(input)) {
+    const isValid = await verifyAdminCredentials(input)
+    if (!isValid) {
       return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 })
     }
 
