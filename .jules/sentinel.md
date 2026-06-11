@@ -1,0 +1,4 @@
+## 2024-06-11 - [CRITICAL] Fix hardcoded admin credentials
+**Vulnerability:** Hardcoded admin credentials (`ADMIN_USERNAME` and `ADMIN_PASSWORD`) were found in `packages/web/src/lib/server/admin-auth.ts`.
+**Learning:** Hardcoding credentials in source control can lead to unauthorized access if the repository is compromised or visible. The vulnerability was present in the auth logic, exposing the admin system. Moving credentials to environment variables (`.env`) via a schema validation tool (like Zod in `env.ts`) mitigates this issue while preserving API boundaries by exporting the env variables instead of hardcoded strings.
+**Prevention:** Always use environment variables for sensitive credentials. Enforce strict checks for hardcoded strings resembling secrets during code review, and ensure environment variables are clearly defined with validation (e.g., Zod `min(1)` or similar length constraints) to prevent bypasses.
