@@ -1,0 +1,4 @@
+## 2024-06-13 - Hardcoded Admin Credentials
+**Vulnerability:** A hardcoded admin password was found in `packages/web/src/lib/server/admin-auth.ts`, allowing anyone with access to the source code to log in as the system administrator and potentially impersonate any user.
+**Learning:** Hardcoded secrets in source files completely bypass any intended access controls and expose the system to immediate compromise if the code is leaked or accessed by unauthorized individuals.
+**Prevention:** Always use environment variables for secrets, validated via Zod at runtime, and never commit real secret values to source control. Ensure CI pipelines use mock values to test integration without exposing production secrets.
