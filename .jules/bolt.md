@@ -1,0 +1,3 @@
+## 2023-10-27 - Avoid multiple iteration passes on Prisma in-memory relations
+**Learning:** When calculating multiple aggregates (e.g. `inputTokens`, `outputTokens`, `estimatedCostUsd`) over a large related dataset loaded via Prisma `include` (like `session.usageRecords`), using multiple chained or separate `.reduce()` calls results in O(k*N) iteration overhead. This causes redundant passes over the same memory structures and unnecessary allocations.
+**Action:** Replace multiple `.reduce()` or `.map()` calls with a single `for...of` loop to compute all required aggregations simultaneously, reducing iterations to O(N) and improving CPU/memory efficiency.
