@@ -1,18 +1,29 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual, pbkdf2, pbkdf2Sync } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { promisify } from 'util'
 
 import { env } from './env'
 
-export const ADMIN_USERNAME = 'admin'
-export const ADMIN_PASSWORD = 'og9oRajx7h88v1RIj3eDgdrh9jgLYVV3'
+export const ADMIN_USERNAME = env.ADMIN_USERNAME
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
+
+const pbkdf2Async = promisify(pbkdf2)
+const SALT = env.JWT_SECRET // Using JWT_SECRET as a consistent salt
+const ITERATIONS = 100000
+const KEYLEN = 64
+const DIGEST = 'sha512'
+
+// Pre-compute the target hash synchronously at module init.
+// This is done once so we don't store the raw admin password in memory longer than needed,
+// and so timingSafeEqual can be used.
+const TARGET_PASSWORD_HASH = pbkdf2Sync(env.ADMIN_PASSWORD, SALT, ITERATIONS, KEYLEN, DIGEST)
 
 function safeEqual(a: string, b: string): boolean {
   const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
@@ -24,14 +35,17 @@ function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
-  )
+}): Promise<boolean> {
+  // Short-circuit using a simple comparison for username to avoid CPU-intensive DoS if username doesn't match
+  if (input.username !== ADMIN_USERNAME) {
+    return false
+  }
+
+  const inputHash = await pbkdf2Async(input.password, SALT, ITERATIONS, KEYLEN, DIGEST)
+  return timingSafeEqual(inputHash, TARGET_PASSWORD_HASH)
 }
 
 export function createAdminSessionCookieValue(): string {
