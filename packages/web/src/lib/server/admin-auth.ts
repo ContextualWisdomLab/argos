@@ -1,18 +1,22 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual, pbkdf2Sync, pbkdf2 } from 'crypto'
+import { promisify } from 'util'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { env } from './env'
 
-export const ADMIN_USERNAME = 'admin'
-export const ADMIN_PASSWORD = 'og9oRajx7h88v1RIj3eDgdrh9jgLYVV3'
+export const ADMIN_USERNAME = env.ADMIN_USERNAME
+const pbkdf2Async = promisify(pbkdf2)
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
+
+// Pre-compute the target hash synchronously at startup to avoid re-computation
+const ADMIN_PASSWORD_HASH = pbkdf2Sync(env.ADMIN_PASSWORD, env.JWT_SECRET, 100000, 64, 'sha512')
 
 function safeEqual(a: string, b: string): boolean {
   const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
@@ -24,14 +28,18 @@ function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
-  )
+}): Promise<boolean> {
+  // Cheap check first to short-circuit and avoid DoS vector via slow hashing
+  if (input.username !== ADMIN_USERNAME) {
+    return false
+  }
+
+  // Use async pbkdf2 to avoid blocking the event loop
+  const inputHash = await pbkdf2Async(input.password, env.JWT_SECRET, 100000, 64, 'sha512')
+  return timingSafeEqual(inputHash, ADMIN_PASSWORD_HASH)
 }
 
 export function createAdminSessionCookieValue(): string {
