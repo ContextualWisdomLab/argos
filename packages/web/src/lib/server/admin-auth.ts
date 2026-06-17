@@ -1,15 +1,43 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, pbkdf2, pbkdf2Sync, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { promisify } from 'util'
 
 import { env } from './env'
+
+const pbkdf2Async = promisify(pbkdf2)
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
+
+// Pre-compute the target hash for the admin password to avoid recalculating it
+const PBKDF2_SALT = env.JWT_SECRET
+const PBKDF2_ITERATIONS = 100000
+const PBKDF2_KEYLEN = 64
+const PBKDF2_DIGEST = 'sha512'
+
+const TARGET_PASSWORD_HASH = pbkdf2Sync(
+  env.ADMIN_PASSWORD,
+  PBKDF2_SALT,
+  PBKDF2_ITERATIONS,
+  PBKDF2_KEYLEN,
+  PBKDF2_DIGEST
+)
+
+async function verifyPassword(password: string): Promise<boolean> {
+  const inputHash = await pbkdf2Async(
+    password,
+    PBKDF2_SALT,
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEYLEN,
+    PBKDF2_DIGEST
+  )
+  return timingSafeEqual(inputHash, TARGET_PASSWORD_HASH)
+}
 
 function safeEqual(a: string, b: string): boolean {
   const aHash = createHmac('sha256', env.JWT_SECRET).update(a).digest()
@@ -21,15 +49,15 @@ function sign(payload: string): string {
   return createHmac('sha256', env.JWT_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  // Cheap string equality check for username to prevent DoS before doing HMAC on password
+}): Promise<boolean> {
+  // Cheap string equality check for username to prevent DoS before doing PBKDF2 on password
   if (input.username !== env.ADMIN_USERNAME) {
     return false
   }
-  return safeEqual(input.password, env.ADMIN_PASSWORD)
+  return verifyPassword(input.password)
 }
 
 export function createAdminSessionCookieValue(): string {
