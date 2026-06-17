@@ -446,17 +446,20 @@ export async function getWeeklyReport(
   }
 
   // Insights — delegation
-  const totalAgentCalls = thisWeekRollups.reduce(
-    (sum, r) => sum + Object.values(r.agentCounts).reduce((a, b) => a + b, 0),
-    0,
-  )
-  const totalSkillCalls = thisWeekRollups.reduce(
-    (sum, r) => sum + Object.values(r.skillCounts).reduce((a, b) => a + b, 0),
-    0,
-  )
+  // Optimization: consolidated multiple passes over `thisWeekRollups` into a single loop
+  // and eliminated intermediate array allocations caused by `Object.values()` to reduce memory overhead.
+  let totalAgentCalls = 0
+  let totalSkillCalls = 0
   const distinctSkillsThisWeek = new Set<string>()
+
   for (const r of thisWeekRollups) {
-    for (const k of Object.keys(r.skillCounts)) distinctSkillsThisWeek.add(k)
+    for (const k of Object.keys(r.agentCounts)) {
+      totalAgentCalls += (r.agentCounts as Record<string, number>)[k]
+    }
+    for (const k of Object.keys(r.skillCounts)) {
+      totalSkillCalls += (r.skillCounts as Record<string, number>)[k]
+      distinctSkillsThisWeek.add(k)
+    }
   }
 
   const insights: WeeklyInsights = {
