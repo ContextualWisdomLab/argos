@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { cn } from '@/lib/utils'
 import { formatTokens, formatCost } from '@/lib/format'
 
@@ -56,6 +56,7 @@ export function OverviewStats({
   rangeSelector,
 }: OverviewStatsProps) {
   const [expanded, setExpanded] = useState(false)
+  const explanationId = useId()
 
   return (
     <div className="rounded-xl bg-card ring-1 ring-foreground/10 p-4 sm:p-5">
@@ -86,14 +87,16 @@ export function OverviewStats({
         type="button"
         onClick={() => setExpanded(v => !v)}
         className="mt-4 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        aria-expanded={expanded}
+        aria-controls={explanationId}
       >
-        <span className={cn('inline-block transition-transform', expanded && 'rotate-90')}>▸</span>
+        <span className={cn('inline-block transition-transform', expanded && 'rotate-90')} aria-hidden="true">▸</span>
         <span className="font-medium text-foreground">What do these numbers mean?</span>
         <span>— {expanded ? 'click to collapse' : 'click to expand'}</span>
       </button>
 
       {expanded && (
-        <div className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed">
+        <div id={explanationId} className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed">
           <p>
             <span className="font-medium text-foreground">Sessions</span> — 팀원들이 시작한 Claude Code 세션 수.
           </p>
