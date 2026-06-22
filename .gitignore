@@ -1,4 +1,5 @@
 .omc/
+.harness/
 node_modules/
 dist/
 .DS_Store
@@ -13,3 +14,6 @@ backups/
 persuasion-data/runs/
 __pycache__/
 *.pyc
+.jules/
+.state/
+.claude/worktrees/
