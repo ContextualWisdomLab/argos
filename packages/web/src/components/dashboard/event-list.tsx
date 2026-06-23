@@ -3,13 +3,14 @@ import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
 import {
   formatSlashCommandText,
-  buildTimelineGroups,
   type TimelineEvent,
+  type TimelineGroup,
 } from "@/lib/timeline-events";
 import { cn } from "@/lib/utils";
 
 type EventListProps = {
   events: TimelineEvent[];
+  groups: TimelineGroup[];
   selectedIdx: number;
   onSelect: (idx: number) => void;
   sessionStartedAt: string;
@@ -50,11 +51,10 @@ function formatElapsed(timestamp: string, sessionStartedAt: string): string {
 }
 
 function buildFlatRows(
-  events: TimelineEvent[],
+  groups: TimelineGroup[],
   expandedGroups: Set<number>,
   selectedIdx: number,
 ): FlatRow[] {
-  const groups = buildTimelineGroups(events);
   const rows: FlatRow[] = [];
   for (const group of groups) {
     if (group.kind === "single") {
@@ -261,6 +261,7 @@ function Row({
 
 export function EventList({
   events,
+  groups,
   selectedIdx,
   onSelect,
   sessionStartedAt,
@@ -268,8 +269,8 @@ export function EventList({
   onToggleGroup,
 }: EventListProps) {
   const rows = useMemo(
-    () => buildFlatRows(events, expandedGroups, selectedIdx),
-    [events, expandedGroups, selectedIdx],
+    () => buildFlatRows(groups, expandedGroups, selectedIdx),
+    [groups, expandedGroups, selectedIdx],
   );
 
   if (events.length === 0) {
