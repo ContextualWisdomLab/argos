@@ -1,3 +1,3 @@
-## 2024-06-22 - Overview Stats 토글 버튼 키보드 접근성 개선
-**Learning:** `overview-stats` 컴포넌트의 설명 텍스트를 펼치거나 접는 `<button>` 요소에 키보드 포커스 스타일이 누락되어 있어, 키보드 내비게이션 사용자에게 현재 포커스 위치를 명확히 보여주지 못했습니다. `hover` 스타일은 있었으나 `focus-visible` 처리가 없어 접근성 결함이 있었습니다.
-**Action:** Tailwind CSS의 `focus-visible` 관련 유틸리티 클래스(`focus-visible:outline-none`, `focus-visible:ring-2`, `focus-visible:ring-ring`, `rounded-sm`)를 추가하여 탭(Tab) 키 이동 시 포커스 링이 보이도록 수정했습니다. 앞으로 대화형 컴포넌트를 설계할 때는 항상 키보드 접근성(focus states)을 염두에 두고 작업해야 합니다.
+## 2025-06-25 - React Toggle Aria Controls Implementation
+**Learning:** When adding `aria-controls` to visually hidden/collapsible UI elements (like `ContextSection` content) in a React application with multiple instances on screen, static string IDs create collisions that break accessibility tools.
+**Action:** Always prefer React's `useId()` hook over static strings or arbitrary counters when generating unique, stable element relationships (such as `aria-controls={id}` / `id={id}`) to guarantee correct semantics regardless of component usage.
