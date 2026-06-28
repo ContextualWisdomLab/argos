@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { UsageSeries } from '@argos/shared'
@@ -24,10 +25,16 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 }
 
 export function DailyCacheReadsChart({ data }: DailyCacheReadsChartProps) {
-  const chartData = data.map(d => ({
-    date: d.date,
-    cacheRead: d.cacheReadTokens,
-  }))
+  // ⚡ Bolt Optimization: Wrap Recharts data array with useMemo.
+  // Recharts performs deep comparisons. Without memoization,
+  // mapping the array creates a new reference on every render,
+  // causing expensive and unnecessary chart re-renders.
+  const chartData = useMemo(() => {
+    return data.map(d => ({
+      date: d.date,
+      cacheRead: d.cacheReadTokens,
+    }))
+  }, [data])
 
   return (
     <ResponsiveContainer width="100%" height={260}>

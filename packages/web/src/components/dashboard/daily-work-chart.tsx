@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { UsageSeries } from '@argos/shared'
@@ -37,12 +38,18 @@ function Row({ color, label, value }: { color: string; label: string; value: num
 }
 
 export function DailyWorkChart({ data }: DailyWorkChartProps) {
-  const chartData = data.map(d => ({
-    date: d.date,
-    input: d.inputTokens,
-    output: d.outputTokens,
-    cacheCreate: d.cacheCreationTokens,
-  }))
+  // ⚡ Bolt Optimization: Wrap Recharts data array with useMemo.
+  // Recharts performs deep comparisons. Without memoization,
+  // mapping the array creates a new reference on every render,
+  // causing expensive and unnecessary chart re-renders.
+  const chartData = useMemo(() => {
+    return data.map(d => ({
+      date: d.date,
+      input: d.inputTokens,
+      output: d.outputTokens,
+      cacheCreate: d.cacheCreationTokens,
+    }))
+  }, [data])
 
   return (
     <ResponsiveContainer width="100%" height={260}>

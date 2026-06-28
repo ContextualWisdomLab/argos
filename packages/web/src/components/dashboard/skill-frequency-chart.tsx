@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts'
 
 interface SkillFrequencyChartProps {
@@ -35,11 +36,17 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 }
 
 export function SkillFrequencyChart({ data }: SkillFrequencyChartProps) {
-  const chartData = data.slice(0, 10).map(s => ({
-    skill: s.skillName,
-    displaySkill: truncate(s.skillName),
-    calls: s.callCount,
-  }))
+  // ⚡ Bolt Optimization: Wrap Recharts data array with useMemo.
+  // Recharts performs deep comparisons. Without memoization,
+  // mapping the array creates a new reference on every render,
+  // causing expensive and unnecessary chart re-renders.
+  const chartData = useMemo(() => {
+    return data.slice(0, 10).map(s => ({
+      skill: s.skillName,
+      displaySkill: truncate(s.skillName),
+      calls: s.callCount,
+    }))
+  }, [data])
 
   if (chartData.length === 0) {
     return (
