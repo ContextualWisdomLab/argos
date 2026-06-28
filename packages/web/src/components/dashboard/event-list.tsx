@@ -23,6 +23,7 @@ type FlatRow =
       kind: "event";
       key: string;
       event: TimelineEvent;
+      timestampMs: number;
       idx: number;
       indented: boolean;
       labelOverride?: string;
@@ -33,17 +34,22 @@ type FlatRow =
       toolName: string;
       count: number;
       firstEvent: TimelineEvent;
+      timestampMs: number;
       groupFirstIdx: number;
       isExpanded: boolean;
     };
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
-  const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+function formatElapsedMs(
+  timestampMs: number,
+  sessionStartedAtMs: number,
+): string {
+  if (Number.isNaN(timestampMs) || Number.isNaN(sessionStartedAtMs)) return "";
+  const diffSec = Math.max(
+    0,
+    Math.floor((timestampMs - sessionStartedAtMs) / 1000),
+  );
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -62,6 +68,7 @@ function buildFlatRows(
         kind: "event",
         key: `s-${group.idx}`,
         event: group.event,
+        timestampMs: new Date(group.event.timestamp).getTime(),
         idx: group.idx,
         indented: false,
       });
@@ -73,6 +80,7 @@ function buildFlatRows(
         kind: "event",
         key: `gs-${idx}`,
         event,
+        timestampMs: new Date(event.timestamp).getTime(),
         idx,
         indented: false,
         labelOverride: "Tool",
@@ -89,6 +97,7 @@ function buildFlatRows(
       toolName: group.toolName,
       count: group.items.length,
       firstEvent: group.items[0].event,
+      timestampMs: new Date(group.items[0].event.timestamp).getTime(),
       groupFirstIdx: firstIdx,
       isExpanded,
     });
@@ -98,6 +107,7 @@ function buildFlatRows(
           kind: "event",
           key: `gc-${idx}`,
           event,
+          timestampMs: new Date(event.timestamp).getTime(),
           idx,
           indented: true,
           labelOverride: "Tool",
@@ -123,7 +133,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -204,7 +215,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedAtMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -214,7 +225,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedAtMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -227,7 +238,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsedMs(row.timestampMs, sessionStartedAtMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -238,18 +249,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsedMs(row.timestampMs, sessionStartedAtMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -268,6 +280,11 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  const sessionStartedAtMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt],
+  );
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -289,7 +306,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedAtMs,
         onSelect,
         onToggleGroup,
       }}
