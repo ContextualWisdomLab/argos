@@ -123,7 +123,7 @@ export function OrgSidebar() {
         <div className="p-3 border-t">
           <button
             onClick={handleLogout}
-            className="w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+            className="w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
             aria-label="Log out of your account"
           >
             Log Out
@@ -150,7 +150,7 @@ export function OrgSidebar() {
           </div>
           <button
             onClick={handleLogout}
-            className="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
+            className="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
             aria-label="Log out of your account"
           >
             Logout
