@@ -55,7 +55,7 @@ export function createAdminSessionCookieValue(): string {
 export function adminCookieOptions() {
   return {
     httpOnly: true,
-    sameSite: 'lax' as const,
+    sameSite: 'strict' as const,
     secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: Math.floor(ADMIN_SESSION_TTL_MS / 1000),
