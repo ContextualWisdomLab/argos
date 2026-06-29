@@ -39,10 +39,9 @@ export function verifyAdminCredentials(input: {
   username: string
   password: string
 }): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
-  )
+  const usernameMatch = safeEqual(input.username, ADMIN_USERNAME)
+  const passwordMatch = safeEqual(input.password, ADMIN_PASSWORD)
+  return usernameMatch && passwordMatch
 }
 
 export function createAdminSessionCookieValue(): string {
