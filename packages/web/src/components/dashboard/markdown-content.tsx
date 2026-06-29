@@ -1,7 +1,8 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
+import { memo } from "react";
 import remarkGfm from "remark-gfm";
 
 type MarkdownContentProps = { children: string };
@@ -26,18 +27,9 @@ class MarkdownErrorBoundary extends Component<
   }
 }
 
-export function MarkdownContent({ children }: MarkdownContentProps) {
-  const fallback = (
-    <p className="whitespace-pre-wrap text-sm text-foreground">{children}</p>
-  );
+const remarkPlugins = [remarkGfm];
 
-  return (
-    <MarkdownErrorBoundary fallback={fallback}>
-      <div className="markdown-body text-sm text-foreground leading-relaxed">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          skipHtml
-          components={{
+const markdownComponents: Components = {
             p: ({ children }) => (
               <p className="mb-3 last:mb-0 whitespace-pre-wrap">{children}</p>
             ),
@@ -113,11 +105,24 @@ export function MarkdownContent({ children }: MarkdownContentProps) {
                 {children}
               </pre>
             ),
-          }}
+          };
+
+export const MarkdownContent = memo(function MarkdownContent({ children }: MarkdownContentProps) {
+  const fallback = (
+    <p className="whitespace-pre-wrap text-sm text-foreground">{children}</p>
+  );
+
+  return (
+    <MarkdownErrorBoundary fallback={fallback}>
+      <div className="markdown-body text-sm text-foreground leading-relaxed">
+        <ReactMarkdown
+          remarkPlugins={remarkPlugins}
+          skipHtml
+          components={markdownComponents}
         >
           {children}
         </ReactMarkdown>
       </div>
     </MarkdownErrorBoundary>
   );
-}
+});
