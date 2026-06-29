@@ -22,8 +22,9 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
+    environment: 'jsdom',
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    setupFiles: ['./src/test/setup.ts'],
     // .env.local を自動ロードして DATABASE_URL などのローカル環境変数を有効化
     env: (() => {
       try {
