@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { PlusIcon } from 'lucide-react'
 import { useOrgs } from '@/hooks/use-orgs'
@@ -21,7 +22,7 @@ function toneFor(id: string) {
   return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length]
 }
 
-function OrgAvatar({
+const OrgAvatar = memo(function OrgAvatar({
   name,
   id,
   size = 'sm',
@@ -43,7 +44,7 @@ function OrgAvatar({
       {name.charAt(0).toUpperCase()}
     </div>
   )
-}
+})
 
 function SwitcherSkeleton() {
   return (
