@@ -1,6 +1,7 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual, pbkdf2Sync, pbkdf2 } from 'crypto'
+import { promisify } from 'util'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -14,6 +15,18 @@ const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
 const MAX_SAFE_EQUAL_BYTES = 512
+
+// Pre-compute PBKDF2 hash of the expected admin password at module init
+// Handle missing env var gracefully during next build statically analysis.
+const PBKDF2_ITERATIONS = 100000
+const PBKDF2_KEYLEN = 64
+const PBKDF2_DIGEST = 'sha256'
+const ADMIN_PASSWORD_SALT = Buffer.from('argos_admin_salt_v1')
+const TARGET_PASSWORD_HASH = ADMIN_PASSWORD
+  ? pbkdf2Sync(ADMIN_PASSWORD, ADMIN_PASSWORD_SALT, PBKDF2_ITERATIONS, PBKDF2_KEYLEN, PBKDF2_DIGEST)
+  : Buffer.alloc(PBKDF2_KEYLEN)
+
+const pbkdf2Async = promisify(pbkdf2)
 
 function safeEqual(a: string, b: string): boolean {
   const aBytes = Buffer.from(a)
@@ -35,14 +48,24 @@ function sign(payload: string): string {
   return createHmac('sha256', env.ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
 }
 
-export function verifyAdminCredentials(input: {
+export async function verifyAdminCredentials(input: {
   username: string
   password: string
-}): boolean {
-  return (
-    safeEqual(input.username, ADMIN_USERNAME) &&
-    safeEqual(input.password, ADMIN_PASSWORD)
+}): Promise<boolean> {
+  // Short-circuit: cheap string comparison for username before slow hashing
+  // prevents DoS CPU-exhaustion for random invalid usernames
+  if (input.username !== ADMIN_USERNAME) {
+    return false
+  }
+
+  const inputHash = await pbkdf2Async(
+    input.password,
+    ADMIN_PASSWORD_SALT,
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEYLEN,
+    PBKDF2_DIGEST
   )
+  return timingSafeEqual(inputHash, TARGET_PASSWORD_HASH)
 }
 
 export function createAdminSessionCookieValue(): string {
