@@ -397,18 +397,39 @@ export async function getDailyRollupsForProjects(
     projectIds.map((pid) => getDailyRollups(pid, from, to)),
   )
 
-  // date-key 기준으로 병합
-  const byDate = new Map<string, DailyRollup>()
-  for (const rollups of perProject) {
-    for (const r of rollups) {
+  // date-key 기준으로 병합 (avoiding intermediate Map/Set/Array creation in loops)
+  interface AggregationState {
+    date: string
+    sessionCount: number
+    turnCount: number
+    inputTokens: number
+    outputTokens: number
+    cacheReadTokens: number
+    cacheCreationTokens: number
+    estimatedCostUsd: number
+    skillCounts: Record<string, number>
+    agentCounts: Record<string, number>
+    modelTokens: Record<string, number>
+    activeUserSet: Set<string>
+    userMap: Map<string, DailyUserStat>
+  }
+  const byDate = new Map<string, AggregationState>()
+
+  for (let i = 0; i < perProject.length; i++) {
+    const rollups = perProject[i]
+    for (let j = 0; j < rollups.length; j++) {
+      const r = rollups[j]
       const prev = byDate.get(r.date)
       if (!prev) {
+        const userMap = new Map<string, DailyUserStat>()
+        for (let k = 0; k < r.userStats.length; k++) {
+          const u = r.userStats[k]
+          userMap.set(u.userId, { ...u })
+        }
         byDate.set(r.date, {
           date: r.date,
           sessionCount: r.sessionCount,
           turnCount: r.turnCount,
-          activeUserCount: 0, // 나중에 union 크기로 재계산
-          activeUserIds: [...r.activeUserIds],
           inputTokens: r.inputTokens,
           outputTokens: r.outputTokens,
           cacheReadTokens: r.cacheReadTokens,
@@ -417,7 +438,8 @@ export async function getDailyRollupsForProjects(
           skillCounts: { ...r.skillCounts },
           agentCounts: { ...r.agentCounts },
           modelTokens: { ...r.modelTokens },
-          userStats: r.userStats.map((u) => ({ ...u })),
+          activeUserSet: new Set(r.activeUserIds),
+          userMap,
         })
       } else {
         prev.sessionCount += r.sessionCount
@@ -427,25 +449,34 @@ export async function getDailyRollupsForProjects(
         prev.cacheReadTokens += r.cacheReadTokens
         prev.cacheCreationTokens += r.cacheCreationTokens
         prev.estimatedCostUsd += r.estimatedCostUsd
-        // activeUserIds: 합집합
-        const userSet = new Set(prev.activeUserIds)
-        for (const u of r.activeUserIds) userSet.add(u)
-        prev.activeUserIds = Array.from(userSet)
-        for (const [k, v] of Object.entries(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + v
+
+        for (let k = 0; k < r.activeUserIds.length; k++) {
+          prev.activeUserSet.add(r.activeUserIds[k])
         }
-        for (const [k, v] of Object.entries(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + v
+
+        const skillKeys = Object.keys(r.skillCounts)
+        for (let k = 0; k < skillKeys.length; k++) {
+          const key = skillKeys[k]
+          prev.skillCounts[key] = (prev.skillCounts[key] ?? 0) + r.skillCounts[key]
         }
-        for (const [k, v] of Object.entries(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + v
+
+        const agentKeys = Object.keys(r.agentCounts)
+        for (let k = 0; k < agentKeys.length; k++) {
+          const key = agentKeys[k]
+          prev.agentCounts[key] = (prev.agentCounts[key] ?? 0) + r.agentCounts[key]
         }
-        // userStats: userId 기준 sum
-        const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
-        for (const u of r.userStats) {
-          const prevU = userMap.get(u.userId)
+
+        const modelKeys = Object.keys(r.modelTokens)
+        for (let k = 0; k < modelKeys.length; k++) {
+          const key = modelKeys[k]
+          prev.modelTokens[key] = (prev.modelTokens[key] ?? 0) + r.modelTokens[key]
+        }
+
+        for (let k = 0; k < r.userStats.length; k++) {
+          const u = r.userStats[k]
+          const prevU = prev.userMap.get(u.userId)
           if (!prevU) {
-            userMap.set(u.userId, { ...u })
+            prev.userMap.set(u.userId, { ...u })
           } else {
             prevU.sessionCount += u.sessionCount
             prevU.inputTokens += u.inputTokens
@@ -455,17 +486,31 @@ export async function getDailyRollupsForProjects(
             prevU.agentCalls += u.agentCalls
           }
         }
-        prev.userStats = Array.from(userMap.values())
       }
     }
   }
 
-  // activeUserCount 재계산
+  const result: DailyRollup[] = []
   for (const r of byDate.values()) {
-    r.activeUserCount = r.activeUserIds.length
+    const activeUserIds = Array.from(r.activeUserSet)
+    result.push({
+      date: r.date,
+      sessionCount: r.sessionCount,
+      turnCount: r.turnCount,
+      activeUserCount: activeUserIds.length,
+      activeUserIds,
+      inputTokens: r.inputTokens,
+      outputTokens: r.outputTokens,
+      cacheReadTokens: r.cacheReadTokens,
+      cacheCreationTokens: r.cacheCreationTokens,
+      estimatedCostUsd: r.estimatedCostUsd,
+      skillCounts: r.skillCounts,
+      agentCounts: r.agentCounts,
+      modelTokens: r.modelTokens,
+      userStats: Array.from(r.userMap.values()),
+    })
   }
 
-  const result = Array.from(byDate.values())
   result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
   return result
 }
@@ -602,7 +647,8 @@ export function aggregateSummary(
   const modelTokens: Record<string, number> = {}
   const activeUsers = new Set<string>()
 
-  for (const r of rollups) {
+  for (let i = 0; i < rollups.length; i++) {
+    const r = rollups[i]
     totals.sessionCount += r.sessionCount
     totals.turnCount += r.turnCount
     totals.inputTokens += r.inputTokens
@@ -610,10 +656,25 @@ export function aggregateSummary(
     totals.cacheReadTokens += r.cacheReadTokens
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
-    for (const u of r.activeUserIds) activeUsers.add(u)
-    for (const [k, v] of Object.entries(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + v
+    for (let j = 0; j < r.activeUserIds.length; j++) activeUsers.add(r.activeUserIds[j])
+
+    const skillKeys = Object.keys(r.skillCounts)
+    for (let j = 0; j < skillKeys.length; j++) {
+      const k = skillKeys[j]
+      skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]
+    }
+
+    const agentKeys = Object.keys(r.agentCounts)
+    for (let j = 0; j < agentKeys.length; j++) {
+      const k = agentKeys[j]
+      agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]
+    }
+
+    const modelKeys = Object.keys(r.modelTokens)
+    for (let j = 0; j < modelKeys.length; j++) {
+      const k = modelKeys[j]
+      modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]
+    }
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
@@ -688,8 +749,10 @@ export interface AggregatedUser {
  */
 export function aggregateUserStats(rollups: DailyRollup[]): AggregatedUser[] {
   const map = new Map<string, AggregatedUser>()
-  for (const r of rollups) {
-    for (const u of r.userStats) {
+  for (let i = 0; i < rollups.length; i++) {
+    const r = rollups[i]
+    for (let j = 0; j < r.userStats.length; j++) {
+      const u = r.userStats[j]
       const prev = map.get(u.userId)
       if (!prev) {
         map.set(u.userId, { ...u })
