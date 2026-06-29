@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
 import {
@@ -209,7 +209,7 @@ type RowProps = {
   onToggleGroup: (firstIdx: number) => void;
 };
 
-function Row({
+const Row = memo(function Row({
   index,
   style,
   rows,
@@ -257,7 +257,33 @@ function Row({
       />
     </div>
   );
-}
+}, (prevProps, nextProps) => {
+  if (prevProps.index !== nextProps.index) return false;
+  if (prevProps.style !== nextProps.style) return false;
+
+  const prevRow = prevProps.rows[prevProps.index];
+  const nextRow = nextProps.rows[nextProps.index];
+
+  // If the actual row data object reference changed (e.g., expandedGroups changed)
+  if (prevRow !== nextRow) return false;
+
+  if (!prevRow || !nextRow) return prevRow === nextRow;
+
+  // Check selection state
+  let wasSelected = false;
+  let isSelected = false;
+
+  if (prevRow.kind === "event") {
+    wasSelected = prevRow.idx === prevProps.selectedIdx;
+  }
+  if (nextRow.kind === "event") {
+    isSelected = nextRow.idx === nextProps.selectedIdx;
+  }
+
+  if (wasSelected !== isSelected) return false;
+
+  return true;
+});
 
 export function EventList({
   events,
@@ -283,7 +309,7 @@ export function EventList({
 
   return (
     <List
-      rowComponent={Row}
+      rowComponent={Row as any}
       rowCount={rows.length}
       rowHeight={ROW_HEIGHT}
       rowProps={{
