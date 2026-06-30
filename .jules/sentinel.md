@@ -1,0 +1,4 @@
+## 2024-07-01 - Host Header Injection Vulnerability
+**Vulnerability:** The application used `req.nextUrl.origin` to construct absolute URLs for authentication callbacks and password reset links. This allows a malicious user to manipulate the `Host` header in their request, causing the application to generate links pointing to an attacker-controlled domain.
+**Learning:** Using `req.nextUrl.origin` or the request's `Host` header for security-sensitive operations (like password resets or auth callbacks) is inherently unsafe because the `Host` header can be easily spoofed by the client.
+**Prevention:** Always use a trusted, statically configured environment variable (like `process.env.NEXT_PUBLIC_SITE_URL` or `process.env.BASE_URL`) to construct absolute URLs for sensitive links and redirects.
