@@ -25,6 +25,9 @@
     },
     "typecheck": {
       "dependsOn": ["^build"]
+    },
+    "coverage": {
+      "dependsOn": ["^build"]
     }
   }
 }
