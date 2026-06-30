@@ -164,8 +164,9 @@ function RowView({
     <button
       type="button"
       onClick={onClick}
+      aria-expanded={chevron ? chevron === "expanded" : undefined}
       className={cn(
-        "w-full h-full text-left flex items-center gap-3 py-2 border-b border-border/60 transition-colors",
+        "w-full h-full text-left flex items-center gap-3 py-2 border-b border-border/60 transition-colors focus-visible:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         indented ? "pl-10 pr-3" : "px-3",
         isSelected
           ? "border-l-2 border-l-brand bg-brand-subtle"
@@ -186,6 +187,7 @@ function RowView({
       <span className="flex-1 min-w-0 flex items-center gap-1 text-sm text-muted-foreground">
         {chevron !== undefined && (
           <ChevronRight
+            aria-hidden="true"
             className={cn(
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
