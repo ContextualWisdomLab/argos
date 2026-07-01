@@ -11,9 +11,7 @@
         "DATABASE_URL",
         "DIRECT_URL",
         "JWT_SECRET",
-        "NODE_ENV",
-        "ADMIN_USERNAME",
-        "ADMIN_PASSWORD"
+        "NODE_ENV"
       ]
     },
     "dev": {
@@ -22,6 +20,10 @@
     },
     "lint": {
       "dependsOn": ["^build"]
+    },
+    "coverage": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
     },
     "test": {
       "dependsOn": ["^build"]
