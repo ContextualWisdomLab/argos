@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -126,24 +127,33 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  // ⚡ Bolt: Memoized tool calls extraction to prevent filtering/mapping array on every render.
+  // Impact: O(N) operations avoided on pure re-renders where N is number of messages.
+  const toolCalls: ToolCallPoint[] = useMemo(() => {
+    return messages
+      .filter((m) => m.role === 'TOOL')
+      .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
+  }, [messages])
+
+  // ⚡ Bolt: Memoized chart data generation to prevent expensive time formatting
+  // and string manipulation (getToolSummaryForIndex) on pure re-renders.
+  // Impact: Reduces Recharts component recreation and DOM recalculation.
+  const chartData: ChartDataItem[] = useMemo(() => {
+    return usageTimeline.map((u, idx) => ({
+      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+      input: u.inputTokens,
+      output: u.outputTokens,
+      cost: u.estimatedCostUsd,
+      model: u.model,
+      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+    }))
+  }, [usageTimeline, sessionStartedAt, toolCalls])
+
   if (usageTimeline.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
   }
-
-  const toolCalls: ToolCallPoint[] = messages
-    .filter((m) => m.role === 'TOOL')
-    .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
-
-  const chartData: ChartDataItem[] = usageTimeline.map((u, idx) => ({
-    relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-    input: u.inputTokens,
-    output: u.outputTokens,
-    cost: u.estimatedCostUsd,
-    model: u.model,
-    toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-  }))
 
   return (
     <ResponsiveContainer width="100%" height={350}>
