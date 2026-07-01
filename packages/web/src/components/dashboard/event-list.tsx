@@ -39,11 +39,10 @@ type FlatRow =
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+function formatElapsed(timestamp: string, sessionStartMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+  if (Number.isNaN(t) || Number.isNaN(sessionStartMs)) return "";
+  const diffSec = Math.max(0, Math.floor((t - sessionStartMs) / 1000));
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -127,15 +126,20 @@ function getSinglePreview(event: TimelineEvent): string {
   return event.toolName;
 }
 
+const ICONS = {
+  human: { Icon: User, bg: "bg-brand" },
+  bot: { Icon: Bot, bg: "bg-brand-2" },
+  special: { Icon: Wrench, bg: "bg-chart-4" },
+  tool: { Icon: Wrench, bg: "bg-muted-foreground" },
+} as const;
+
 function getIcon(event: TimelineEvent) {
   if (event.kind === "message") {
-    if (event.role === "HUMAN") {
-      return { Icon: User, bg: "bg-brand" };
-    }
-    return { Icon: Bot, bg: "bg-brand-2" };
+    if (event.role === "HUMAN") return ICONS.human;
+    return ICONS.bot;
   }
   const isSpecial = event.isSkillCall || event.isAgentCall;
-  return { Icon: Wrench, bg: isSpecial ? "bg-chart-4" : "bg-muted-foreground" };
+  return isSpecial ? ICONS.special : ICONS.tool;
 }
 
 type RowViewProps = {
@@ -204,7 +208,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -214,7 +218,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -227,7 +231,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.firstEvent.timestamp, sessionStartMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -249,7 +253,7 @@ function Row({
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.event.timestamp, sessionStartMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -268,6 +272,11 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  const sessionStartMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt]
+  );
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -289,7 +298,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartMs,
         onSelect,
         onToggleGroup,
       }}
