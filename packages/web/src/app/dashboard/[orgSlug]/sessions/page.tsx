@@ -45,14 +45,19 @@ function SortPicker({
   onChange: (next: SessionSort) => void
 }) {
   return (
-    <div className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5">
+    <div
+      className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5"
+      role="group"
+      aria-label="정렬 기준 선택"
+    >
       {SORT_OPTIONS.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
+          aria-pressed={value === opt.value}
           className={cn(
-            'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+            'px-3 py-1 text-xs font-medium rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
             value === opt.value
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted',
