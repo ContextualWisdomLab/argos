@@ -57,14 +57,20 @@ function DateRangePickerContent() {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <div className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5">
+      <div
+        className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5"
+        role="group"
+        aria-label="Date range presets"
+      >
         {PRESETS.map((preset) => (
           <button
             key={preset.days}
             type="button"
             onClick={() => handlePreset(preset.days)}
+            aria-pressed={activePreset === preset.days}
             className={cn(
               'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               activePreset === preset.days
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted',
