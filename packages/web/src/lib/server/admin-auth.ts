@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -23,12 +23,10 @@ function safeEqual(a: string, b: string): boolean {
     return false
   }
 
-  const aPadded = Buffer.alloc(MAX_SAFE_EQUAL_BYTES)
-  const bPadded = Buffer.alloc(MAX_SAFE_EQUAL_BYTES)
-  aBytes.copy(aPadded)
-  bBytes.copy(bPadded)
+  const aHash = createHash('sha256').update(a).digest()
+  const bHash = createHash('sha256').update(b).digest()
 
-  return timingSafeEqual(aPadded, bPadded) && aBytes.length === bBytes.length
+  return timingSafeEqual(aHash, bHash)
 }
 
 function sign(payload: string): string {
