@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     await db.cliAuthRequest.create({ data: { state, expiresAt } })
 
-    const authUrl = `${req.nextUrl.origin}/cli-auth?state=${state}`
+    const authUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/cli-auth?state=${state}`
     return NextResponse.json({ state, authUrl })
   } catch (err) {
     return handleRouteError(err)
