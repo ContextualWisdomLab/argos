@@ -6,8 +6,8 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "pnpm -r test",
-    "coverage": "pnpm -r test --coverage"
+    "test": "pnpm -r run test",
+    "coverage": "pnpm -r run test -- --coverage"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
