@@ -58,21 +58,25 @@ function DateRangePickerContent() {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
       <div className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.days}
-            type="button"
-            onClick={() => handlePreset(preset.days)}
-            className={cn(
-              'px-3 py-1 text-xs font-medium rounded-md transition-colors',
-              activePreset === preset.days
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-            )}
-          >
-            {preset.label}
-          </button>
-        ))}
+        {PRESETS.map((preset) => {
+          const isActive = activePreset === preset.days
+          return (
+            <button
+              key={preset.days}
+              type="button"
+              onClick={() => handlePreset(preset.days)}
+              aria-pressed={isActive}
+              className={cn(
+                'px-3 py-1 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              )}
+            >
+              {preset.label}
+            </button>
+          )
+        })}
       </div>
       <span className="text-xs text-muted-foreground tabular-nums">
         {format(fromDate, 'MMM d')} ~ {format(toDate, 'MMM d')}
