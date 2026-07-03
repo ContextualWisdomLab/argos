@@ -17,3 +17,5 @@ __pycache__/
 .jules/
 .state/
 .claude/worktrees/
+coverage
+coverage/
