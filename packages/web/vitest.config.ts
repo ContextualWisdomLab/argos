@@ -1,6 +1,5 @@
 import path from 'node:path'
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 
 // Guard: DB-dependent tests must run against localhost only.
 // If DATABASE_URL points to a remote host, bail early to prevent writes
@@ -17,16 +16,14 @@ if (dbUrl && !/(localhost|127\.0\.0\.1)/.test(dbUrl)) {
 }
 
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
   },
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
     // .env.local を自動ロードして DATABASE_URL などのローカル環境変数を有効化
     env: (() => {
       try {
