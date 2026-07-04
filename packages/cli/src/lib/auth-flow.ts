@@ -1,15 +1,19 @@
-import { exec } from 'child_process'
+import { spawn } from 'child_process'
 import chalk from 'chalk'
 import ora from 'ora'
 import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  const cmd =
-    process.platform === 'darwin' ? 'open' :
-    process.platform === 'win32' ? 'start ""' :
-    'xdg-open'
-  exec(`${cmd} "${url}"`)
+  // Use spawn instead of exec to prevent command injection vulnerabilities.
+  // Passing the URL as an argument array avoids shell interpolation.
+  if (process.platform === 'win32') {
+    // Windows cmd.exe requires explicit quoting if the URL contains ampersands.
+    spawn('cmd', ['/c', 'start', '""', `"${url}"`])
+  } else {
+    const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open'
+    spawn(cmd, [url])
+  }
 }
 
 /**
