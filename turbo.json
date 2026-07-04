@@ -20,6 +20,9 @@
       "cache": false,
       "persistent": true
     },
+    "coverage": {
+      "dependsOn": ["^build"]
+    },
     "lint": {
       "dependsOn": ["^build"]
     },
