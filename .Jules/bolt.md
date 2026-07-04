@@ -1,0 +1,5 @@
+## 2024-07-04 - React Hook Rules when Optimizing Recharts
+
+**Learning:** When using `useMemo` to prevent expensive string-to-date parsing (`new Date().getTime()`) within loops during Recharts rendering, it's crucial to remember that React Hooks cannot be called conditionally. A common pattern in Recharts components is to use early returns if the dataset is empty (e.g. `if (data.length === 0) return null`). Moving data transformations into `useMemo` hooks *above* these early returns is required to satisfy React rules.
+
+**Action:** Whenever identifying an O(N) or O(N*M) calculation bottleneck inside a React render function and applying `useMemo`, immediately scan the component for early return statements. Ensure all hooks are executed *before* any conditional logic returns to prevent "Rendered more hooks than during the previous render" runtime errors.
