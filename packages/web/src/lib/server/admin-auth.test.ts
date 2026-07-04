@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { NextRequest } from 'next/server'
 import {
   verifyAdminCredentials,
   verifyAdminSessionCookie,
@@ -107,10 +108,10 @@ describe('admin-auth', () => {
   })
 
   it('checks requireAdmin', () => {
-    const req = { cookies: { get: vi.fn(() => undefined) } } as any
+    const req = { cookies: { get: vi.fn(() => undefined) } } as unknown as NextRequest
     requireAdmin(req)
 
-    const req2 = { cookies: { get: vi.fn(() => ({ value: createAdminSessionCookieValue() })) } } as any
+    const req2 = { cookies: { get: vi.fn(() => ({ value: createAdminSessionCookieValue() })) } } as unknown as NextRequest
     expect(requireAdmin(req2)).toBeNull()
   })
 
