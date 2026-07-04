@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { runLoginFlow } from '../lib/auth-flow'
-import { apiRequest } from '../lib/api-client'
+import { runLoginFlow } from '../lib/auth-flow.js'
+import { apiRequest } from '../lib/api-client.js'
 import { spawn } from 'child_process'
 
-vi.mock('../lib/api-client', () => ({
+vi.mock('../lib/api-client.js', () => ({
   apiRequest: vi.fn(),
 }))
 
