@@ -24,7 +24,7 @@ describe('DateRangePicker', () => {
 
   it('renders presets correctly and handles click', () => {
     const mockPush = vi.fn()
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof vi.fn>)
     const from = format(subDays(TODAY, 6), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
@@ -45,27 +45,27 @@ describe('DateRangePicker', () => {
 
     fireEvent.click(button30d)
 
-    let from30 = format(subDays(TODAY, 30), 'yyyy-MM-dd')
-    let to30 = format(TODAY, 'yyyy-MM-dd')
+    const from30 = format(subDays(TODAY, 30), 'yyyy-MM-dd')
+    const to30 = format(TODAY, 'yyyy-MM-dd')
 
     expect(mockPush).toHaveBeenCalledWith(`?from=${from30}&to=${to30}`)
 
     // 90d click
     fireEvent.click(button90d)
-    let from90 = format(subDays(TODAY, 90), 'yyyy-MM-dd')
-    let to90 = format(TODAY, 'yyyy-MM-dd')
+    const from90 = format(subDays(TODAY, 90), 'yyyy-MM-dd')
+    const to90 = format(TODAY, 'yyyy-MM-dd')
     expect(mockPush).toHaveBeenCalledWith(`?from=${from90}&to=${to90}`)
 
     // ALL click
     fireEvent.click(buttonAll)
-    let fromAll = format(subDays(TODAY, 3650), 'yyyy-MM-dd')
-    let toAll = format(TODAY, 'yyyy-MM-dd')
+    const fromAll = format(subDays(TODAY, 3650), 'yyyy-MM-dd')
+    const toAll = format(TODAY, 'yyyy-MM-dd')
     expect(mockPush).toHaveBeenCalledWith(`?from=${fromAll}&to=${toAll}`)
 
   })
 
   it('identifies custom date range', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2023-01-01&to=2023-01-10'))
 
     render(<DateRangePicker />)
@@ -81,7 +81,7 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 29), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
@@ -94,7 +94,7 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 89), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
@@ -107,7 +107,7 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 3649), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
@@ -129,7 +129,7 @@ describe('DateRangePicker default params coverage', () => {
   })
 
   it('covers daysDiff logic when isToday=false', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2024-07-01&to=2024-07-02'))
     render(<DateRangePicker />)
     const button7d = screen.getByRole('button', { name: '7d' })
@@ -137,10 +137,50 @@ describe('DateRangePicker default params coverage', () => {
   })
 
   it('covers currentTo null', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as any)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
     const p = new URLSearchParams()
     p.set('from', '2024-07-01')
     vi.mocked(useSearchParams).mockReturnValue(p)
+    render(<DateRangePicker />)
+    const button7d = screen.getByRole('button', { name: '7d' })
+    expect(button7d.getAttribute('aria-pressed')).toBe('false')
+  })
+})
+
+describe('DateRangePicker default params coverage edge cases', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-07-04T00:00:00Z'))
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  it('covers daysDiff no match', () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2024-07-03&to=2024-07-04'))
+    render(<DateRangePicker />)
+    const button7d = screen.getByRole('button', { name: '7d' })
+    expect(button7d.getAttribute('aria-pressed')).toBe('false')
+  })
+})
+
+describe('DateRangePicker params from null', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-07-04T00:00:00Z'))
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  it('covers currentFrom null', () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?to=2024-07-04'))
     render(<DateRangePicker />)
     const button7d = screen.getByRole('button', { name: '7d' })
     expect(button7d.getAttribute('aria-pressed')).toBe('false')
