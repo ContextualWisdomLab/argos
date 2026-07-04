@@ -6,7 +6,8 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "coverage": "turbo run coverage"
+    "coverage": "turbo run coverage",
+    "test": "turbo test"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
