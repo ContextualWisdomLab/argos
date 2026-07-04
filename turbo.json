@@ -25,6 +25,10 @@
     },
     "typecheck": {
       "dependsOn": ["^build"]
+    },
+    "coverage": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
     }
   }
 }
