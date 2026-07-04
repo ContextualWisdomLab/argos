@@ -124,7 +124,6 @@ export function OrgSidebar() {
           <button
             onClick={handleLogout}
             className="w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-            aria-label="Log out of your account"
           >
             Log Out
           </button>
@@ -151,7 +150,6 @@ export function OrgSidebar() {
           <button
             onClick={handleLogout}
             className="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors"
-            aria-label="Log out of your account"
           >
             Logout
           </button>

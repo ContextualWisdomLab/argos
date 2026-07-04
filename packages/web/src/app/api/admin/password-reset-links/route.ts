@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const input = CreatePasswordResetLinkSchema.parse(await req.json())
     const result = await createPasswordResetLink({
       userId: input.userId,
-      origin: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://argos-ai.xyz',
+      origin: req.nextUrl.origin,
     })
 
     if (result.status === 'user_not_found') {
