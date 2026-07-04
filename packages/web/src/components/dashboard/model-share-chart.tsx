@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { ModelShare } from '@argos/shared'
@@ -32,7 +33,18 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 }
 
 export function ModelShareChart({ data }: ModelShareChartProps) {
-  const total = data.reduce((s, d) => s + d.totalTokens, 0)
+  // ⚡ Bolt: Memoize the calculations and data transformation for Recharts to prevent unnecessary re-renders.
+  // Recharts does deep equality checks on data points, so a new reference on every render
+  // causes performance bottlenecks. This optimization ensures a stable array reference.
+  // Impact: Reduces re-renders of complex SVG DOM trees, leading to lower CPU utilization.
+  const { total, chartData } = useMemo(() => {
+    const t = data.reduce((s, d) => s + d.totalTokens, 0)
+    const cData = data.map(d => ({
+      ...d,
+      pct: t > 0 ? (d.totalTokens / t) * 100 : 0,
+    }))
+    return { total: t, chartData: cData }
+  }, [data])
 
   if (total === 0 || data.length === 0) {
     return (
@@ -41,11 +53,6 @@ export function ModelShareChart({ data }: ModelShareChartProps) {
       </div>
     )
   }
-
-  const chartData = data.map(d => ({
-    ...d,
-    pct: (d.totalTokens / total) * 100,
-  }))
 
   return (
     <ResponsiveContainer width="100%" height={260}>

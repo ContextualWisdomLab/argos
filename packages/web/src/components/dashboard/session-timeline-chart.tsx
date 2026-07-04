@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useMemo } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -126,24 +127,32 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  // ⚡ Bolt: Memoize the calculations and data transformation for Recharts to prevent unnecessary re-renders.
+  // Recharts does deep equality checks on data points, so a new reference on every render
+  // causes performance bottlenecks. This optimization ensures a stable array reference.
+  // Impact: Reduces re-renders of complex SVG DOM trees, leading to lower CPU utilization.
+  const { chartData } = useMemo(() => {
+    const tools = messages
+      .filter((m) => m.role === 'TOOL')
+      .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
+
+    const data = usageTimeline.map((u, idx) => ({
+      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+      input: u.inputTokens,
+      output: u.outputTokens,
+      cost: u.estimatedCostUsd,
+      model: u.model,
+      toolSummary: getToolSummaryForIndex(idx, usageTimeline, tools),
+    }))
+
+    return { chartData: data }
+  }, [usageTimeline, messages, sessionStartedAt])
+
   if (usageTimeline.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
   }
-
-  const toolCalls: ToolCallPoint[] = messages
-    .filter((m) => m.role === 'TOOL')
-    .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
-
-  const chartData: ChartDataItem[] = usageTimeline.map((u, idx) => ({
-    relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-    input: u.inputTokens,
-    output: u.outputTokens,
-    cost: u.estimatedCostUsd,
-    model: u.model,
-    toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-  }))
 
   return (
     <ResponsiveContainer width="100%" height={350}>
