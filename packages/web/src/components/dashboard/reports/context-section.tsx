@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import React, { useState, useId, type ReactNode } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,27 +12,38 @@ interface ContextSectionProps {
 
 export function ContextSection({ title, children, defaultOpen = false }: ContextSectionProps) {
   const [open, setOpen] = useState(defaultOpen)
+  const id = useId()
+  const headerId = `${id}-header`
+  const contentId = `${id}-content`
 
   return (
     <div className="rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden">
       <button
+        id={headerId}
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'w-full flex items-center justify-between px-4 py-3 text-left',
+          'w-full flex items-center justify-between px-4 py-3 text-left outline-none rounded-sm',
           'hover:bg-card-elevated transition-colors',
+          'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset'
         )}
         aria-expanded={open}
+        aria-controls={contentId}
       >
         <h2 className="text-base font-medium">{title}</h2>
         {open ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown aria-hidden="true" className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-1">
+        <div
+          id={contentId}
+          role="region"
+          aria-labelledby={headerId}
+          className="px-4 pb-4 pt-1"
+        >
           {children}
         </div>
       )}
