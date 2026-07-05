@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { ModelShare } from '@argos/shared'
@@ -32,7 +33,8 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 }
 
 export function ModelShareChart({ data }: ModelShareChartProps) {
-  const total = data.reduce((s, d) => s + d.totalTokens, 0)
+  // ⚡ 성능 최적화: 매 렌더링마다 배열을 다시 순회하는 것을 방지하기 위해 캐싱
+  const total = useMemo(() => data.reduce((s, d) => s + d.totalTokens, 0), [data])
 
   if (total === 0 || data.length === 0) {
     return (
@@ -42,10 +44,11 @@ export function ModelShareChart({ data }: ModelShareChartProps) {
     )
   }
 
-  const chartData = data.map(d => ({
+  // ⚡ 성능 최적화: Recharts 내부의 불필요한 재렌더링 방지를 위해 매핑 배열 캐싱
+  const chartData = useMemo(() => data.map(d => ({
     ...d,
     pct: (d.totalTokens / total) * 100,
-  }))
+  })), [data, total])
 
   return (
     <ResponsiveContainer width="100%" height={260}>

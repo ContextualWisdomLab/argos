@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, TooltipProps } from 'recharts'
 
 interface SkillFrequencyChartProps {
@@ -35,11 +36,12 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 }
 
 export function SkillFrequencyChart({ data }: SkillFrequencyChartProps) {
-  const chartData = data.slice(0, 10).map(s => ({
+  // ⚡ 성능 최적화: Recharts 내부의 불필요한 재렌더링 방지를 위해 매핑 배열 캐싱
+  const chartData = useMemo(() => data.slice(0, 10).map(s => ({
     skill: s.skillName,
     displaySkill: truncate(s.skillName),
     calls: s.callCount,
-  }))
+  })), [data])
 
   if (chartData.length === 0) {
     return (

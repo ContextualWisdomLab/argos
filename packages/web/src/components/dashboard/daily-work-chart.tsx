@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { UsageSeries } from '@argos/shared'
@@ -37,12 +38,13 @@ function Row({ color, label, value }: { color: string; label: string; value: num
 }
 
 export function DailyWorkChart({ data }: DailyWorkChartProps) {
-  const chartData = data.map(d => ({
+  // ⚡ 성능 최적화: Recharts 내부의 불필요한 재렌더링 방지를 위해 매핑 배열 캐싱
+  const chartData = useMemo(() => data.map(d => ({
     date: d.date,
     input: d.inputTokens,
     output: d.outputTokens,
     cacheCreate: d.cacheCreationTokens,
-  }))
+  })), [data])
 
   return (
     <ResponsiveContainer width="100%" height={260}>
