@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage --coverage.reporter=json-summary --coverage.reporter=json"
   },
   "dependencies": {
     "zod": "^3"

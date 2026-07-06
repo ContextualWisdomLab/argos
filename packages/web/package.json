@@ -14,7 +14,7 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:generate": "prisma generate",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage --coverage.reporter=json-summary --coverage.reporter=json"
   },
   "dependencies": {
     "@argos/shared": "workspace:*",
