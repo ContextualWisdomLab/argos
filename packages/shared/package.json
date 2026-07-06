@@ -16,6 +16,7 @@
     "dev": "tsc --watch",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
+    "coverage": "vitest run --coverage",
     "test": "vitest run",
     "test:watch": "vitest"
   },
