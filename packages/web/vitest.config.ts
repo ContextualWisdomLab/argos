@@ -24,6 +24,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'html', 'json-summary'],
+    },
     // .env.local を自動ロードして DATABASE_URL などのローカル環境変数を有効化
     env: (() => {
       try {
