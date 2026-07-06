@@ -431,14 +431,18 @@ export async function getDailyRollupsForProjects(
         const userSet = new Set(prev.activeUserIds)
         for (const u of r.activeUserIds) userSet.add(u)
         prev.activeUserIds = Array.from(userSet)
-        for (const [k, v] of Object.entries(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + v
+
+        // ⚡ Bolt Optimization:
+        // 병목 지점: Object.entries()는 순회할 때마다 매 항목에 대해 중간 배열을 할당하여 메모리(GC) 오버헤드를 발생시킵니다.
+        // 최적화 방법: Obejct.keys()로 키만 순회하고 원본 객체에서 값을 참조하여 배열 생성 비용을 제거했습니다.
+        for (const k of Object.keys(r.skillCounts)) {
+          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]
         }
-        for (const [k, v] of Object.entries(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + v
+        for (const k of Object.keys(r.agentCounts)) {
+          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]
         }
-        for (const [k, v] of Object.entries(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + v
+        for (const k of Object.keys(r.modelTokens)) {
+          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]
         }
         // userStats: userId 기준 sum
         const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
@@ -611,9 +615,11 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    for (const [k, v] of Object.entries(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + v
+
+    // ⚡ Bolt Optimization: Replace Object.entries() with Object.keys() to avoid intermediate array allocations
+    for (const k of Object.keys(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]
+    for (const k of Object.keys(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]
+    for (const k of Object.keys(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
