@@ -7,7 +7,7 @@ vi.mock('server-only', () => ({}))
 vi.mock('next/server', () => {
   return {
     NextResponse: {
-      json: (body: any, init?: any) => ({ body, init }),
+      json: (body: unknown, init?: unknown) => ({ body, init }),
     },
   }
 })
@@ -35,7 +35,7 @@ describe('POST /api/auth/cli-request', () => {
   it('환경 변수에 NEXT_PUBLIC_SITE_URL이 설정된 경우 해당 값을 사용한다', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://custom-site.com'
 
-    const response = await POST() as any
+    const response = await POST() as { body: { authUrl: string, state: string } }
     const { authUrl, state } = response.body
 
     expect(authUrl).toBe(`https://custom-site.com/cli-auth?state=${state}`)
@@ -44,7 +44,7 @@ describe('POST /api/auth/cli-request', () => {
   it('환경 변수에 NEXT_PUBLIC_SITE_URL이 없는 경우 로컬호스트를 사용한다', async () => {
     delete process.env.NEXT_PUBLIC_SITE_URL
 
-    const response = await POST() as any
+    const response = await POST() as { body: { authUrl: string, state: string } }
     const { authUrl, state } = response.body
 
     expect(authUrl).toBe(`http://localhost:3000/cli-auth?state=${state}`)
