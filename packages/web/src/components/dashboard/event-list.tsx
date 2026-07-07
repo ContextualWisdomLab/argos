@@ -5,6 +5,7 @@ import {
   formatSlashCommandText,
   buildTimelineGroups,
   type TimelineEvent,
+  type TimelineGroup,
 } from "@/lib/timeline-events";
 import { cn } from "@/lib/utils";
 
@@ -50,11 +51,10 @@ function formatElapsed(timestamp: string, sessionStartedAt: string): string {
 }
 
 function buildFlatRows(
-  events: TimelineEvent[],
+  groups: TimelineGroup[],
   expandedGroups: Set<number>,
   selectedIdx: number,
 ): FlatRow[] {
-  const groups = buildTimelineGroups(events);
   const rows: FlatRow[] = [];
   for (const group of groups) {
     if (group.kind === "single") {
@@ -267,9 +267,11 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  const groups = useMemo(() => buildTimelineGroups(events), [events]);
+
   const rows = useMemo(
-    () => buildFlatRows(events, expandedGroups, selectedIdx),
-    [events, expandedGroups, selectedIdx],
+    () => buildFlatRows(groups, expandedGroups, selectedIdx),
+    [groups, expandedGroups, selectedIdx],
   );
 
   if (events.length === 0) {
