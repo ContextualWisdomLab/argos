@@ -52,10 +52,6 @@ export async function issueUserAuthResult(
   return issueAuthResultForUser(user, source)
 }
 
-// Constant time dummy hash to prevent user enumeration via timing attack
-// Generated using bcryptjs with a 10 round cost factor
-const DUMMY_HASH = '$2a$10$7C3lWTYSTSCV0aji92qP6OurTYGfXHlSc7NQMJLv.S/nUlo77mbU.'
-
 /**
  * 로그인 비즈니스 로직.
  * 자격 증명이 유효하면 새 JWT를 발급하고 CliToken을 생성한 뒤 반환한다.
@@ -68,12 +64,7 @@ export async function loginUser(
   const { email, password } = input
 
   const user = await db.user.findUnique({ where: { email } })
-
-  if (!user) {
-    // Perform dummy hash comparison to mitigate timing attacks
-    await bcrypt.compare(password, DUMMY_HASH)
-    return null
-  }
+  if (!user) return null
 
   const valid = await bcrypt.compare(password, user.passwordHash)
   if (!valid) return null

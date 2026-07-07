@@ -24,11 +24,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
-    server: {
-      deps: {
-        inline: ['server-only'],
-      },
-    },
     // .env.local を自動ロードして DATABASE_URL などのローカル環境変数を有効化
     env: (() => {
       try {
