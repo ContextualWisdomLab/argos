@@ -4,3 +4,11 @@
 ## 2024-07-04 - Segment Controls State Accessibility
 **Learning:** React segment controls/toggles (like preset buttons) built with basic buttons often visually distinguish the active state (e.g. using a background color) but fail to communicate this to screen readers. They also easily miss standard keyboard focus outlines when built with custom padding/borders.
 **Action:** 항상 커스텀 토글/세그먼트 컨트롤 버튼을 구현할 때는 `aria-pressed={isActive}` 속성을 추가하여 상태를 스크린 리더에 명시적으로 알리고, `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1` 클래스를 적용해 키보드 네비게이션 시 명확한 시각적 피드백을 제공해야 한다.
+
+## 2024-07-04 - Segment Controls State Accessibility
+**Learning:** React segment controls/toggles (like preset buttons) built with basic buttons often visually distinguish the active state (e.g. using a background color) but fail to communicate this to screen readers. They also easily miss standard keyboard focus outlines when built with custom padding/borders.
+**Action:** 항상 커스텀 토글/세그먼트 컨트롤 버튼을 구현할 때는 `aria-pressed={isActive}` 속성을 추가하여 상태를 스크린 리더에 명시적으로 알리고, `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1` 클래스를 적용해 키보드 네비게이션 시 명확한 시각적 피드백을 제공해야 한다.
+
+## 2024-07-04 - Segment Controls State Accessibility
+**Learning:** React segment controls/toggles (like preset buttons) built with basic buttons often visually distinguish the active state (e.g. using a background color) but fail to communicate this to screen readers. They also easily miss standard keyboard focus outlines when built with custom padding/borders.
+**Action:** 항상 커스텀 토글/세그먼트 컨트롤 버튼을 구현할 때는 `aria-pressed={isActive}` 속성을 추가하여 상태를 스크린 리더에 명시적으로 알리고, `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1` 클래스를 적용해 키보드 네비게이션 시 명확한 시각적 피드백을 제공해야 한다.

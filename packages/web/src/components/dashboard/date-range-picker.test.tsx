@@ -1,3 +1,4 @@
+import React from 'react'
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { DateRangePicker } from './date-range-picker'
@@ -24,7 +25,7 @@ describe('DateRangePicker', () => {
 
   it('renders presets correctly and handles click', () => {
     const mockPush = vi.fn()
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as unknown as ReturnType<typeof vi.fn>)
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<typeof vi.fn>)
     const from = format(subDays(TODAY, 6), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
@@ -65,7 +66,7 @@ describe('DateRangePicker', () => {
   })
 
   it('identifies custom date range', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2023-01-01&to=2023-01-10'))
 
     render(<DateRangePicker />)
@@ -81,7 +82,7 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 29), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
@@ -94,7 +95,7 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 89), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
@@ -107,43 +108,13 @@ describe('DateRangePicker', () => {
     const from = format(subDays(TODAY, 3649), 'yyyy-MM-dd')
     const to = format(TODAY, 'yyyy-MM-dd')
 
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams(`?from=${from}&to=${to}`))
 
     render(<DateRangePicker />)
 
     const buttonAll = screen.getByRole('button', { name: 'ALL' })
     expect(buttonAll.getAttribute('aria-pressed')).toBe('true')
-  })
-})
-
-describe('DateRangePicker default params coverage', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2024-07-04T00:00:00Z'))
-  })
-
-  afterEach(() => {
-    cleanup()
-    vi.useRealTimers()
-  })
-
-  it('covers daysDiff logic when isToday=false', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
-    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2024-07-01&to=2024-07-02'))
-    render(<DateRangePicker />)
-    const button7d = screen.getByRole('button', { name: '7d' })
-    expect(button7d.getAttribute('aria-pressed')).toBe('false')
-  })
-
-  it('covers currentTo null', () => {
-    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as unknown as ReturnType<typeof vi.fn>)
-    const p = new URLSearchParams()
-    p.set('from', '2024-07-01')
-    vi.mocked(useSearchParams).mockReturnValue(p)
-    render(<DateRangePicker />)
-    const button7d = screen.getByRole('button', { name: '7d' })
-    expect(button7d.getAttribute('aria-pressed')).toBe('false')
   })
 })
 
@@ -165,9 +136,19 @@ describe('DateRangePicker default params coverage edge cases', () => {
     const button7d = screen.getByRole('button', { name: '7d' })
     expect(button7d.getAttribute('aria-pressed')).toBe('false')
   })
+
+  it('covers currentTo null', () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
+    const p = new URLSearchParams()
+    p.set('from', '2024-07-01')
+    vi.mocked(useSearchParams).mockReturnValue(p)
+    render(<DateRangePicker />)
+    const buttons = screen.getAllByRole('button', { name: '7d' })
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false')
+  })
 })
 
-describe('DateRangePicker params from null', () => {
+describe('DateRangePicker default params coverage edge cases', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2024-07-04T00:00:00Z'))
@@ -178,9 +159,29 @@ describe('DateRangePicker params from null', () => {
     vi.useRealTimers()
   })
 
+  it('covers daysDiff no match', () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?from=2024-07-03&to=2024-07-04'))
+    render(<DateRangePicker />)
+    const button7d = screen.getByRole('button', { name: '7d' })
+    expect(button7d.getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('covers currentTo null', () => {
+    vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
+    const p = new URLSearchParams()
+    p.set('from', '2024-07-01')
+    vi.mocked(useSearchParams).mockReturnValue(p)
+    render(<DateRangePicker />)
+    const buttons = screen.getAllByRole('button', { name: '7d' })
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false')
+  })
+
   it('covers currentFrom null', () => {
     vi.mocked(useRouter).mockReturnValue({ push: vi.fn() } as ReturnType<typeof vi.fn>)
-    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams('?to=2024-07-04'))
+    const p = new URLSearchParams()
+    p.set('to', '2024-07-04')
+    vi.mocked(useSearchParams).mockReturnValue(p)
     render(<DateRangePicker />)
     const button7d = screen.getByRole('button', { name: '7d' })
     expect(button7d.getAttribute('aria-pressed')).toBe('false')
