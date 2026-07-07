@@ -64,7 +64,7 @@ function DateRangePickerContent() {
             type="button"
             onClick={() => handlePreset(preset.days)}
             className={cn(
-              'px-3 py-1 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'px-3 py-1 text-xs font-medium rounded-md transition-colors',
               activePreset === preset.days
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted',
