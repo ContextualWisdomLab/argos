@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { formatTokens, formatCost } from '@/lib/format'
 import type { UserStat } from '@argos/shared'
 
@@ -9,13 +8,6 @@ interface TopUsersListProps {
 }
 
 export function TopUsersList({ users }: TopUsersListProps) {
-  const maxTokens = useMemo(() => {
-    return users.reduce(
-      (m, u) => Math.max(m, u.inputTokens + u.outputTokens),
-      0,
-    )
-  }, [users])
-
   if (users.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-6 text-center">
@@ -23,6 +15,11 @@ export function TopUsersList({ users }: TopUsersListProps) {
       </p>
     )
   }
+
+  const maxTokens = users.reduce(
+    (m, u) => Math.max(m, u.inputTokens + u.outputTokens),
+    0,
+  )
 
   return (
     <ol className="space-y-2">
