@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
     await db.cliAuthRequest.create({ data: { state, expiresAt } })
 
-    const authUrl = `${req.nextUrl.origin}/cli-auth?state=${state}`
+    const origin = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://argos-ai.xyz'
+    const authUrl = `${origin}/cli-auth?state=${state}`
     return NextResponse.json({ state, authUrl })
   } catch (err) {
     return handleRouteError(err)
