@@ -1,0 +1,3 @@
+## 2024-05-18 - [Dynamic ARIA Links in React]
+**Learning:** When building reusable UI components (like `ContextSection` in this codebase) that require linking elements for accessibility (e.g., `aria-controls` to `id`, `aria-labelledby` to `id`), hardcoded IDs will clash if multiple instances of the component are rendered on the same page.
+**Action:** Always use React's `useId()` hook to generate unique prefixes or full IDs for ARIA relationships within reusable components. Additionally, for components compiled with Vitest in `web`, explicitly import `React` to avoid "React is not defined" errors during testing, and add `jsdom` and `@testing-library/*` dependencies to the specific workspace project if tests are added where they previously did not exist.
