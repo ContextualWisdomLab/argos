@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -22,6 +23,11 @@ interface SessionTimelineChartProps {
 interface ToolCallPoint {
   timestamp: string
   toolName: string
+  timeNum: number
+}
+
+interface ParsedUsage extends SessionTimelineUsage {
+  timeNum: number
 }
 
 interface ChartDataItem {
@@ -35,19 +41,18 @@ interface ChartDataItem {
 
 function getToolSummaryForIndex(
   index: number,
-  usageTimeline: SessionTimelineUsage[],
+  usageTimeline: ParsedUsage[],
   toolCalls: ToolCallPoint[]
 ): string {
   if (toolCalls.length === 0) return ''
 
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
+  const currentTimestamp = usageTimeline[index]!.timeNum
+  const prevTimestamp = index > 0 ? usageTimeline[index - 1]!.timeNum : 0
 
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
   const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = new Date(e.timestamp).getTime()
+    const toolTimestamp = e.timeNum
     return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
   })
 
@@ -126,24 +131,39 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  const parsedUsage = useMemo<ParsedUsage[]>(() => {
+    return usageTimeline.map(u => ({
+      ...u,
+      timeNum: new Date(u.timestamp).getTime()
+    }))
+  }, [usageTimeline])
+
+  const parsedToolCalls = useMemo<ToolCallPoint[]>(() => {
+    return messages
+      .filter((m) => m.role === 'TOOL')
+      .map((m) => ({
+        timestamp: m.timestamp,
+        toolName: m.toolName ?? 'unknown',
+        timeNum: new Date(m.timestamp).getTime()
+      }))
+  }, [messages])
+
+  const chartData = useMemo<ChartDataItem[]>(() => {
+    return parsedUsage.map((u, idx) => ({
+      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+      input: u.inputTokens,
+      output: u.outputTokens,
+      cost: u.estimatedCostUsd,
+      model: u.model,
+      toolSummary: getToolSummaryForIndex(idx, parsedUsage, parsedToolCalls),
+    }))
+  }, [parsedUsage, parsedToolCalls, sessionStartedAt])
+
   if (usageTimeline.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
   }
-
-  const toolCalls: ToolCallPoint[] = messages
-    .filter((m) => m.role === 'TOOL')
-    .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
-
-  const chartData: ChartDataItem[] = usageTimeline.map((u, idx) => ({
-    relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-    input: u.inputTokens,
-    output: u.outputTokens,
-    cost: u.estimatedCostUsd,
-    model: u.model,
-    toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-  }))
 
   return (
     <ResponsiveContainer width="100%" height={350}>
