@@ -5,7 +5,9 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "coverage": "pnpm install --frozen-lockfile && pnpm --filter @argos/web run coverage:erd"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
