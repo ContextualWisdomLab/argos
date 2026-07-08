@@ -36,4 +36,21 @@ Cross-agent conventions for the `argos` repo, readable by any coding agent
   index is ever added at the repo root, prefer CodeGraph
   (`codegraph explore "<query>"`, or the code-review-graph MCP tools) BEFORE
   grep/find — it surfaces callers/callees/impact that text search misses.
+
+### Config & secrets (KV, not env)
+- Org rule: do **not** read config/secrets from raw environment variables at
+  runtime (`os.getenv()` in Python, `process.env.*` in TS/Node). Read them from
+  a KV / credential registry. Org Actions secrets (e.g. `OPENAI_API_KEY`) flow
+  **into** the KV via a bootstrap/CI step; runtime reads from the KV — env is
+  only transport into the KV, never the runtime source.
+- Reference implementation: xtrmLLMBatchPython's pgcrypto-encrypted Postgres
+  credential registry (`get_credential(name)`). Reuse that pattern (a DB-backed
+  KV is fine — this repo already runs Postgres via Prisma) unless a dedicated KV
+  is adopted.
+- **Known deviation to migrate:** `packages/web/src/lib/server/env.ts` currently
+  parses secrets (`DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`,
+  `ADMIN_COOKIE_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`) straight from
+  `process.env` with Zod. Treat this as the source to migrate to the KV: keep
+  env as bootstrap transport, but resolve these values through the credential
+  registry at runtime. Do not add new `process.env` reads for secrets.
 <!-- END cwl-agent-guidance -->
