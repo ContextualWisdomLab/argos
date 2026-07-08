@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { createHmac, pbkdf2Sync, pbkdf2, randomBytes, timingSafeEqual } from 'crypto'
+import { createHash, createHmac, pbkdf2Sync, pbkdf2, randomBytes, timingSafeEqual } from 'crypto'
 import { promisify } from 'util'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
@@ -84,8 +84,10 @@ export function verifyAdminSessionCookie(value: string | undefined): boolean {
   const signatureBytes = Buffer.from(signature)
   const expectedSignatureBytes = Buffer.from(expectedSignature)
 
-  if (signatureBytes.length !== expectedSignatureBytes.length) return false
-  if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return false
+  const signatureHash = createHash('sha256').update(signatureBytes).digest()
+  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
+
+  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return false
 
   if (username !== ADMIN_USERNAME) return false
 
@@ -126,8 +128,10 @@ export function verifyAdminImpersonationToken(token: string): string | null {
   const signatureBytes = Buffer.from(signature)
   const expectedSignatureBytes = Buffer.from(expectedSignature)
 
-  if (signatureBytes.length !== expectedSignatureBytes.length) return null
-  if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return null
+  const signatureHash = createHash('sha256').update(signatureBytes).digest()
+  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
+
+  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return null
 
   const expiresAt = Number(expiresAtRaw)
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null
