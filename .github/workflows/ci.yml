@@ -43,13 +43,17 @@ jobs:
       - run: pnpm -r run typecheck
       - run: pnpm -r run lint
       - run: pnpm --filter argos-ai test
+      - name: Create Prisma shadow database
+        run: |
+          docker run --rm --network host -e PGPASSWORD=argos postgres:16-alpine \
+            createdb -h 127.0.0.1 -U argos argos_shadow
       - name: Check schema/migration drift
         working-directory: packages/web
         run: |
           pnpm exec prisma migrate diff \
             --from-migrations ./prisma/migrations \
             --to-schema-datamodel ./prisma/schema.prisma \
-            --shadow-database-url postgresql://argos:argos@localhost:5432/argos \
+            --shadow-database-url postgresql://argos:argos@localhost:5432/argos_shadow \
             --exit-code
       - run: pnpm --filter @argos/web exec prisma migrate deploy
       - run: pnpm --filter @argos/web test
