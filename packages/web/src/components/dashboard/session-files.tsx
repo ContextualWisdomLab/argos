@@ -18,9 +18,9 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
-          className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-success hover:bg-success/25 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-success hover:bg-success/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success"
         >
-          <Pencil className="h-3 w-3" />
+          <Pencil className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{modifiedCount}</span>
           <span>{modifiedCount === 1 ? 'file modified' : 'files modified'}</span>
         </button>
@@ -29,9 +29,9 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
-          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground hover:bg-muted/70 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground hover:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Eye className="h-3 w-3" />
+          <Eye className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{readCount}</span>
           <span>{readCount === 1 ? 'file read' : 'files read'}</span>
         </button>
@@ -69,9 +69,9 @@ function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
       type="button"
       onClick={() => onJump(entry.lastEventIdx)}
       title={`${entry.path} — jump to last ${unit}`}
-      className="group w-full text-left flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
+      className="group w-full text-left flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <FileText className={`h-4 w-4 shrink-0 ${iconTone}`} />
+      <FileText className={`h-4 w-4 shrink-0 ${iconTone}`} aria-hidden="true" />
       <span className="min-w-0 flex-1 flex items-baseline gap-1 truncate">
         {dir && (
           <span className="text-xs text-muted-foreground truncate" dir="rtl">
@@ -112,7 +112,7 @@ export function SessionFilesTab({ files, onJump }: FilesTabProps) {
     <div className="space-y-6 p-4">
       <section>
         <header className="flex items-center gap-2 mb-2 px-1">
-          <Pencil className="h-4 w-4 text-success" />
+          <Pencil className="h-4 w-4 text-success" aria-hidden="true" />
           <h3 className="text-sm font-semibold">
             Modified
             <span className="ml-1.5 text-xs font-normal text-muted-foreground tabular-nums">
@@ -142,7 +142,7 @@ export function SessionFilesTab({ files, onJump }: FilesTabProps) {
 
       <section>
         <header className="flex items-center gap-2 mb-2 px-1">
-          <Eye className="h-4 w-4 text-muted-foreground" />
+          <Eye className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <h3 className="text-sm font-medium text-muted-foreground">
             Read
             <span className="ml-1.5 text-xs font-normal text-muted-foreground tabular-nums">
