@@ -399,6 +399,9 @@ export async function getDailyRollupsForProjects(
 
   // date-key 기준으로 병합
   const byDate = new Map<string, DailyRollup>()
+  const activeUsersByDate = new Map<string, Set<string>>()
+  const userStatsByDate = new Map<string, Map<string, DailyUserStat>>()
+
   for (const rollups of perProject) {
     for (const r of rollups) {
       const prev = byDate.get(r.date)
@@ -408,17 +411,26 @@ export async function getDailyRollupsForProjects(
           sessionCount: r.sessionCount,
           turnCount: r.turnCount,
           activeUserCount: 0, // 나중에 union 크기로 재계산
-          activeUserIds: [...r.activeUserIds],
+          activeUserIds: [], // 나중에 Set에서 변환
           inputTokens: r.inputTokens,
           outputTokens: r.outputTokens,
           cacheReadTokens: r.cacheReadTokens,
           cacheCreationTokens: r.cacheCreationTokens,
           estimatedCostUsd: r.estimatedCostUsd,
+          // Optimization: Avoid Object.entries allocation
           skillCounts: { ...r.skillCounts },
           agentCounts: { ...r.agentCounts },
           modelTokens: { ...r.modelTokens },
-          userStats: r.userStats.map((u) => ({ ...u })),
+          userStats: [], // 나중에 Map에서 변환
         })
+
+        const userSet = new Set<string>()
+        for (const u of r.activeUserIds) userSet.add(u)
+        activeUsersByDate.set(r.date, userSet)
+
+        const userMap = new Map<string, DailyUserStat>()
+        for (const u of r.userStats) userMap.set(u.userId, { ...u })
+        userStatsByDate.set(r.date, userMap)
       } else {
         prev.sessionCount += r.sessionCount
         prev.turnCount += r.turnCount
@@ -427,21 +439,24 @@ export async function getDailyRollupsForProjects(
         prev.cacheReadTokens += r.cacheReadTokens
         prev.cacheCreationTokens += r.cacheCreationTokens
         prev.estimatedCostUsd += r.estimatedCostUsd
+
         // activeUserIds: 합집합
-        const userSet = new Set(prev.activeUserIds)
+        const userSet = activeUsersByDate.get(r.date)!
         for (const u of r.activeUserIds) userSet.add(u)
-        prev.activeUserIds = Array.from(userSet)
-        for (const [k, v] of Object.entries(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + v
+
+        // Optimization: Use Object.keys instead of Object.entries to save memory
+        for (const k of Object.keys(r.skillCounts)) {
+          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
         }
-        for (const [k, v] of Object.entries(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + v
+        for (const k of Object.keys(r.agentCounts)) {
+          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!
         }
-        for (const [k, v] of Object.entries(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + v
+        for (const k of Object.keys(r.modelTokens)) {
+          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
         }
+
         // userStats: userId 기준 sum
-        const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
+        const userMap = userStatsByDate.get(r.date)!
         for (const u of r.userStats) {
           const prevU = userMap.get(u.userId)
           if (!prevU) {
@@ -455,14 +470,18 @@ export async function getDailyRollupsForProjects(
             prevU.agentCalls += u.agentCalls
           }
         }
-        prev.userStats = Array.from(userMap.values())
       }
     }
   }
 
-  // activeUserCount 재계산
+  // activeUserCount 및 배열 변환을 마지막에 한 번만 수행
   for (const r of byDate.values()) {
+    const userSet = activeUsersByDate.get(r.date)!
+    r.activeUserIds = Array.from(userSet)
     r.activeUserCount = r.activeUserIds.length
+
+    const userMap = userStatsByDate.get(r.date)!
+    r.userStats = Array.from(userMap.values())
   }
 
   const result = Array.from(byDate.values())
@@ -611,15 +630,23 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    for (const [k, v] of Object.entries(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + v
+
+    // Optimization: Use Object.keys instead of Object.entries
+    for (const k of Object.keys(r.skillCounts)) {
+      skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
+    }
+    for (const k of Object.keys(r.agentCounts)) {
+      agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!
+    }
+    for (const k of Object.keys(r.modelTokens)) {
+      modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!
+    }
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
   // Postgres COLLATE "C" 와 정렬 결과 일치시켜 skills route 와 동일 순서 보장).
-  const topSkills = Object.entries(skillCounts)
-    .map(([skillName, callCount]) => ({ skillName, callCount }))
+  const topSkills = Object.keys(skillCounts)
+    .map((skillName) => ({ skillName, callCount: skillCounts[skillName]! }))
     .sort((a, b) => {
       if (b.callCount !== a.callCount) return b.callCount - a.callCount
       return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0
@@ -627,17 +654,17 @@ export function aggregateSummary(
     .slice(0, topSkillsN)
 
   // Deterministic tie-break: callCount DESC, agentType ASC (codepoint binary).
-  const topAgents = Object.entries(agentCounts)
-    .map(([agentType, callCount]) => ({ agentType, callCount }))
+  const topAgents = Object.keys(agentCounts)
+    .map((agentType) => ({ agentType, callCount: agentCounts[agentType]! }))
     .sort((a, b) => {
       if (b.callCount !== a.callCount) return b.callCount - a.callCount
       return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0
     })
     .slice(0, topAgentsN)
 
-  const modelShare = Object.entries(modelTokens)
-    .filter(([, v]) => v > 0)
-    .map(([model, totalTokens]) => ({ model, totalTokens }))
+  const modelShare = Object.keys(modelTokens)
+    .filter((model) => modelTokens[model]! > 0)
+    .map((model) => ({ model, totalTokens: modelTokens[model]! }))
     .sort((a, b) => b.totalTokens - a.totalTokens)
 
   return {
