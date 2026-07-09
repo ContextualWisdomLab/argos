@@ -5,10 +5,7 @@ import { promisify } from 'util'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { env } from './env'
-
-export const ADMIN_USERNAME = env.ADMIN_USERNAME
-export const ADMIN_PASSWORD = env.ADMIN_PASSWORD
+import { getEnv } from './env'
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
@@ -21,36 +18,45 @@ const pbkdf2Async = promisify(pbkdf2)
 // if env vars are missing during static generation phases.
 let cachedAdminPasswordHash: Buffer | null = null
 
+function getAdminCredentials() {
+  const { ADMIN_USERNAME, ADMIN_PASSWORD } = getEnv()
+  return { username: ADMIN_USERNAME, password: ADMIN_PASSWORD }
+}
+
 function getAdminPasswordHash(): Buffer {
   if (!cachedAdminPasswordHash) {
-    cachedAdminPasswordHash = pbkdf2Sync(ADMIN_PASSWORD, ADMIN_USERNAME, 100000, 64, 'sha512')
+    const { username, password } = getAdminCredentials()
+    cachedAdminPasswordHash = pbkdf2Sync(password, username, 100000, 64, 'sha512')
   }
   return cachedAdminPasswordHash
 }
 
 function sign(payload: string): string {
-  return createHmac('sha256', env.ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
+  return createHmac('sha256', getEnv().ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
 }
 
 export async function verifyAdminCredentials(input: {
   username: string
   password: string
 }): Promise<boolean> {
+  const { username } = getAdminCredentials()
+
   // Prevent CPU exhaustion (DoS) by short-circuiting on fast check first
-  if (input.username !== ADMIN_USERNAME) {
+  if (input.username !== username) {
     return false
   }
 
   // Use asynchronous crypto.pbkdf2 to prevent blocking the Node.js event loop
-  const inputPasswordHash = await pbkdf2Async(input.password, ADMIN_USERNAME, 100000, 64, 'sha512')
+  const inputPasswordHash = await pbkdf2Async(input.password, username, 100000, 64, 'sha512')
 
   return timingSafeEqual(getAdminPasswordHash(), inputPasswordHash)
 }
 
 export function createAdminSessionCookieValue(): string {
+  const { username } = getAdminCredentials()
   const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS
   const nonce = randomBytes(16).toString('base64url')
-  const payload = `${ADMIN_USERNAME}.${expiresAt}.${nonce}`
+  const payload = `${username}.${expiresAt}.${nonce}`
   return `${payload}.${sign(payload)}`
 }
 
@@ -87,7 +93,7 @@ export function verifyAdminSessionCookie(value: string | undefined): boolean {
   if (signatureBytes.length !== expectedSignatureBytes.length) return false
   if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return false
 
-  if (username !== ADMIN_USERNAME) return false
+  if (username !== getAdminCredentials().username) return false
 
   const expiresAt = Number(expiresAtRaw)
   return Number.isFinite(expiresAt) && Date.now() <= expiresAt
