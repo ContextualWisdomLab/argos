@@ -399,6 +399,8 @@ export async function getDailyRollupsForProjects(
 
   // date-key 기준으로 병합
   const byDate = new Map<string, DailyRollup>()
+  const activeUserSets = new Map<string, Set<string>>()
+
   for (const rollups of perProject) {
     for (const r of rollups) {
       const prev = byDate.get(r.date)
@@ -408,7 +410,7 @@ export async function getDailyRollupsForProjects(
           sessionCount: r.sessionCount,
           turnCount: r.turnCount,
           activeUserCount: 0, // 나중에 union 크기로 재계산
-          activeUserIds: [...r.activeUserIds],
+          activeUserIds: [], // 나중에 activeUserSets 에서 변환
           inputTokens: r.inputTokens,
           outputTokens: r.outputTokens,
           cacheReadTokens: r.cacheReadTokens,
@@ -419,6 +421,7 @@ export async function getDailyRollupsForProjects(
           modelTokens: { ...r.modelTokens },
           userStats: r.userStats.map((u) => ({ ...u })),
         })
+        activeUserSets.set(r.date, new Set(r.activeUserIds))
       } else {
         prev.sessionCount += r.sessionCount
         prev.turnCount += r.turnCount
@@ -427,20 +430,24 @@ export async function getDailyRollupsForProjects(
         prev.cacheReadTokens += r.cacheReadTokens
         prev.cacheCreationTokens += r.cacheCreationTokens
         prev.estimatedCostUsd += r.estimatedCostUsd
+
         // activeUserIds: 합집합
-        const userSet = new Set(prev.activeUserIds)
+        const userSet = activeUserSets.get(r.date)!
         for (const u of r.activeUserIds) userSet.add(u)
-        prev.activeUserIds = Array.from(userSet)
-        for (const [k, v] of Object.entries(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + v
+
+        for (const k of Object.keys(r.skillCounts)) {
+          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]
         }
-        for (const [k, v] of Object.entries(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + v
+        for (const k of Object.keys(r.agentCounts)) {
+          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]
         }
-        for (const [k, v] of Object.entries(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + v
+        for (const k of Object.keys(r.modelTokens)) {
+          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]
         }
+
         // userStats: userId 기준 sum
+        // Note: prev.userStats can also be optimized but it involves an object and a Map,
+        // to stay strictly within plan boundaries, we focus on the confirmed Set.
         const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
         for (const u of r.userStats) {
           const prevU = userMap.get(u.userId)
@@ -462,6 +469,8 @@ export async function getDailyRollupsForProjects(
 
   // activeUserCount 재계산
   for (const r of byDate.values()) {
+    const userSet = activeUserSets.get(r.date)!
+    r.activeUserIds = Array.from(userSet)
     r.activeUserCount = r.activeUserIds.length
   }
 
@@ -611,9 +620,9 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    for (const [k, v] of Object.entries(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + v
-    for (const [k, v] of Object.entries(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + v
+    for (const k of Object.keys(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]
+    for (const k of Object.keys(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]
+    for (const k of Object.keys(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
