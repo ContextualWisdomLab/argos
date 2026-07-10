@@ -1,9 +1,9 @@
 name: CI
 on:
   push:
-    branches: [main, feat-*]
+    branches: [main, developmental, feat-*, "feature/**"]
   pull_request:
-    branches: [main]
+    branches: [main, developmental]
 
 jobs:
   build:
