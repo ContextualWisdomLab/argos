@@ -123,7 +123,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -164,8 +165,10 @@ function RowView({
     <button
       type="button"
       onClick={onClick}
+      aria-expanded={chevron ? chevron === "expanded" : undefined}
       className={cn(
         "w-full h-full text-left flex items-center gap-3 py-2 border-b border-border/60 transition-colors",
+        "focus-visible:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         indented ? "pl-10 pr-3" : "px-3",
         isSelected
           ? "border-l-2 border-l-brand bg-brand-subtle"
@@ -173,12 +176,13 @@ function RowView({
       )}
     >
       <span
+        aria-hidden="true"
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
           bg,
         )}
       >
-        <Icon className="h-3 w-3 text-background" />
+        <Icon className="h-3 w-3 text-background" aria-hidden="true" />
       </span>
       <span className="w-20 shrink-0 text-sm font-medium truncate">
         {label}
@@ -186,6 +190,7 @@ function RowView({
       <span className="flex-1 min-w-0 flex items-center gap-1 text-sm text-muted-foreground">
         {chevron !== undefined && (
           <ChevronRight
+            aria-hidden="true"
             className={cn(
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
@@ -238,11 +243,12 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
