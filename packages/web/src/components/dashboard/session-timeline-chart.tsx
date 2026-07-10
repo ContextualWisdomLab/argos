@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -126,24 +127,28 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  // ⚡ Bolt: Recharts 차트는 새로운 배열 참조가 들어올 때마다 값비싼 재랜더링을 수행하므로,
+  // usageTimeline이나 messages가 변경될 때만 데이터를 재계산하도록 useMemo로 감싸 성능을 최적화합니다.
+  const chartData = useMemo(() => {
+    const toolCalls: ToolCallPoint[] = messages
+      .filter((m) => m.role === 'TOOL')
+      .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
+
+    return usageTimeline.map((u, idx) => ({
+      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+      input: u.inputTokens,
+      output: u.outputTokens,
+      cost: u.estimatedCostUsd,
+      model: u.model,
+      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+    }))
+  }, [messages, usageTimeline, sessionStartedAt])
+
   if (usageTimeline.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
   }
-
-  const toolCalls: ToolCallPoint[] = messages
-    .filter((m) => m.role === 'TOOL')
-    .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
-
-  const chartData: ChartDataItem[] = usageTimeline.map((u, idx) => ({
-    relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-    input: u.inputTokens,
-    output: u.outputTokens,
-    cost: u.estimatedCostUsd,
-    model: u.model,
-    toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-  }))
 
   return (
     <ResponsiveContainer width="100%" height={350}>
