@@ -1,34 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
-import { requireAdmin } from '@/lib/server/admin-auth'
-import { handleRouteError } from '@/lib/server/error-helper'
-import { createPasswordResetLink } from '@/lib/server/password-reset'
+import { requireAdmin } from "@/lib/server/admin-auth";
+import { handleRouteError } from "@/lib/server/error-helper";
+import { createPasswordResetLink } from "@/lib/server/password-reset";
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const CreatePasswordResetLinkSchema = z.object({
   userId: z.string().min(1),
-})
+});
 
 export async function POST(req: NextRequest) {
-  const unauthorized = requireAdmin(req)
-  if (unauthorized) return unauthorized
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
   try {
-    const input = CreatePasswordResetLinkSchema.parse(await req.json())
+    const input = CreatePasswordResetLinkSchema.parse(await req.json());
+    // 보안 수정: req.nextUrl.origin 대신 환경 변수를 사용하여 Host Header Injection을 방지합니다.
     const result = await createPasswordResetLink({
       userId: input.userId,
-      origin: req.nextUrl.origin,
-    })
+      origin: process.env.NEXT_PUBLIC_SITE_URL || "https://argos-ai.xyz",
+    });
 
-    if (result.status === 'user_not_found') {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (result.status === "user_not_found") {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json(result, { status: 201 })
+    return NextResponse.json(result, { status: 201 });
   } catch (err) {
-    return handleRouteError(err)
+    return handleRouteError(err);
   }
 }
