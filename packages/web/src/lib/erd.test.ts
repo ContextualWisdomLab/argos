@@ -21,6 +21,15 @@ describe('ERDModel', () => {
       expect(() => model.addTable('users')).toThrowError("Table 'users' already exists.")
     })
 
+    it('should reject non-snake-case table names', () => {
+      expect(() => model.addTable('UserProfiles')).toThrowError(
+        "Table 'UserProfiles' must be snake_case."
+      )
+      expect(() => model.addTable('user-profiles')).toThrowError(
+        "Table 'user-profiles' must be snake_case."
+      )
+    })
+
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
     })
@@ -47,6 +56,16 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'id', type: 'string' })
       ).toThrowError("Column 'id' already exists in table 'users'.")
+    })
+
+    it('should reject non-snake-case column names', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'createdAt', type: 'timestamp' })
+      ).toThrowError("Column 'createdAt' must be snake_case.")
+      expect(() =>
+        model.addColumn('users', { name: 'created__at', type: 'timestamp' })
+      ).toThrowError("Column 'created__at' must be snake_case.")
     })
   })
 
@@ -108,6 +127,24 @@ describe('ERDModel', () => {
           referenceColumn: 'non_existent_col',
         })
       }).toThrowError("Reference column 'non_existent_col' does not exist in table 'users'.")
+    })
+
+    it('should reject non-snake-case foreign key object names', () => {
+      expect(() => {
+        model.addForeignKey('posts', {
+          columnName: 'userId',
+          referenceTable: 'users',
+          referenceColumn: 'id',
+        })
+      }).toThrowError("Column 'userId' must be snake_case.")
+
+      expect(() => {
+        model.addForeignKey('posts', {
+          columnName: 'user_id',
+          referenceTable: 'UserProfiles',
+          referenceColumn: 'id',
+        })
+      }).toThrowError("Reference table 'UserProfiles' must be snake_case.")
     })
   })
 

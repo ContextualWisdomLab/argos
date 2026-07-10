@@ -17,10 +17,19 @@ export interface Table {
   foreignKeys: ForeignKey[]
 }
 
+const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
+
+function assertSnakeCaseIdentifier(kind: string, name: string): void {
+  if (!SNAKE_CASE_IDENTIFIER.test(name)) {
+    throw new Error(`${kind} '${name}' must be snake_case.`)
+  }
+}
+
 export class ERDModel {
   private tables: Map<string, Table> = new Map()
 
   addTable(name: string): Table {
+    assertSnakeCaseIdentifier('Table', name)
     if (this.tables.has(name)) {
       throw new Error(`Table '${name}' already exists.`)
     }
@@ -38,6 +47,8 @@ export class ERDModel {
   }
 
   addColumn(tableName: string, column: Column): void {
+    assertSnakeCaseIdentifier('Table', tableName)
+    assertSnakeCaseIdentifier('Column', column.name)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -49,6 +60,10 @@ export class ERDModel {
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
+    assertSnakeCaseIdentifier('Table', tableName)
+    assertSnakeCaseIdentifier('Column', fk.columnName)
+    assertSnakeCaseIdentifier('Reference table', fk.referenceTable)
+    assertSnakeCaseIdentifier('Reference column', fk.referenceColumn)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
