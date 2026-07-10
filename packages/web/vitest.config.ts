@@ -22,8 +22,14 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts'],
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    server: {
+      deps: {
+        inline: ['server-only'],
+      },
+    },
     // Coverage is scoped to DB-free core library modules so the central
     // coverage-evidence gate can prove 100% coverage without a Postgres
     // service. Invoked via the `coverage:erd` script.
