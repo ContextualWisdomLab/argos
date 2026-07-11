@@ -17,7 +17,8 @@ export function jsonError(code: string, message: string, status: number): NextRe
  */
 export function handleRouteError(err: unknown): NextResponse {
   console.error('Route error', {
-    prismaCode: (err as Record<string, unknown>).code,
+    prismaCode:
+      err && typeof err === 'object' ? (err as Record<string, unknown>).code : undefined,
     message: err instanceof Error ? err.message : String(err),
   })
 
