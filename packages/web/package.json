@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "coverage:erd": "vitest run --coverage src/lib/erd.test.ts"
   },
   "dependencies": {
     "@argos/shared": "workspace:*",
@@ -51,6 +52,7 @@
     "shadcn": "^4.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.6"
+    "vitest": "^3.2.6",
+    "@vitest/coverage-v8": "3.2.6"
   }
 }
