@@ -13,7 +13,6 @@ import {
   Legend,
   type TooltipProps,
 } from 'recharts'
-import { useMemo } from 'react'
 import { parseISO } from 'date-fns'
 import { formatTokens } from '@/lib/format'
 import type { DailySeriesPoint } from '@/types/reports'
