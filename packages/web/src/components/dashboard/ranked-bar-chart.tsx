@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
 import type { TooltipProps } from 'recharts'
@@ -45,11 +46,13 @@ function ChartTooltip({ active, payload, valueLabel }: ChartTooltipProps) {
 }
 
 export function RankedBarChart({ data, valueLabel = 'Invocations', limit = 10 }: RankedBarChartProps) {
-  const chartData = data.slice(0, limit).map(d => ({
-    label: d.label,
-    displayLabel: truncateLabel(d.label),
-    value: d.value,
-  }))
+  const chartData = useMemo(() => {
+    return data.slice(0, limit).map(d => ({
+      label: d.label,
+      displayLabel: truncateLabel(d.label),
+      value: d.value,
+    }))
+  }, [data, limit])
 
   return (
     <ResponsiveContainer width="100%" height={320}>
