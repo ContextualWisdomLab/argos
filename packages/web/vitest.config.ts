@@ -24,6 +24,15 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // Coverage is scoped to DB-free core library modules so the central
+    // coverage-evidence gate can prove 100% coverage without a Postgres
+    // service. Invoked via the `coverage:erd` script.
+    coverage: {
+      provider: 'v8',
+      include: ['src/lib/erd.ts'],
+      reporter: ['text', 'json', 'json-summary'],
+      thresholds: { lines: 100, functions: 100, branches: 100, statements: 100 },
+    },
     // .env.local を自動ロードして DATABASE_URL などのローカル環境変数を有効化
     env: (() => {
       try {
