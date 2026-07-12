@@ -1,56 +1,51 @@
 import 'server-only'
 
-import { createHmac, pbkdf2Sync, pbkdf2, randomBytes, timingSafeEqual } from 'crypto'
-import { promisify } from 'util'
+import { createHmac, createHash, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { env } from './env'
-
-export const ADMIN_USERNAME = env.ADMIN_USERNAME
-export const ADMIN_PASSWORD = env.ADMIN_PASSWORD
+import { getEnv } from './env'
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
+const MAX_PASSWORD_LENGTH = 1024
 
-const pbkdf2Async = promisify(pbkdf2)
-
-// Lazily compute the password hash to avoid Next.js build errors
-// if env vars are missing during static generation phases.
-let cachedAdminPasswordHash: Buffer | null = null
-
-function getAdminPasswordHash(): Buffer {
-  if (!cachedAdminPasswordHash) {
-    cachedAdminPasswordHash = pbkdf2Sync(ADMIN_PASSWORD, ADMIN_USERNAME, 100000, 64, 'sha512')
-  }
-  return cachedAdminPasswordHash
+function getAdminCredentials() {
+  const { ADMIN_USERNAME, ADMIN_PASSWORD } = getEnv()
+  return { username: ADMIN_USERNAME, password: ADMIN_PASSWORD }
 }
 
 function sign(payload: string): string {
-  return createHmac('sha256', env.ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
+  return createHmac('sha256', getEnv().ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
 }
 
 export async function verifyAdminCredentials(input: {
   username: string
   password: string
 }): Promise<boolean> {
+  const { username, password: expectedPassword } = getAdminCredentials()
+
   // Prevent CPU exhaustion (DoS) by short-circuiting on fast check first
-  if (input.username !== ADMIN_USERNAME) {
+  // and enforcing maximum input length.
+  if (input.username !== username || input.password.length > MAX_PASSWORD_LENGTH) {
     return false
   }
 
-  // Use asynchronous crypto.pbkdf2 to prevent blocking the Node.js event loop
-  const inputPasswordHash = await pbkdf2Async(input.password, ADMIN_USERNAME, 100000, 64, 'sha512')
+  // Use fast uniform hash to prevent timing attacks without unnecessary slow derivation
+  // on a plaintext in-memory secret.
+  const inputPasswordHash = createHash('sha256').update(input.password).digest()
+  const expectedPasswordHash = createHash('sha256').update(expectedPassword).digest()
 
-  return timingSafeEqual(getAdminPasswordHash(), inputPasswordHash)
+  return timingSafeEqual(expectedPasswordHash, inputPasswordHash)
 }
 
 export function createAdminSessionCookieValue(): string {
+  const { username } = getAdminCredentials()
   const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS
   const nonce = randomBytes(16).toString('base64url')
-  const payload = `${ADMIN_USERNAME}.${expiresAt}.${nonce}`
+  const payload = `${username}.${expiresAt}.${nonce}`
   return `${payload}.${sign(payload)}`
 }
 
@@ -87,7 +82,7 @@ export function verifyAdminSessionCookie(value: string | undefined): boolean {
   if (signatureBytes.length !== expectedSignatureBytes.length) return false
   if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return false
 
-  if (username !== ADMIN_USERNAME) return false
+  if (username !== getAdminCredentials().username) return false
 
   const expiresAt = Number(expiresAtRaw)
   return Number.isFinite(expiresAt) && Date.now() <= expiresAt

@@ -37,6 +37,7 @@ export function NoOrganizationState({
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-sm text-destructive hover:underline"
+              aria-label="Log out of your account"
             >
               Log out
             </button>

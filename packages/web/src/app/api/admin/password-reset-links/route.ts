@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/lib/server/admin-auth'
 import { handleRouteError } from '@/lib/server/error-helper'
 import { createPasswordResetLink } from '@/lib/server/password-reset'
+import { getPublicSiteOrigin } from '@/lib/server/site-origin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     const input = CreatePasswordResetLinkSchema.parse(await req.json())
     const result = await createPasswordResetLink({
       userId: input.userId,
-      origin: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://argos-ai.xyz',
+      origin: getPublicSiteOrigin(),
     })
 
     if (result.status === 'user_not_found') {

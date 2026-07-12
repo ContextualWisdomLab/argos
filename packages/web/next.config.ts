@@ -10,11 +10,6 @@ const config: NextConfig = {
   outputFileTracingRoot: workspaceRoot,
   transpilePackages: ['@argos/shared'],
 
-  images: {
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-  },
-
   async headers() {
     return [
       {
@@ -43,6 +38,11 @@ const config: NextConfig = {
         ],
       },
     ]
+  },
+
+  images: {
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 }
 
