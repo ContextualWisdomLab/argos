@@ -31,8 +31,7 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        const msg = typeof data.error === 'string' ? data.error : (data.error?.message || 'Registration failed')
-        setError(msg)
+        setError(data.error?.message ?? 'Registration failed')
         setLoading(false)
         return
       }
@@ -48,7 +47,6 @@ export default function RegisterPage() {
         setError('Registration succeeded but login failed. Please try logging in.')
       } else {
         router.push('/dashboard')
-        router.refresh()
       }
     } catch {
       setError('An error occurred. Please try again.')
