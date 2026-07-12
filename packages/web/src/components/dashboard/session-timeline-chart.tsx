@@ -22,6 +22,7 @@ interface SessionTimelineChartProps {
 interface ToolCallPoint {
   timestamp: string
   toolName: string
+  timeMs: number
 }
 
 interface ChartDataItem {
@@ -47,8 +48,7 @@ function getToolSummaryForIndex(
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
   const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = new Date(e.timestamp).getTime()
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
+    return e.timeMs <= currentTimestamp && e.timeMs > prevTimestamp
   })
 
   if (relevantTools.length === 0) return ''
@@ -132,9 +132,16 @@ export function SessionTimelineChart({
     )
   }
 
+  // [Bolt: Performance Optimization] Date 객체 생성과 파싱은 무거운 연산입니다.
+  // getToolSummaryForIndex 내부의 O(N*M) 중첩 루프에서 매번 Date를 파싱하지 않도록,
+  // 툴 호출 메시지 매핑 시 O(N)으로 미리(pre-compute) 계산해 둡니다.
   const toolCalls: ToolCallPoint[] = messages
     .filter((m) => m.role === 'TOOL')
-    .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
+    .map((m) => ({
+      timestamp: m.timestamp,
+      toolName: m.toolName ?? 'unknown',
+      timeMs: new Date(m.timestamp).getTime(),
+    }))
 
   const chartData: ChartDataItem[] = usageTimeline.map((u, idx) => ({
     relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
