@@ -43,13 +43,21 @@ jobs:
       - run: pnpm -r run typecheck
       - run: pnpm -r run lint
       - run: pnpm --filter argos-ai test
+      - name: Create isolated Prisma shadow database
+        env:
+          PGPASSWORD: argos
+        run: |
+          echo "Creating argos_shadow so schema drift checks cannot populate the migration target database."
+          createdb --host localhost --username argos argos_shadow
+          psql --host localhost --username argos --dbname postgres --tuples-only --command \
+            "SELECT datname FROM pg_database WHERE datname = 'argos_shadow';"
       - name: Check schema/migration drift
         working-directory: packages/web
         run: |
           pnpm exec prisma migrate diff \
             --from-migrations ./prisma/migrations \
             --to-schema-datamodel ./prisma/schema.prisma \
-            --shadow-database-url postgresql://argos:argos@localhost:5432/argos \
+            --shadow-database-url postgresql://argos:argos@localhost:5432/argos_shadow \
             --exit-code
       - run: pnpm --filter @argos/web exec prisma migrate deploy
       - run: pnpm --filter @argos/web test
