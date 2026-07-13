@@ -2,6 +2,7 @@
 import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
 import { SessionTimelineChart } from './session-timeline-chart'
 
 vi.mock('recharts', async () => {
@@ -32,41 +33,36 @@ describe('SessionTimelineChart', () => {
   })
 
   it('renders the chart correctly when data is provided', () => {
-    const mockUsageTimeline = [
+    const mockUsageTimeline: SessionTimelineUsage[] = [
       {
-        id: '1',
-        sessionId: 'session-1',
-        orgId: 'org-1',
-        projectId: 'proj-1',
-        userId: 'user-1',
         timestamp: '2023-01-01T00:01:00.000Z',
         inputTokens: 100,
         outputTokens: 50,
-        cacheCreationTokens: 0,
-        cacheReadTokens: 0,
         estimatedCostUsd: 0.001,
         model: 'gpt-4',
-        createdAt: '2023-01-01T00:01:00.000Z',
+        isSubagent: false,
       },
     ]
 
-    const mockMessages = [
+    const mockMessages: SessionDetail['messages'] = [
       {
-        id: '1',
-        sessionId: 'session-1',
-        role: 'USER',
+        role: 'HUMAN',
         content: 'Hello',
+        sequence: 1,
         timestamp: '2023-01-01T00:00:30.000Z',
-        createdAt: '2023-01-01T00:00:30.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
         toolName: null,
       },
       {
-        id: '2',
-        sessionId: 'session-1',
         role: 'TOOL',
         content: 'Tool Output',
+        sequence: 2,
         timestamp: '2023-01-01T00:00:45.000Z',
-        createdAt: '2023-01-01T00:00:45.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
         toolName: 'myTool',
       },
     ]
