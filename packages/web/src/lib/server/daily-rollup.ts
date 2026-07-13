@@ -399,6 +399,9 @@ export async function getDailyRollupsForProjects(
 
   // date-key 기준으로 병합
   const byDate = new Map<string, DailyRollup>()
+  const userSetsByDate = new Map<string, Set<string>>()
+  const userStatsByDate = new Map<string, Map<string, AggregatedUser>>()
+
   for (const rollups of perProject) {
     for (const r of rollups) {
       const prev = byDate.get(r.date)
@@ -408,7 +411,7 @@ export async function getDailyRollupsForProjects(
           sessionCount: r.sessionCount,
           turnCount: r.turnCount,
           activeUserCount: 0, // 나중에 union 크기로 재계산
-          activeUserIds: [...r.activeUserIds],
+          activeUserIds: [], // 나중에 Set에서 변환
           inputTokens: r.inputTokens,
           outputTokens: r.outputTokens,
           cacheReadTokens: r.cacheReadTokens,
@@ -417,8 +420,11 @@ export async function getDailyRollupsForProjects(
           skillCounts: { ...r.skillCounts },
           agentCounts: { ...r.agentCounts },
           modelTokens: { ...r.modelTokens },
-          userStats: r.userStats.map((u) => ({ ...u })),
+          userStats: [], // 나중에 Map에서 변환
         })
+
+        userSetsByDate.set(r.date, new Set(r.activeUserIds))
+        userStatsByDate.set(r.date, new Map(r.userStats.map((u) => [u.userId, { ...u }])))
       } else {
         prev.sessionCount += r.sessionCount
         prev.turnCount += r.turnCount
@@ -427,10 +433,11 @@ export async function getDailyRollupsForProjects(
         prev.cacheReadTokens += r.cacheReadTokens
         prev.cacheCreationTokens += r.cacheCreationTokens
         prev.estimatedCostUsd += r.estimatedCostUsd
-        // activeUserIds: 합집합
-        const userSet = new Set(prev.activeUserIds)
+
+        // activeUserIds: 합집합 (지연된 Set 변환)
+        const userSet = userSetsByDate.get(r.date)!
         for (const u of r.activeUserIds) userSet.add(u)
-        prev.activeUserIds = Array.from(userSet)
+
         // [Bolt: Performance Optimization] Use Object.keys() instead of Object.entries() in hot paths.
         // Impact: Avoids array allocation for each key-value pair, significantly reducing GC overhead when aggregating large daily rollups.
         for (const k of Object.keys(r.skillCounts)) {
@@ -442,8 +449,9 @@ export async function getDailyRollupsForProjects(
         for (const k of Object.keys(r.modelTokens)) {
           prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
         }
-        // userStats: userId 기준 sum
-        const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
+
+        // userStats: userId 기준 sum (지연된 Map 변환)
+        const userMap = userStatsByDate.get(r.date)!
         for (const u of r.userStats) {
           const prevU = userMap.get(u.userId)
           if (!prevU) {
@@ -457,14 +465,15 @@ export async function getDailyRollupsForProjects(
             prevU.agentCalls += u.agentCalls
           }
         }
-        prev.userStats = Array.from(userMap.values())
       }
     }
   }
 
-  // activeUserCount 재계산
+  // 지연된 Set/Map을 Array로 변환하고 activeUserCount 계산
   for (const r of byDate.values()) {
+    r.activeUserIds = Array.from(userSetsByDate.get(r.date)!)
     r.activeUserCount = r.activeUserIds.length
+    r.userStats = Array.from(userStatsByDate.get(r.date)!.values())
   }
 
   const result = Array.from(byDate.values())
