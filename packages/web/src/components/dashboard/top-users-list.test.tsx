@@ -32,6 +32,8 @@ describe("TopUsersList", () => {
         outputTokens: 50,
         sessionCount: 2,
         estimatedCostUsd: 0.1,
+        skillCalls: 0,
+        agentCalls: 0,
       },
       {
         userId: "2",
@@ -40,6 +42,8 @@ describe("TopUsersList", () => {
         outputTokens: 20,
         sessionCount: 1,
         estimatedCostUsd: 0.03,
+        skillCalls: 0,
+        agentCalls: 0,
       },
     ];
     render(<TopUsersList users={mockUsers} />);
@@ -58,6 +62,8 @@ describe("TopUsersList", () => {
         outputTokens: 0,
         sessionCount: 2,
         estimatedCostUsd: 0.0,
+        skillCalls: 0,
+        agentCalls: 0,
       },
     ];
     render(<TopUsersList users={mockUsers} />);
