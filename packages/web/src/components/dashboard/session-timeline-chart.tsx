@@ -23,6 +23,7 @@ interface SessionTimelineChartProps {
 interface ToolCallPoint {
   timestamp: string
   toolName: string
+  parsedTimestamp: number
 }
 
 interface ChartDataItem {
@@ -48,7 +49,7 @@ function getToolSummaryForIndex(
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
   const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = new Date(e.timestamp).getTime()
+    const toolTimestamp = e.parsedTimestamp
     return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
   })
 
@@ -132,7 +133,11 @@ export function SessionTimelineChart({
   const toolCalls: ToolCallPoint[] = useMemo(() => {
     return messages
       .filter((m) => m.role === 'TOOL')
-      .map((m) => ({ timestamp: m.timestamp, toolName: m.toolName ?? 'unknown' }))
+      .map((m) => ({
+        timestamp: m.timestamp,
+        toolName: m.toolName ?? 'unknown',
+        parsedTimestamp: new Date(m.timestamp).getTime(),
+      }))
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
