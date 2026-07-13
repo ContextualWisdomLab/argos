@@ -39,11 +39,10 @@ type FlatRow =
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+function formatElapsed(timestamp: string, sessionStartedMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+  if (Number.isNaN(t) || Number.isNaN(sessionStartedMs)) return "";
+  const diffSec = Math.max(0, Math.floor((t - sessionStartedMs) / 1000));
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -207,7 +206,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +216,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +229,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.firstEvent.timestamp, sessionStartedMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -252,7 +251,7 @@ function Row({
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.event.timestamp, sessionStartedMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -276,6 +275,14 @@ export function EventList({
     [groups, expandedGroups, selectedIdx],
   );
 
+  // [Bolt Optimization] Parse sessionStartedAt once instead of N times during scroll.
+  // Reduces N new Date() allocations per render cycle, significantly decreasing memory allocations
+  // and GC overhead during rapid virtual list scrolling.
+  const sessionStartedMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt]
+  );
+
   if (events.length === 0) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">
@@ -292,7 +299,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedMs,
         onSelect,
         onToggleGroup,
       }}
