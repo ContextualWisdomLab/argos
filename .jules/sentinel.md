@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2024-07-14 - Fix CSV Injection Vulnerability in Session Exports
+**Vulnerability:** CSV Injection (Formula Injection) vulnerability in the CSV export function due to unsanitized user input (session titles or messages) starting with `=`, `+`, `-`, `@`, `\t`, or `\r`.
+**Learning:** Untrusted user input written directly to CSV files can be interpreted as executable formulas by spreadsheet software like Excel or Google Sheets, leading to arbitrary code execution or data exfiltration on the victim's machine.
+**Prevention:** Always sanitize data written to CSV files by prepending a single quote (`'`) to fields that begin with dangerous characters.

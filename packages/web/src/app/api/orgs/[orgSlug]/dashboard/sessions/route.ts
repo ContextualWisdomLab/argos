@@ -71,9 +71,20 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
+export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
-  const text = String(value)
+
+  if (typeof value === 'number') {
+    return value
+  }
+
+  let text = String(value)
+
+  // Prevent CSV Injection (Formula Injection)
+  if (/^[=\+\-@\t\r]/.test(text)) {
+    text = "'" + text
+  }
+
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
@@ -239,7 +250,7 @@ export async function GET(
       if (ids.length === 0) {
         sessions = []
       } else {
-        // 2) 해당 id들만 기존 include 구조로 하이드레이션 후 rank 순서 복원.
+        // 2) 해당 id들만 기존 거조로 하이드레이션 후 rank 순서 복원.
         const rows = await db.claudeSession.findMany({
           where: { id: { in: ids } },
           include: sessionInclude,
