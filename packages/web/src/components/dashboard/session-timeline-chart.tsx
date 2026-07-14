@@ -35,24 +35,7 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
+function getToolSummaryFromList(relevantTools: ToolCallPoint[]): string {
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
@@ -129,28 +112,54 @@ export function SessionTimelineChart({
   sessionStartedAt,
 }: SessionTimelineChartProps) {
   // ⚡ Bolt: messages 배열을 필터링하고 매핑하는 비용이 높은 작업을 useMemo로 최적화하여
-  // 리렌더링 시마다 발생하는 불필요한 연산을 방지함. (배열 생성 오버헤드 감소)
+  // 리렌더링 시마다 발생하는 불필요한 연산을 방지함.
+  // 배열 filter -> map 체이닝 대신 단일 for 루프 사용하여 배열 할당과 순회 비용을 최적화.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
-    return messages
-      .filter((m) => m.role === 'TOOL')
-      .map((m) => ({
-        timestamp: m.timestamp,
-        toolName: m.toolName ?? 'unknown',
-        parsedTimestamp: new Date(m.timestamp).getTime(),
-      }))
+    const result: ToolCallPoint[] = []
+    for (const m of messages) {
+      if (m.role === 'TOOL') {
+        result.push({
+          timestamp: m.timestamp,
+          toolName: m.toolName ?? 'unknown',
+          parsedTimestamp: new Date(m.timestamp).getTime(),
+        })
+      }
+    }
+    return result
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
-  // 이로 인해 리렌더링 속도가 향상됨.
+  // 이중 루프(O(N*M))로 인한 성능 병목을 해결하기 위해 미리 timestamp를 파싱하고 단일 순회(O(N+M))로 버킷팅함.
   const chartData: ChartDataItem[] = useMemo(() => {
+    const parsedTimelineTimes = usageTimeline.map((u) => new Date(u.timestamp).getTime())
+    const groupedTools: ToolCallPoint[][] = usageTimeline.map(() => [])
+
+    let toolIdx = 0
+    for (let i = 0; i < parsedTimelineTimes.length; i++) {
+      const currentTimestamp = parsedTimelineTimes[i]!
+      const prevTimestamp = i > 0 ? parsedTimelineTimes[i - 1]! : 0
+
+      while (toolIdx < toolCalls.length) {
+        const tool = toolCalls[toolIdx]!
+        if (tool.parsedTimestamp <= currentTimestamp) {
+          if (tool.parsedTimestamp > prevTimestamp) {
+            groupedTools[i]!.push(tool)
+          }
+          toolIdx++
+        } else {
+          break
+        }
+      }
+    }
+
     return usageTimeline.map((u, idx) => ({
       relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
       input: u.inputTokens,
       output: u.outputTokens,
       cost: u.estimatedCostUsd,
       model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+      toolSummary: getToolSummaryFromList(groupedTools[idx]!),
     }))
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
