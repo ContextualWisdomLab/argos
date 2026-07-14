@@ -1,16 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-
-// Mock server-only and next headers to avoid import errors in this unit test
-vi.mock('server-only', () => ({}))
-vi.mock('next/headers', () => ({
-  cookies: vi.fn(),
-}))
-vi.mock('next/server', () => ({
-  NextRequest: vi.fn(),
-  NextResponse: vi.fn(),
-}))
-
-import { csvField } from './route'
+import { describe, expect, it } from 'vitest'
+import { csvField } from './csv-helper'
 
 describe('csvField', () => {
   it('returns empty string for null or undefined', () => {
