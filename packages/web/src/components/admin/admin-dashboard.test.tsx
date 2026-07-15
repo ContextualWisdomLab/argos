@@ -1,5 +1,4 @@
-import { render, screen, fireEvent, act, cleanup, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { AdminDashboard } from './admin-dashboard';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import React from 'react';
@@ -62,10 +61,10 @@ describe('AdminDashboard UX/A11y', () => {
       },
     ];
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ users: mockUsers }),
-    });
+    } as Response);
 
     render(<AdminDashboard />);
 
@@ -100,10 +99,10 @@ describe('AdminDashboard UX/A11y', () => {
       },
     ];
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ users: mockUsers }),
-    });
+    } as Response);
 
     render(<AdminDashboard />);
 
@@ -112,13 +111,13 @@ describe('AdminDashboard UX/A11y', () => {
     });
 
     // Create link mock
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         url: 'http://example.com/reset',
         expiresAt: new Date(Date.now() + 86400000).toISOString(),
       }),
-    });
+    } as Response);
 
     const createLinkButton = await screen.findByRole('button', { name: /Create reset link/i });
 
