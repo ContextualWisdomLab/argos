@@ -5,3 +5,9 @@
 ## 2024-07-10 - 접을 수 있는 영역(Collapsible Region) 접근성 개선
 **Learning:** `ContextSection` 컴포넌트와 같이 아코디언 형태의 접을 수 있는 영역은 스크린 리더가 컨텐츠의 상태를 올바르게 인식하고 읽어주기 위해 토글 버튼과 컨텐츠 컨테이너 간의 명확한 ARIA 연결이 필요합니다. React의 `useId()` 훅을 사용하여 `aria-controls`, `id`, `aria-labelledby`를 동적으로 생성해 서로 연결하면 안정적입니다. 또한, 컨텐츠 영역에는 `role="region"`이 반드시 필요하다는 점을 확인했습니다.
 **Action:** 향후 접을 수 있는 컴포넌트(Collapsible Region)를 만들거나 수정할 때는 항상 `useId()`를 사용하여 토글 버튼(`aria-controls`)과 컨텐츠 컨테이너(`id`, `role="region"`, `aria-labelledby`)를 동적으로 연결하도록 합니다. 추가로 키보드 네비게이션 사용자를 위한 명확한 포커스 링(`focus-visible` 관련 클래스 적용) 처리도 잊지 말아야 합니다.
+## 2024-07-15 - Dynamic Feedback for Clipboard Actions & Bare Button A11y
+**Learning:**
+- Relying solely on textual feedback (like changing "Copy" to "Copied") is often insufficient for users interacting with clipboard actions. Visual cues, such as swapping out the `Copy` icon for a `Check` icon and implementing an automatic state reset (e.g., using `setTimeout` for 2 seconds), greatly improves the clarity of success state.
+- When creating custom interactive elements (like bare `<button>` tags without a UI component wrapper), adding `aria-pressed={condition}` is critical for screen reader users to identify selected items in a list.
+- Keyboard accessibility often needs explicit handling on bare buttons. Adding Tailwind focus-visible classes (`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset`) ensures consistent and visible focus states.
+**Action:** Always implement dynamic icon swapping and automatic state resets for clipboard/copy actions. Furthermore, explicitly add `aria-pressed` and focus indicator classes (via Tailwind `focus-visible:*`) to custom `<button>` elements to maintain keyboard and screen reader accessibility.
