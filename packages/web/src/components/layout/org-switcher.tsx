@@ -128,7 +128,7 @@ export function OrgSwitcher({
             className="gap-2.5 rounded-md px-2 py-1.5 pr-8 text-muted-foreground"
           >
             <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-              <PlusIcon className="size-3.5" />
+              <PlusIcon className="size-3.5" aria-hidden="true" />
             </span>
             <span className="truncate text-sm">Create organization</span>
           </SelectItem>
