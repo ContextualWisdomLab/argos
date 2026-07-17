@@ -83,7 +83,57 @@ export class ERDModel {
     table.foreignKeys.push(fk)
   }
 
+
+  removeTable(name: string): void {
+    if (!this.tables.has(name)) {
+      throw new Error(`Table '${name}' does not exist.`)
+    }
+    // Remove any foreign keys that reference this table
+    for (const table of this.tables.values()) {
+      table.foreignKeys = table.foreignKeys.filter(
+        (fk) => fk.referenceTable !== name
+      )
+    }
+    this.tables.delete(name)
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const columnIndex = table.columns.findIndex((c) => c.name === columnName)
+    if (columnIndex === -1) {
+      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
+    }
+
+    for (const t of this.tables.values()) {
+      const isUsed = t.foreignKeys.some(
+        (fk) => (t.name === tableName && fk.columnName === columnName) ||
+                (fk.referenceTable === tableName && fk.referenceColumn === columnName)
+      )
+      if (isUsed) {
+         throw new Error(`Cannot remove column '${columnName}' because it is referenced by a foreign key.`)
+      }
+    }
+
+    table.columns.splice(columnIndex, 1)
+  }
+
+  removeForeignKey(tableName: string, fkColumnName: string): void {
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const fkIndex = table.foreignKeys.findIndex((fk) => fk.columnName === fkColumnName)
+    if (fkIndex === -1) {
+       throw new Error(`Foreign key on column '${fkColumnName}' does not exist in table '${tableName}'.`)
+    }
+    table.foreignKeys.splice(fkIndex, 1)
+  }
+
   generateDDL(): string {
+
     let ddl = ''
     for (const table of this.tables.values()) {
       ddl += `CREATE TABLE ${table.name} (\n`

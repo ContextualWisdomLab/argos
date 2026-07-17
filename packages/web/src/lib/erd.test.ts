@@ -30,9 +30,34 @@ describe('ERDModel', () => {
       )
     })
 
+
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
     })
+
+    it('should remove a table', () => {
+      model.addTable('users')
+      expect(model.getTable('users')).toBeDefined()
+      model.removeTable('users')
+      expect(model.getTable('users')).toBeUndefined()
+    })
+
+    it('should throw when removing a non-existent table', () => {
+      expect(() => model.removeTable('non_existent')).toThrowError("Table 'non_existent' does not exist.")
+    })
+
+    it('should remove foreign keys when table is removed', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', { columnName: 'user_id', referenceTable: 'users', referenceColumn: 'id' })
+
+      model.removeTable('users')
+      const postsTable = model.getTable('posts')
+      expect(postsTable?.foreignKeys.length).toBe(0)
+    })
+
   })
 
   describe('Column Management', () => {
@@ -58,6 +83,7 @@ describe('ERDModel', () => {
       ).toThrowError("Column 'id' already exists in table 'users'.")
     })
 
+
     it('should reject non-snake-case column names', () => {
       model.addTable('users')
       expect(() =>
@@ -67,6 +93,35 @@ describe('ERDModel', () => {
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
+
+    it('should remove a column', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.removeColumn('users', 'id')
+      const table = model.getTable('users')
+      expect(table?.columns.length).toBe(0)
+    })
+
+    it('should throw when removing column from non-existent table', () => {
+      expect(() => model.removeColumn('non_existent', 'id')).toThrowError("Table 'non_existent' does not exist.")
+    })
+
+    it('should throw when removing non-existent column', () => {
+      model.addTable('users')
+      expect(() => model.removeColumn('users', 'id')).toThrowError("Column 'id' does not exist in table 'users'.")
+    })
+
+    it('should throw when removing a column referenced by foreign key', () => {
+       model.addTable('users')
+       model.addColumn('users', { name: 'id', type: 'integer' })
+       model.addTable('posts')
+       model.addColumn('posts', { name: 'user_id', type: 'integer' })
+       model.addForeignKey('posts', { columnName: 'user_id', referenceTable: 'users', referenceColumn: 'id' })
+
+       expect(() => model.removeColumn('users', 'id')).toThrowError("Cannot remove column 'id' because it is referenced by a foreign key.")
+       expect(() => model.removeColumn('posts', 'user_id')).toThrowError("Cannot remove column 'user_id' because it is referenced by a foreign key.")
+    })
+
   })
 
   describe('Foreign Key Management', () => {
@@ -129,6 +184,7 @@ describe('ERDModel', () => {
       }).toThrowError("Reference column 'non_existent_col' does not exist in table 'users'.")
     })
 
+
     it('should reject non-snake-case foreign key object names', () => {
       expect(() => {
         model.addForeignKey('posts', {
@@ -146,6 +202,22 @@ describe('ERDModel', () => {
         })
       }).toThrowError("Reference table 'UserProfiles' must be snake_case.")
     })
+
+    it('should remove a foreign key', () => {
+      model.addForeignKey('posts', { columnName: 'user_id', referenceTable: 'users', referenceColumn: 'id' })
+      model.removeForeignKey('posts', 'user_id')
+      const postsTable = model.getTable('posts')
+      expect(postsTable?.foreignKeys.length).toBe(0)
+    })
+
+    it('should throw when removing foreign key from non-existent table', () => {
+       expect(() => model.removeForeignKey('non_existent', 'user_id')).toThrowError("Table 'non_existent' does not exist.")
+    })
+
+    it('should throw when removing non-existent foreign key', () => {
+       expect(() => model.removeForeignKey('posts', 'non_existent_fk')).toThrowError("Foreign key on column 'non_existent_fk' does not exist in table 'posts'.")
+    })
+
   })
 
   describe('DDL Generation', () => {

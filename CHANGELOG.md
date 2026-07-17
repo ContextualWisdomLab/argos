@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-07-17]
+
+### 추가됨
+- ERD 도구(`packages/web/src/lib/erd.ts`)에 테이블 삭제(`removeTable`), 컬럼 삭제(`removeColumn`), 외래키 삭제(`removeForeignKey`) 기능이 추가되었습니다.
+
 ## [Unreleased]
 
 ### ✨ 추가 기능 (Feature)
