@@ -26,6 +26,7 @@ type FlatRow =
       idx: number;
       indented: boolean;
       labelOverride?: string;
+      timestampMs: number;
     }
   | {
       kind: "groupHeader";
@@ -35,15 +36,14 @@ type FlatRow =
       firstEvent: TimelineEvent;
       groupFirstIdx: number;
       isExpanded: boolean;
+      timestampMs: number;
     };
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
-  const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+function formatElapsed(tMs: number, sessionStartedAtMs: number): string {
+  if (Number.isNaN(tMs) || Number.isNaN(sessionStartedAtMs)) return "";
+  const diffSec = Math.max(0, Math.floor((tMs - sessionStartedAtMs) / 1000));
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -64,6 +64,7 @@ function buildFlatRows(
         event: group.event,
         idx: group.idx,
         indented: false,
+        timestampMs: new Date(group.event.timestamp).getTime(),
       });
       continue;
     }
@@ -76,6 +77,7 @@ function buildFlatRows(
         idx,
         indented: false,
         labelOverride: "Tool",
+        timestampMs: new Date(event.timestamp).getTime(),
       });
       continue;
     }
@@ -91,6 +93,7 @@ function buildFlatRows(
       firstEvent: group.items[0].event,
       groupFirstIdx: firstIdx,
       isExpanded,
+      timestampMs: new Date(group.items[0].event.timestamp).getTime(),
     });
     if (isExpanded) {
       for (const { event, idx } of group.items) {
@@ -101,6 +104,7 @@ function buildFlatRows(
           idx,
           indented: true,
           labelOverride: "Tool",
+          timestampMs: new Date(event.timestamp).getTime(),
         });
       }
     }
@@ -207,7 +211,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedAtMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +221,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedAtMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +234,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.timestampMs, sessionStartedAtMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -252,7 +256,7 @@ function Row({
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.timestampMs, sessionStartedAtMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -271,6 +275,10 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  // ⚡ Bolt: Pre-parse sessionStartedAt string into timestamp number outside the virtualized render loop
+  // This avoids expensive repetitive string parsing (new Date().getTime()) during rapid scroll events
+  const sessionStartedAtMs = useMemo(() => new Date(sessionStartedAt).getTime(), [sessionStartedAt]);
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -292,7 +300,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedAtMs,
         onSelect,
         onToggleGroup,
       }}
