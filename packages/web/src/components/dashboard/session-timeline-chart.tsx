@@ -35,37 +35,16 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
+function formatToolSummary(tools: ToolCallPoint[]): string {
+  if (tools.length === 0) return ''
 
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
-  if (relevantTools.length === 0) return ''
-
-  // 이름별로 카운트
   const counts = new Map<string, number>()
-  for (const tool of relevantTools) {
+  for (const tool of tools) {
     const name = tool.toolName || 'unknown'
     counts.set(name, (counts.get(name) || 0) + 1)
   }
 
-  // 배열로 변환하여 카운트 내림차순 정렬
   const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
-
-  // 최대 3개까지만 표시
   const displayCount = Math.min(3, sorted.length)
   const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
     return count > 1 ? `${name} x${count}` : name
@@ -144,14 +123,44 @@ export function SessionTimelineChart({
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
-    return usageTimeline.map((u, idx) => ({
-      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-      input: u.inputTokens,
-      output: u.outputTokens,
-      cost: u.estimatedCostUsd,
-      model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
+    // ⚡ Bolt: O(N*M) nested loop replaced with O(N+M) pointer-based algorithm
+    // by pre-sorting usage and tools by timestamp. This significantly improves
+    // performance for large sessions with many tools and usage records.
+    const sortedUsage = [...usageTimeline].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    )
+
+    const sortedTools = [...toolCalls].sort(
+      (a, b) => a.parsedTimestamp - b.parsedTimestamp
+    )
+
+    const result: ChartDataItem[] = []
+    let toolIdx = 0
+
+    for (let i = 0; i < sortedUsage.length; i++) {
+      const u = sortedUsage[i]!
+      const currentTimestamp = new Date(u.timestamp).getTime()
+
+      const bucketTools: ToolCallPoint[] = []
+      while (
+        toolIdx < sortedTools.length &&
+        sortedTools[toolIdx]!.parsedTimestamp <= currentTimestamp
+      ) {
+        bucketTools.push(sortedTools[toolIdx]!)
+        toolIdx++
+      }
+
+      result.push({
+        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+        input: u.inputTokens,
+        output: u.outputTokens,
+        cost: u.estimatedCostUsd,
+        model: u.model,
+        toolSummary: formatToolSummary(bucketTools),
+      })
+    }
+
+    return result
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
   if (usageTimeline.length === 0) {
