@@ -16,3 +16,7 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+## 2026-06-10 - DDL Injection in ERD Model
+**Vulnerability:** The `ERDModel` in `packages/web/src/lib/erd.ts` allows arbitrary strings for column types. This can lead to DDL injection if user input is used for column types, allowing users to inject malicious SQL (e.g., `TEXT\n);\nDROP TABLE users;--`).
+**Learning:** Even internal tool models generating SQL/DDL need strict validation on all properties, not just identifiers (table/column names), because types are concatenated directly into the DDL string.
+**Prevention:** Implement strict validation for column types (e.g., alphanumeric and parentheses only) to prevent injection of special characters like semicolons, quotes, and newlines.
