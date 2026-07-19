@@ -26,6 +26,7 @@ type FlatRow =
       idx: number;
       indented: boolean;
       labelOverride?: string;
+      timestampNum: number;
     }
   | {
       kind: "groupHeader";
@@ -35,15 +36,21 @@ type FlatRow =
       firstEvent: TimelineEvent;
       groupFirstIdx: number;
       isExpanded: boolean;
+      timestampNum: number;
     };
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
-  const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+function formatElapsed(
+  timestampNum: number,
+  sessionStartTimeNum: number,
+): string {
+  if (Number.isNaN(timestampNum) || Number.isNaN(sessionStartTimeNum))
+    return "";
+  const diffSec = Math.max(
+    0,
+    Math.floor((timestampNum - sessionStartTimeNum) / 1000),
+  );
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -64,6 +71,7 @@ function buildFlatRows(
         event: group.event,
         idx: group.idx,
         indented: false,
+        timestampNum: new Date(group.event.timestamp).getTime(),
       });
       continue;
     }
@@ -76,6 +84,7 @@ function buildFlatRows(
         idx,
         indented: false,
         labelOverride: "Tool",
+        timestampNum: new Date(event.timestamp).getTime(),
       });
       continue;
     }
@@ -91,6 +100,7 @@ function buildFlatRows(
       firstEvent: group.items[0].event,
       groupFirstIdx: firstIdx,
       isExpanded,
+      timestampNum: new Date(group.items[0].event.timestamp).getTime(),
     });
     if (isExpanded) {
       for (const { event, idx } of group.items) {
@@ -101,6 +111,7 @@ function buildFlatRows(
           idx,
           indented: true,
           labelOverride: "Tool",
+          timestampNum: new Date(event.timestamp).getTime(),
         });
       }
     }
@@ -123,7 +134,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -207,7 +219,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartTimeNum: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +229,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartTimeNum,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +242,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.timestampNum, sessionStartTimeNum)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -241,18 +253,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.timestampNum, sessionStartTimeNum)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -276,6 +289,12 @@ export function EventList({
     [groups, expandedGroups, selectedIdx],
   );
 
+  // Pre-calculate sessionStartTimeNum to prevent parsing string in every Row render
+  const sessionStartTimeNum = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt],
+  );
+
   if (events.length === 0) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">
@@ -292,7 +311,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartTimeNum,
         onSelect,
         onToggleGroup,
       }}
