@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -145,8 +145,13 @@ export function AdminDashboard() {
 
   async function handleCopy() {
     if (!resetLink) return
-    await navigator.clipboard.writeText(resetLink.url)
-    setCopied(true)
+    try {
+      await navigator.clipboard.writeText(resetLink.url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard API unavailable or blocked; fail silently
+    }
   }
 
   return (
@@ -209,7 +214,8 @@ export function AdminDashboard() {
                       <button
                         key={user.id}
                         type="button"
-                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
+                        aria-current={selected ? 'true' : undefined}
+                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
                           setSelectedUserId(user.id)
                           setResetLink(null)
@@ -279,7 +285,11 @@ export function AdminDashboard() {
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
                       <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        <Copy className="size-4" aria-hidden="true" />
+                        {copied ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-4" aria-hidden="true" />
+                        )}
                         {copied ? 'Copied' : 'Copy link'}
                       </Button>
                       <p className="text-xs text-muted-foreground">
