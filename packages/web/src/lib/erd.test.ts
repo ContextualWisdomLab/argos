@@ -33,6 +33,66 @@ describe('ERDModel', () => {
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
     })
+
+    it('should remove an existing table', () => {
+      model.addTable('users')
+      expect(model.getTables().length).toBe(1)
+      model.removeTable('users')
+      expect(model.getTables().length).toBe(0)
+    })
+
+    it('should throw when removing non-existent table', () => {
+      expect(() => model.removeTable('users')).toThrowError("Table 'users' does not exist.")
+    })
+
+    it('should throw when removing table that is referenced by another table', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+      expect(() => model.removeTable('users')).toThrowError(
+        "Cannot remove table 'users' because table 'posts' references it."
+      )
+    })
+
+    it('should correctly bypass self-referencing check (for coverage)', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addColumn('users', { name: 'manager_id', type: 'integer' })
+      model.addForeignKey('users', {
+        columnName: 'manager_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+      // Self-reference does not block removal based on current implementation logic,
+      // where `if (table.name !== name)` skips the self.
+      model.removeTable('users')
+      expect(model.getTables().length).toBe(0)
+    })
+
+    it('should continue loop safely if foreign keys reference other tables (for coverage)', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'id', type: 'integer' })
+      model.addTable('comments')
+      model.addColumn('comments', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('comments', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      // We are removing 'posts', 'comments' references 'users' (not 'posts').
+      // This will trigger the loop but not hit the throw condition.
+      model.removeTable('posts')
+      expect(model.getTable('posts')).toBeUndefined()
+    })
   })
 
   describe('Column Management', () => {
@@ -66,6 +126,88 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
+    })
+
+    it('should remove a column from an existing table', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      expect(model.getTable('users')?.columns.length).toBe(1)
+      model.removeColumn('users', 'id')
+      expect(model.getTable('users')?.columns.length).toBe(0)
+    })
+
+    it('should throw when removing column from non-existent table', () => {
+      expect(() => model.removeColumn('users', 'id')).toThrowError("Table 'users' does not exist.")
+    })
+
+    it('should throw when removing non-existent column', () => {
+      model.addTable('users')
+      expect(() => model.removeColumn('users', 'id')).toThrowError("Column 'id' does not exist in table 'users'.")
+    })
+
+    it('should throw when removing column referenced by another table', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+      expect(() => model.removeColumn('users', 'id')).toThrowError(
+        "Cannot remove column 'id' because table 'posts' references it."
+      )
+    })
+
+    it('should clean up foreign keys when removing a column with a foreign key', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      expect(model.getTable('posts')?.foreignKeys.length).toBe(1)
+      model.removeColumn('posts', 'user_id')
+      expect(model.getTable('posts')?.columns.length).toBe(0)
+      expect(model.getTable('posts')?.foreignKeys.length).toBe(0)
+    })
+
+    it('should correctly bypass self-referencing check for column removal (for coverage)', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addColumn('users', { name: 'manager_id', type: 'integer' })
+      model.addForeignKey('users', {
+        columnName: 'manager_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+      model.removeColumn('users', 'id')
+      expect(model.getTable('users')?.columns.length).toBe(1)
+    })
+
+    it('should continue loop safely if foreign keys reference other columns (for coverage)', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addColumn('users', { name: 'email', type: 'varchar' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'id', type: 'integer' })
+      model.addTable('comments')
+      model.addColumn('comments', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('comments', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      // We are removing 'email' from 'users', 'comments' references 'users(id)'.
+      // This will trigger the loop but not hit the throw condition.
+      model.removeColumn('users', 'email')
+      expect(model.getTable('users')?.columns.length).toBe(1)
     })
   })
 
@@ -164,6 +306,21 @@ describe('ERDModel', () => {
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   bio TEXT
+);`
+      expect(ddl).toBe(expected)
+    })
+
+    it('should generate correct DDL for column with unique and default constraints', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'SERIAL', isPrimaryKey: true })
+      model.addColumn('users', { name: 'email', type: 'VARCHAR(255)', isUnique: true })
+      model.addColumn('users', { name: 'status', type: 'VARCHAR(50)', defaultValue: "'active'" })
+
+      const ddl = model.generateDDL()
+      const expected = `CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE,
+  status VARCHAR(50) DEFAULT 'active'
 );`
       expect(ddl).toBe(expected)
     })

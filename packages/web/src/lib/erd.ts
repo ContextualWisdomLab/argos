@@ -3,6 +3,8 @@ export interface Column {
   type: string
   isPrimaryKey?: boolean
   isNullable?: boolean
+  isUnique?: boolean
+  defaultValue?: string
 }
 
 export interface ForeignKey {
@@ -38,6 +40,23 @@ export class ERDModel {
     return table
   }
 
+  removeTable(name: string): void {
+    if (!this.tables.has(name)) {
+      throw new Error(`Table '${name}' does not exist.`)
+    }
+    // 다른 테이블에서 이 테이블을 참조하고 있는지 확인
+    for (const table of this.tables.values()) {
+      if (table.name !== name) {
+        for (const fk of table.foreignKeys) {
+          if (fk.referenceTable === name) {
+            throw new Error(`Cannot remove table '${name}' because table '${table.name}' references it.`)
+          }
+        }
+      }
+    }
+    this.tables.delete(name)
+  }
+
   getTable(name: string): Table | undefined {
     return this.tables.get(name)
   }
@@ -57,6 +76,32 @@ export class ERDModel {
       throw new Error(`Column '${column.name}' already exists in table '${tableName}'.`)
     }
     table.columns.push(column)
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const columnIndex = table.columns.findIndex((c) => c.name === columnName)
+    if (columnIndex === -1) {
+      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
+    }
+
+    // 다른 테이블에서 이 컬럼을 참조하고 있는지 확인
+    for (const t of this.tables.values()) {
+      if (t.name !== tableName) {
+        for (const fk of t.foreignKeys) {
+          if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
+            throw new Error(`Cannot remove column '${columnName}' because table '${t.name}' references it.`)
+          }
+        }
+      }
+    }
+
+    // 자기 자신의 외래키 중 해당 컬럼을 사용하는 항목 자동 정리
+    table.foreignKeys = table.foreignKeys.filter((fk) => fk.columnName !== columnName)
+    table.columns.splice(columnIndex, 1)
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
@@ -94,6 +139,12 @@ export class ERDModel {
         }
         if (col.isNullable === false) {
           def += ' NOT NULL'
+        }
+        if (col.isUnique) {
+          def += ' UNIQUE'
+        }
+        if (col.defaultValue !== undefined) {
+          def += ` DEFAULT ${col.defaultValue}`
         }
         return def
       })
