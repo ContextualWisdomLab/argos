@@ -13,3 +13,9 @@
 ### 🎨 변경 사항 (UX / 접근성)
 
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
+
+### ERD 도구 기능 확장 및 무결성 강화
+- `Column` 인터페이스에 `isUnique`, `defaultValue` 속성 추가
+- `removeTable`, `removeColumn`, `removeForeignKey` 메서드 추가 및 삭제 시 참조 무결성 검증 방어 로직 구현
+- DDL 생성 시 UNIQUE 제약 조건 및 DEFAULT 값 구문 지원
+- 관련된 모든 기능에 대해 100% 테스트 커버리지 달성 및 예외 케이스 처리
