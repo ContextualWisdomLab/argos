@@ -26,6 +26,7 @@ type FlatRow =
       idx: number;
       indented: boolean;
       labelOverride?: string;
+      timeStr: string;
     }
   | {
       kind: "groupHeader";
@@ -35,13 +36,14 @@ type FlatRow =
       firstEvent: TimelineEvent;
       groupFirstIdx: number;
       isExpanded: boolean;
+      timeStr: string;
     };
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+function formatElapsed(timestamp: string, sessionStartedAtMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
+  const start = sessionStartedAtMs;
   if (Number.isNaN(t) || Number.isNaN(start)) return "";
   const diffSec = Math.max(0, Math.floor((t - start) / 1000));
   const h = Math.floor(diffSec / 3600);
@@ -54,6 +56,7 @@ function buildFlatRows(
   groups: TimelineGroup[],
   expandedGroups: Set<number>,
   selectedIdx: number,
+  sessionStartedAtMs: number,
 ): FlatRow[] {
   const rows: FlatRow[] = [];
   for (const group of groups) {
@@ -64,6 +67,7 @@ function buildFlatRows(
         event: group.event,
         idx: group.idx,
         indented: false,
+        timeStr: formatElapsed(group.event.timestamp, sessionStartedAtMs),
       });
       continue;
     }
@@ -76,6 +80,7 @@ function buildFlatRows(
         idx,
         indented: false,
         labelOverride: "Tool",
+        timeStr: formatElapsed(event.timestamp, sessionStartedAtMs),
       });
       continue;
     }
@@ -91,6 +96,10 @@ function buildFlatRows(
       firstEvent: group.items[0].event,
       groupFirstIdx: firstIdx,
       isExpanded,
+      timeStr: formatElapsed(
+        group.items[0].event.timestamp,
+        sessionStartedAtMs,
+      ),
     });
     if (isExpanded) {
       for (const { event, idx } of group.items) {
@@ -101,6 +110,7 @@ function buildFlatRows(
           idx,
           indented: true,
           labelOverride: "Tool",
+          timeStr: formatElapsed(event.timestamp, sessionStartedAtMs),
         });
       }
     }
@@ -123,7 +133,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -207,7 +218,6 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +227,6 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +239,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={row.timeStr}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -241,18 +250,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={row.timeStr}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -271,9 +281,16 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  // ⚡ Bolt: 문자열 파싱 오버헤드를 Row 렌더러 루프 밖으로 이동시킵니다.
+  const sessionStartedAtMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt],
+  );
+
   const rows = useMemo(
-    () => buildFlatRows(groups, expandedGroups, selectedIdx),
-    [groups, expandedGroups, selectedIdx],
+    () =>
+      buildFlatRows(groups, expandedGroups, selectedIdx, sessionStartedAtMs),
+    [groups, expandedGroups, selectedIdx, sessionStartedAtMs],
   );
 
   if (events.length === 0) {
@@ -292,7 +309,6 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
         onSelect,
         onToggleGroup,
       }}
