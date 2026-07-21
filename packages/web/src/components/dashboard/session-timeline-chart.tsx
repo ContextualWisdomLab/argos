@@ -35,24 +35,7 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
+function getToolSummary(relevantTools: ToolCallPoint[]): string {
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
@@ -138,19 +121,52 @@ export function SessionTimelineChart({
         toolName: m.toolName ?? 'unknown',
         parsedTimestamp: new Date(m.timestamp).getTime(),
       }))
+      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
+    // ⚡ Bolt: O(N*M) 중첩 루프를 O(N+M) 포인터 기반 알고리즘으로 최적화하여
+    // 수천 개의 이벤트가 있을 때의 차트 렌더링 성능을 극대화함.
+    const sortedUsage = usageTimeline
+      .map((u, idx) => ({ ...u, originalIdx: idx, parsedTimestamp: new Date(u.timestamp).getTime() }))
+      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+
+    const groupedTools = new Map<number, ToolCallPoint[]>()
+    let toolIdx = 0
+
+    for (let i = 0; i < sortedUsage.length; i++) {
+      const currentTimestamp = sortedUsage[i]!.parsedTimestamp
+      const prevTimestamp = i > 0 ? sortedUsage[i - 1]!.parsedTimestamp : 0
+
+      const relevantTools: ToolCallPoint[] = []
+
+      // prevTimestamp 이전의 도구 호출 건너뛰기
+      while (toolIdx < toolCalls.length && toolCalls[toolIdx]!.parsedTimestamp <= prevTimestamp) {
+        toolIdx++
+      }
+
+      // 현재 구간(prevTimestamp 초과, currentTimestamp 이하)의 도구 호출 수집
+      let j = toolIdx
+      while (j < toolCalls.length && toolCalls[j]!.parsedTimestamp <= currentTimestamp) {
+        if (toolCalls[j]!.parsedTimestamp > prevTimestamp) {
+          relevantTools.push(toolCalls[j]!)
+        }
+        j++
+      }
+
+      groupedTools.set(sortedUsage[i]!.originalIdx, relevantTools)
+    }
+
     return usageTimeline.map((u, idx) => ({
       relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
       input: u.inputTokens,
       output: u.outputTokens,
       cost: u.estimatedCostUsd,
       model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+      toolSummary: getToolSummary(groupedTools.get(idx) || []),
     }))
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
