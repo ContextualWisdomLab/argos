@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2026-07-21 - [ERD 모델의 무결성 검증 추가]
+**Vulnerability:** 테이블이나 컬럼을 삭제할 때 외래 키 참조 관계를 무시하고 삭제를 수행하면 데이터 불일치 및 시스템 에러를 유발할 수 있습니다.
+**Learning:** 메모리 내 모델이라 하더라도, 도메인 주도 설계에서 엔티티의 참조 무결성을 보장하지 않으면 예기치 않은 부작용이나 보안상 악용될 수 있는 엣지 케이스가 발생합니다.
+**Prevention:** 삭제 작업 전 항상 참조 중인 다른 객체나 외래 키에 대한 방어적 검증 로직(Defensive Validation)을 필수로 수행해야 합니다.

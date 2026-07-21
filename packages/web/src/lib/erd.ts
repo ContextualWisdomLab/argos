@@ -83,6 +83,90 @@ export class ERDModel {
     table.foreignKeys.push(fk)
   }
 
+  removeTable(name: string): void {
+    const table = this.tables.get(name)
+    if (!table) {
+      throw new Error(`Table '${name}' does not exist.`)
+    }
+    // Cannot remove if referenced by another table
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === name) {
+          throw new Error(`Cannot remove table '${name}' because it is referenced by '${t.name}'.`)
+        }
+      }
+    }
+    this.tables.delete(name)
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const columnIdx = table.columns.findIndex((c) => c.name === columnName)
+    if (columnIdx === -1) {
+      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
+    }
+
+    // Cannot remove if used in a foreign key
+    if (table.foreignKeys.some((fk) => fk.columnName === columnName)) {
+      throw new Error(`Cannot remove column '${columnName}' because it is used in a foreign key.`)
+    }
+
+    // Cannot remove if referenced by another table
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
+          throw new Error(`Cannot remove column '${columnName}' because it is referenced by '${t.name}'.`)
+        }
+      }
+    }
+
+    table.columns.splice(columnIdx, 1)
+  }
+
+  removeForeignKey(tableName: string, columnName: string, referenceTable: string, referenceColumn: string): void {
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const fkIdx = table.foreignKeys.findIndex(
+      (fk) => fk.columnName === columnName && fk.referenceTable === referenceTable && fk.referenceColumn === referenceColumn
+    )
+    if (fkIdx === -1) {
+      throw new Error(`Foreign key not found.`)
+    }
+    table.foreignKeys.splice(fkIdx, 1)
+  }
+
+  generateMermaid(): string {
+    let mermaid = 'erDiagram\n'
+
+    for (const table of this.tables.values()) {
+      mermaid += `  ${table.name} {\n`
+      for (const col of table.columns) {
+        let pkFk = ''
+        if (col.isPrimaryKey) pkFk = ' PK'
+        // also check if this column is part of a foreign key
+        if (table.foreignKeys.some((fk) => fk.columnName === col.name)) {
+          pkFk += ' FK'
+        }
+        mermaid += `    ${col.type} ${col.name}${pkFk.trim() ? ' ' + pkFk.trim() : ''}\n`
+      }
+      mermaid += `  }\n`
+    }
+
+    // Add relationships
+    for (const table of this.tables.values()) {
+      for (const fk of table.foreignKeys) {
+        mermaid += `  ${table.name} ||--o{ ${fk.referenceTable} : "${fk.columnName} references ${fk.referenceColumn}"\n`
+      }
+    }
+
+    return mermaid.trim()
+  }
+
   generateDDL(): string {
     let ddl = ''
     for (const table of this.tables.values()) {
