@@ -10,7 +10,7 @@
     "coverage": "pnpm install --frozen-lockfile && pnpm --filter @argos/web run coverage:erd"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@eslint/eslintrc": "^3.3.5",
     "eslint": "^9",
     "turbo": "^2.9.16",
     "typescript-eslint": "^8"
@@ -21,7 +21,9 @@
       "@babel/core": "7.29.7",
       "esbuild": "0.28.1",
       "hono": "4.12.25",
-      "js-yaml": "4.2.0"
+      "js-yaml": "4.3.0",
+      "body-parser": "2.3.0",
+      "brace-expansion": "1.1.16"
     }
   }
 }
