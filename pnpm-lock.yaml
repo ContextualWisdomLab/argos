@@ -9,8 +9,6 @@ overrides:
   esbuild: 0.28.1
   hono: 4.12.25
   js-yaml: 4.2.0
-  brace-expansion@<1.1.16: '>=1.1.16'
-  brace-expansion@>=3.0.0 <5.0.7: '>=5.0.7'
   js-yaml@>=4.0.0 <4.3.0: '>=4.3.0'
   body-parser@>=2.0.0 <2.3.0: '>=2.3.0'
   hono@>=4.3.3 <4.12.27: '>=4.12.27'
@@ -1941,6 +1939,9 @@ packages:
     resolution: {integrity: sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==}
     engines: {node: '>=18'}
 
+  brace-expansion@1.1.16:
+    resolution: {integrity: sha512-IDw48K2/2kRkg9LdJxurvq3lV3aBgq0REY89duEqFRthjlPdXHKMj7EnQOXVckxzgisinf3nHfrcE2FufFLXMw==}
+
   brace-expansion@2.1.2:
     resolution: {integrity: sha512-w5JZcKgdhDOgOwm8H+KgbosopHMuGcl6qbulwjtz3SM7I7P3yW1eAjzMPLrIE+NQ9vjgANKHWeMHnrT0OXW1oA==}
 
@@ -2090,6 +2091,9 @@ packages:
   commander@14.0.3:
     resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
+
+  concat-map@0.0.1:
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   confbox@0.2.4:
     resolution: {integrity: sha512-ysOGlgTFbN2/Y6Cg3Iye8YKulHw+R2fNXHrgSmXISQdMnomY6eNDprVdW9R5xBguEqI954+S6709UyiO7B+6OQ==}
@@ -6355,6 +6359,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  brace-expansion@1.1.16:
+    dependencies:
+      balanced-match: 1.0.2
+      concat-map: 0.0.1
+
   brace-expansion@2.1.2:
     dependencies:
       balanced-match: 1.0.2
@@ -6497,6 +6506,8 @@ snapshots:
   commander@12.1.0: {}
 
   commander@14.0.3: {}
+
+  concat-map@0.0.1: {}
 
   confbox@0.2.4: {}
 
@@ -8296,7 +8307,7 @@ snapshots:
 
   minimatch@3.1.5:
     dependencies:
-      brace-expansion: 5.0.7
+      brace-expansion: 1.1.16
 
   minimatch@9.0.9:
     dependencies:
