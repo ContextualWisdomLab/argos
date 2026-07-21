@@ -19,6 +19,13 @@ describe('LoginRequestSchema', () => {
       LoginRequestSchema.safeParse({ email: 'a@b.com', password: '1234567' }).success,
     ).toBe(false)
   })
+
+  it('비밀번호가 1025자 이상이면 실패한다 (max 1024 경계)', () => {
+    const longPassword = 'a'.repeat(1025)
+    expect(
+      LoginRequestSchema.safeParse({ email: 'a@b.com', password: longPassword }).success,
+    ).toBe(false)
+  })
 })
 
 describe('RegisterRequestSchema', () => {
@@ -32,6 +39,13 @@ describe('RegisterRequestSchema', () => {
     expect(
       RegisterRequestSchema.safeParse({ email: 'a@b.com', password: '12345678', name: 'k' }).success,
     ).toBe(true)
+  })
+
+  it('비밀번호가 1025자 이상이면 실패한다 (max 1024 경계)', () => {
+    const longPassword = 'a'.repeat(1025)
+    expect(
+      RegisterRequestSchema.safeParse({ email: 'a@b.com', password: longPassword, name: 'k' }).success,
+    ).toBe(false)
   })
 })
 
