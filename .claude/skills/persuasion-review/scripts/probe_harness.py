@@ -21,6 +21,10 @@ import subprocess
 import time
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlsplit
+
+
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
 
 
 def free_port() -> int:
@@ -29,11 +33,46 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+def _validated_loopback_http_url(url: str) -> str:
+    """Return ``url`` only when it targets the local UX probe server."""
+    try:
+        parsed = urlsplit(url)
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("probe readiness URL is malformed") from exc
+
+    if (
+        parsed.scheme not in {"http", "https"}
+        or parsed.hostname not in _LOOPBACK_HOSTS
+        or parsed.username is not None
+        or parsed.password is not None
+        or not parsed.netloc
+    ):
+        raise ValueError("probe readiness URL must be loopback HTTP(S)")
+    if port is not None and not 1 <= port <= 65535:
+        raise ValueError("probe readiness URL port is out of range")
+    return url
+
+
+class _LoopbackRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Allow redirects only when they remain on a loopback HTTP(S) target."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _validated_loopback_http_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_LOOPBACK_OPENER = urllib.request.build_opener(_LoopbackRedirectHandler)
+
+
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
+    ready_url = _validated_loopback_http_url(url)
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- validated above as loopback HTTP(S) only.
+            with _LOOPBACK_OPENER.open(ready_url, timeout=1) as response:
+                response.read()
             return True
         except Exception:
             time.sleep(0.2)
