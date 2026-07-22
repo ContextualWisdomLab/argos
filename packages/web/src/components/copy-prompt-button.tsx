@@ -1,7 +1,7 @@
 "use client";
 
+import React, { useState } from "react";
 import { Check, Copy } from "lucide-react";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -37,9 +37,10 @@ export function CopyPromptButton({
       size="sm"
       variant="outline"
       onClick={handleCopy}
+      aria-pressed={copied}
       className={cn("gap-1.5", className)}
     >
-      {copied ? <Check /> : <Copy />}
+      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
       {copied ? copiedLabel : label}
     </Button>
   );
