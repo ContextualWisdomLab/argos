@@ -53,7 +53,7 @@ class ValidatedLoopbackHttpUrlTests(unittest.TestCase):
 
     def test_accepts_relative_redirects_resolved_against_loopback(self) -> None:
         handler = _LoopbackRedirectHandler()
-        request = urllib.request.Request("http://127.0.0.1:3000/start")
+        request = urllib.request.Request("https://127.0.0.1:3000/start")
 
         redirected = handler.redirect_request(
             request,
@@ -65,11 +65,11 @@ class ValidatedLoopbackHttpUrlTests(unittest.TestCase):
         )
 
         self.assertIsNotNone(redirected)
-        self.assertEqual(redirected.full_url, "http://127.0.0.1:3000/ready")
+        self.assertEqual(redirected.full_url, "https://127.0.0.1:3000/ready")
 
     def test_rejects_relative_redirects_resolved_off_loopback(self) -> None:
         handler = _LoopbackRedirectHandler()
-        request = urllib.request.Request("http://127.0.0.1:3000/start")
+        request = urllib.request.Request("https://127.0.0.1:3000/start")
 
         with self.assertRaises(ValueError):
             handler.redirect_request(
@@ -80,6 +80,20 @@ class ValidatedLoopbackHttpUrlTests(unittest.TestCase):
                 {},
                 "//example.com/ready",
             )
+
+    def test_direct_loopback_validation_without_source_request_is_safe(self) -> None:
+        handler = _LoopbackRedirectHandler()
+
+        redirected = handler.redirect_request(
+            None,
+            None,
+            302,
+            "Found",
+            {},
+            "https://localhost/ready",
+        )
+
+        self.assertIsNone(redirected)
 
     def test_malformed_readiness_url_returns_false(self) -> None:
         self.assertFalse(wait_http_ready("https://example.com/ready", 0.01))

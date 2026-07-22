@@ -62,7 +62,7 @@ class _LoopbackRedirectHandler(urllib.request.HTTPRedirectHandler):
             # Preserve the direct-call validation boundary used by tests and
             # defensive callers that do not have a source request to resolve.
             _validated_loopback_http_url(newurl)
-            return super().redirect_request(req, fp, code, msg, headers, newurl)
+            return None
 
         resolved_url = urljoin(req.full_url, newurl)
         redirected_request = super().redirect_request(
