@@ -630,8 +630,9 @@ export function aggregateSummary(
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
   // Postgres COLLATE "C" 와 정렬 결과 일치시켜 skills route 와 동일 순서 보장).
-  const topSkills = Object.entries(skillCounts)
-    .map(([skillName, callCount]) => ({ skillName, callCount }))
+  // ⚡ Bolt: Use Object.keys() instead of Object.entries() to avoid array tuple allocations.
+  const topSkills = Object.keys(skillCounts)
+    .map((skillName) => ({ skillName, callCount: skillCounts[skillName]! }))
     .sort((a, b) => {
       if (b.callCount !== a.callCount) return b.callCount - a.callCount
       return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0
@@ -639,17 +640,17 @@ export function aggregateSummary(
     .slice(0, topSkillsN)
 
   // Deterministic tie-break: callCount DESC, agentType ASC (codepoint binary).
-  const topAgents = Object.entries(agentCounts)
-    .map(([agentType, callCount]) => ({ agentType, callCount }))
+  const topAgents = Object.keys(agentCounts)
+    .map((agentType) => ({ agentType, callCount: agentCounts[agentType]! }))
     .sort((a, b) => {
       if (b.callCount !== a.callCount) return b.callCount - a.callCount
       return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0
     })
     .slice(0, topAgentsN)
 
-  const modelShare = Object.entries(modelTokens)
-    .filter(([, v]) => v > 0)
-    .map(([model, totalTokens]) => ({ model, totalTokens }))
+  const modelShare = Object.keys(modelTokens)
+    .filter((model) => modelTokens[model]! > 0)
+    .map((model) => ({ model, totalTokens: modelTokens[model]! }))
     .sort((a, b) => b.totalTokens - a.totalTokens)
 
   return {
