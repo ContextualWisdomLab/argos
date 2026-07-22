@@ -1,8 +1,15 @@
 """Regression tests for the UX probe readiness boundary."""
 
 import unittest
+import urllib.request
+from unittest import mock
 
-from probe_harness import _LoopbackRedirectHandler, _validated_loopback_http_url
+from probe_harness import (
+    _LoopbackRedirectHandler,
+    _validated_loopback_http_url,
+    spawn_and_wait_ready,
+    wait_http_ready,
+)
 
 
 class ValidatedLoopbackHttpUrlTests(unittest.TestCase):
@@ -43,6 +50,58 @@ class ValidatedLoopbackHttpUrlTests(unittest.TestCase):
                 {},
                 "https://example.com/ready",
             )
+
+    def test_accepts_relative_redirects_resolved_against_loopback(self) -> None:
+        handler = _LoopbackRedirectHandler()
+        request = urllib.request.Request("http://127.0.0.1:3000/start")
+
+        redirected = handler.redirect_request(
+            request,
+            None,
+            302,
+            "Found",
+            {},
+            "/ready",
+        )
+
+        self.assertIsNotNone(redirected)
+        self.assertEqual(redirected.full_url, "http://127.0.0.1:3000/ready")
+
+    def test_rejects_relative_redirects_resolved_off_loopback(self) -> None:
+        handler = _LoopbackRedirectHandler()
+        request = urllib.request.Request("http://127.0.0.1:3000/start")
+
+        with self.assertRaises(ValueError):
+            handler.redirect_request(
+                request,
+                None,
+                302,
+                "Found",
+                {},
+                "//example.com/ready",
+            )
+
+    def test_malformed_readiness_url_returns_false(self) -> None:
+        self.assertFalse(wait_http_ready("https://example.com/ready", 0.01))
+
+    @mock.patch("probe_harness._terminate")
+    @mock.patch("probe_harness.subprocess.Popen")
+    def test_invalid_readiness_url_terminates_spawned_process(
+        self,
+        popen: mock.Mock,
+        terminate: mock.Mock,
+    ) -> None:
+        process = popen.return_value
+
+        with self.assertRaisesRegex(RuntimeError, "server did not become ready"):
+            spawn_and_wait_ready(
+                ["server"],
+                env={},
+                cwd=".",
+                ready_url="https://example.com/ready",
+            )
+
+        terminate.assert_called_once_with(process)
 
 
 if __name__ == "__main__":

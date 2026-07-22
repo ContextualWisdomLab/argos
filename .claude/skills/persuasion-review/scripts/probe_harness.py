@@ -21,7 +21,7 @@ import subprocess
 import time
 import urllib.request
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 
 _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -58,15 +58,29 @@ class _LoopbackRedirectHandler(urllib.request.HTTPRedirectHandler):
     """Allow redirects only when they remain on a loopback HTTP(S) target."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        _validated_loopback_http_url(newurl)
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+        if req is None:
+            # Preserve the direct-call validation boundary used by tests and
+            # defensive callers that do not have a source request to resolve.
+            _validated_loopback_http_url(newurl)
+            return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+        resolved_url = urljoin(req.full_url, newurl)
+        redirected_request = super().redirect_request(
+            req, fp, code, msg, headers, resolved_url
+        )
+        if redirected_request is not None:
+            _validated_loopback_http_url(redirected_request.full_url)
+        return redirected_request
 
 
 _LOOPBACK_OPENER = urllib.request.build_opener(_LoopbackRedirectHandler)
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
-    ready_url = _validated_loopback_http_url(url)
+    try:
+        ready_url = _validated_loopback_http_url(url)
+    except ValueError:
+        return False
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
