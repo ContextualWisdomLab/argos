@@ -6,14 +6,17 @@ on:
   pull_request:
     branches: ["main"]
 
+permissions:
+  contents: read
+
 jobs:
   semgrep:
     name: Semgrep
     runs-on: ubuntu-latest
     permissions:
-      security-events: write
+      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Disable semgrep scanner
-        run: echo "Semgrep scanning is temporarily disabled."
+        run: echo "Semgrep scanning is temporarily disabled to prevent false positives and scorecard failures."
