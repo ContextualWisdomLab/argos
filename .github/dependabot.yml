@@ -1,0 +1,18 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: developmental
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: developmental
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
