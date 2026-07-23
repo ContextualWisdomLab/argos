@@ -8,6 +8,18 @@ function readPackage(pkg, context) {
   if (pkg.dependencies && pkg.dependencies['postcss']) {
     pkg.dependencies['postcss'] = '^8.5.12';
   }
+  if (pkg.dependencies && pkg.dependencies['@hono/node-server']) {
+    pkg.dependencies['@hono/node-server'] = '^2.0.5';
+  }
+  if (pkg.dependencies && pkg.dependencies['fast-uri']) {
+    pkg.dependencies['fast-uri'] = '^3.1.4';
+  }
+  if (pkg.dependencies && pkg.dependencies['body-parser']) {
+    pkg.dependencies['body-parser'] = '^2.3.0';
+  }
+  if (pkg.dependencies && pkg.dependencies['brace-expansion']) {
+    pkg.dependencies['brace-expansion'] = '^1.1.16';
+  }
   return pkg;
 }
 
