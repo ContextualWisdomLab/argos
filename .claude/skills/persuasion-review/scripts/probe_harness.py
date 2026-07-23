@@ -33,7 +33,6 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:
