@@ -148,6 +148,87 @@ describe('ERDModel', () => {
     })
   })
 
+  describe('Removal Operations', () => {
+    beforeEach(() => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'id', type: 'integer' })
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+    })
+
+    describe('removeTable', () => {
+      it('should remove a table and cascade foreign keys', () => {
+        model.removeTable('users')
+        expect(model.getTable('users')).toBeUndefined()
+
+        const postsTable = model.getTable('posts')
+        expect(postsTable?.foreignKeys.length).toBe(0)
+      })
+
+      it('should throw when removing non-existent table', () => {
+        expect(() => model.removeTable('non_existent')).toThrowError(
+          "Table 'non_existent' does not exist."
+        )
+      })
+    })
+
+    describe('removeColumn', () => {
+      it('should remove a column and cascade its own foreign keys', () => {
+        model.removeColumn('posts', 'user_id')
+        const postsTable = model.getTable('posts')
+        expect(postsTable?.columns.some((c) => c.name === 'user_id')).toBe(false)
+        expect(postsTable?.foreignKeys.length).toBe(0)
+      })
+
+      it('should remove a column and cascade incoming foreign keys', () => {
+        model.removeColumn('users', 'id')
+        const usersTable = model.getTable('users')
+        expect(usersTable?.columns.some((c) => c.name === 'id')).toBe(false)
+
+        const postsTable = model.getTable('posts')
+        expect(postsTable?.foreignKeys.length).toBe(0)
+      })
+
+      it('should throw when removing column from non-existent table', () => {
+        expect(() => model.removeColumn('non_existent', 'id')).toThrowError(
+          "Table 'non_existent' does not exist."
+        )
+      })
+
+      it('should throw when removing non-existent column', () => {
+        expect(() => model.removeColumn('users', 'non_existent_col')).toThrowError(
+          "Column 'non_existent_col' does not exist in table 'users'."
+        )
+      })
+    })
+
+    describe('removeForeignKey', () => {
+      it('should remove a specific foreign key', () => {
+        model.removeForeignKey('posts', 'user_id', 'users', 'id')
+        const postsTable = model.getTable('posts')
+        expect(postsTable?.foreignKeys.length).toBe(0)
+      })
+
+      it('should throw when removing foreign key from non-existent table', () => {
+        expect(() =>
+          model.removeForeignKey('non_existent', 'user_id', 'users', 'id')
+        ).toThrowError("Table 'non_existent' does not exist.")
+      })
+
+      it('should throw when foreign key does not exist', () => {
+        expect(() =>
+          model.removeForeignKey('posts', 'id', 'users', 'id')
+        ).toThrowError("Foreign key not found in table 'posts'.")
+      })
+    })
+  })
+
   describe('DDL Generation', () => {
     it('should generate empty string if no tables exist', () => {
       expect(model.generateDDL()).toBe('')
