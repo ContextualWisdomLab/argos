@@ -9,7 +9,7 @@ function readPackage(pkg, context) {
     pkg.dependencies['postcss'] = '^8.5.12';
   }
   if (pkg.dependencies && pkg.dependencies['@hono/node-server']) {
-    pkg.dependencies['@hono/node-server'] = '^2.0.5';
+    pkg.dependencies['@hono/node-server'] = '^2.0.10';
   }
   if (pkg.dependencies && pkg.dependencies['fast-uri']) {
     pkg.dependencies['fast-uri'] = '^3.1.4';
@@ -19,6 +19,9 @@ function readPackage(pkg, context) {
   }
   if (pkg.dependencies && pkg.dependencies['brace-expansion']) {
     pkg.dependencies['brace-expansion'] = '^1.1.16';
+  }
+  if (pkg.dependencies && pkg.dependencies['js-yaml']) {
+    pkg.dependencies['js-yaml'] = '^4.3.0';
   }
   return pkg;
 }
