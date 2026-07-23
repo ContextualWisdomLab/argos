@@ -48,6 +48,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파싱 실패한 줄은 {} 로 반환한다', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'bad.jsonl')
     writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
 
@@ -58,6 +59,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('빈 줄은 제거한다', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'empty-lines.jsonl')
     writeFileSync(
       path,
