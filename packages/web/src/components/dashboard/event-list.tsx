@@ -176,6 +176,7 @@ function RowView({
       )}
     >
       <span
+        aria-hidden="true"
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full",
           bg,
@@ -188,7 +189,7 @@ function RowView({
       </span>
       <span className="flex-1 min-w-0 flex items-center gap-1 text-sm text-muted-foreground">
         {chevron !== undefined && (
-          <ChevronRight
+          <ChevronRight aria-hidden="true"
             className={cn(
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
