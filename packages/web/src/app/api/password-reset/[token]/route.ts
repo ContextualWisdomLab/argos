@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic'
 
 const ResetPasswordSchema = z
   .object({
-    password: z.string().min(8),
-    passwordConfirmation: z.string().min(8),
+    password: z.string().min(8).max(1024),
+    passwordConfirmation: z.string().min(8).max(1024),
   })
   .refine((value) => value.password === value.passwordConfirmation, {
     path: ['passwordConfirmation'],
