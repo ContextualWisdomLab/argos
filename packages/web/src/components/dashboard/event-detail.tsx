@@ -119,7 +119,6 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
       <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border">
         <div className="flex items-center gap-3 min-w-0">
           <span
-            aria-hidden="true"
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${bg}`}
           >
             <Icon className="h-3.5 w-3.5 text-background" />
@@ -142,7 +141,7 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
               aria-label="Close event details"
               className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X aria-hidden="true" className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </button>
           )}
         </div>
