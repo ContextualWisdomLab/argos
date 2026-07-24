@@ -9,7 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = join(dir /* nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal */, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
