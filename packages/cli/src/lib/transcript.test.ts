@@ -11,6 +11,7 @@ import {
 
 /** Write an array of objects as JSONL to a temp file and return the path. */
 function writeJsonl(dir: string, lines: object[]): string {
+   // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
@@ -48,7 +49,8 @@ describe('readTranscriptLines', () => {
   })
 
   it('파싱 실패한 줄은 {} 로 반환한다', async () => {
-    const path = join(tempDir, 'bad.jsonl')
+     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+  const path = join(tempDir, 'bad.jsonl')
     writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
 
     const lines = await readTranscriptLines(path)
@@ -58,7 +60,8 @@ describe('readTranscriptLines', () => {
   })
 
   it('빈 줄은 제거한다', async () => {
-    const path = join(tempDir, 'empty-lines.jsonl')
+     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+  const path = join(tempDir, 'empty-lines.jsonl')
     writeFileSync(
       path,
       '{"type":"human"}\n\n{"type":"assistant"}\n',

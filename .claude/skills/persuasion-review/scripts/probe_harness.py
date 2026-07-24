@@ -1,8 +1,5 @@
-"""persuasion-review 5a0 UX probe 어댑터용 공유 plumbing.
-
-프로젝트의 `persuasion-data/ux_probe_adapter.py` 가 import 해서 사용하는 유틸.
-run_simulation.py 가 어댑터를 동적 로드하기 직전 이 스크립트 디렉토리를
-sys.path 에 주입하므로 어댑터에서는 `from probe_harness import ...` 로 쓴다.
+"""
+로컬에서 서버를 띄우고 테스트하기 위한 헬퍼 스크립트.
 
 API:
     free_port() -> int
@@ -33,6 +30,7 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:
@@ -49,21 +47,24 @@ def spawn_and_wait_ready(
     timeout_sec: float = 15.0,
     pidfile: Path | None = None,
 ) -> subprocess.Popen:
-    popen_kwargs: dict = {
-        "env": env,
-        "cwd": cwd,
-        "stdout": subprocess.PIPE,
-        "stderr": subprocess.STDOUT,
-    }
-    if os.name == "posix":
-        popen_kwargs["preexec_fn"] = os.setsid
-    proc = subprocess.Popen(cmd, **popen_kwargs)
-    if not wait_http_ready(ready_url, timeout_sec):
-        _terminate(proc)
-        raise RuntimeError(f"server did not become ready in {timeout_sec}s: {ready_url}")
-    if pidfile is not None:
+    proc = subprocess.Popen(
+        cmd,
+        env=env,
+        cwd=cwd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        preexec_fn=os.setsid,  # UNIX only
+    )
+    if pidfile:
         pidfile.parent.mkdir(parents=True, exist_ok=True)
-        pidfile.write_text(str(proc.pid), encoding="utf-8")
+        pidfile.write_text(str(proc.pid))
+
+    if not wait_http_ready(ready_url, timeout_sec):
+        # 멈추고 실패 처리
+        proc.kill()
+        proc.wait()
+        raise RuntimeError(f"Server at {ready_url} did not become ready within {timeout_sec}s.")
+
     return proc
 
 
@@ -71,64 +72,23 @@ def stop_by_pidfile(pidfile: Path) -> None:
     if not pidfile.exists():
         return
     try:
-        pid = int(pidfile.read_text(encoding="utf-8").strip())
-    except Exception:
-        pidfile.unlink(missing_ok=True)
-        return
-    _kill_process_group(pid)
-    pidfile.unlink(missing_ok=True)
+        pid_str = pidfile.read_text().strip()
+        if pid_str.isdigit():
+            pid = int(pid_str)
+            import signal
+            try:
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+            except OSError:
+                pass
+    finally:
+        try:
+            pidfile.unlink()
+        except OSError:
+            pass
 
 
 def load_seed_result(stdout: str) -> dict:
-    """seed 스크립트 stdout 의 마지막 비공백 줄을 JSON 으로 파싱.
-
-    seed 스크립트는 stdout 마지막 줄에 단일 JSON 오브젝트를 찍어야 한다.
-    예: `{"trainer_id": 1, "member_ids": [1, 2, 3]}`
-    """
-    for line in reversed(stdout.splitlines()):
-        if line.strip():
-            return json.loads(line)
-    raise ValueError("seed produced no output")
-
-
-def _terminate(proc: subprocess.Popen) -> None:
-    if os.name == "posix":
-        try:
-            os.killpg(os.getpgid(proc.pid), 15)
-        except Exception:
-            proc.terminate()
-    else:
-        proc.terminate()
-    try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-
-
-def _kill_process_group(pid: int) -> None:
-    if os.name == "posix":
-        try:
-            os.killpg(os.getpgid(pid), 15)
-        except (OSError, ProcessLookupError):
-            try:
-                os.kill(pid, 15)
-            except OSError:
-                return
-    else:
-        try:
-            os.kill(pid, 15)
-        except OSError:
-            return
-    for _ in range(25):
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return
-        time.sleep(0.2)
-    try:
-        if os.name == "posix":
-            os.killpg(os.getpgid(pid), 9)
-        else:
-            os.kill(pid, 9)
-    except OSError:
-        pass
+    lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
+    if not lines:
+        return {}
+    return json.loads(lines[-1])

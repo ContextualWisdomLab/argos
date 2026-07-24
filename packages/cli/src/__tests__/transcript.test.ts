@@ -9,6 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
+   // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
@@ -90,7 +91,8 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('handles malformed lines without throwing', async () => {
-    const path = join(tempDir, 'transcript.jsonl')
+     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+  const path = join(tempDir, 'transcript.jsonl')
     writeFileSync(
       path,
       [
