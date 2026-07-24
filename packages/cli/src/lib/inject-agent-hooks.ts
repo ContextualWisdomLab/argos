@@ -15,9 +15,9 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
-     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
