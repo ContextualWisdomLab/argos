@@ -22,7 +22,7 @@
       "esbuild": "0.28.1",
       "js-yaml": "4.2.0",
       "minimatch": ">=3.1.5",
-      "brace-expansion": ">=1.1.16",
+      "brace-expansion@>=1.1.16 <2.0.0": "1.1.11",
       "@hono/node-server": ">=2.0.5",
       "hono": ">=4.12.27",
       "postcss": ">=8.5.18"
