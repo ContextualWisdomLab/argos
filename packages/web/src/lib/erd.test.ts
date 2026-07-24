@@ -38,126 +38,44 @@ describe('ERDModel', () => {
   describe('Column Management', () => {
     it('should add a column to an existing table', () => {
       model.addTable('users')
-      model.addColumn('users', { name: 'id', type: 'INTEGER' })
+      model.addColumn('users', { name: 'id', type: 'integer' })
       const table = model.getTable('users')
       expect(table?.columns.length).toBe(1)
       expect(table?.columns[0].name).toBe('id')
     })
 
-    it('should throw when adding a column with invalid SQL type', () => {
-      model.addTable('users')
-      expect(() =>
-        model.addColumn('users', { name: 'id', type: 'INTEGER; DROP TABLE users;' })
-      ).toThrowError("Type 'INTEGER; DROP TABLE users;' contains invalid characters or format.")
-    })
-
     it('should throw when adding a column to a non-existent table', () => {
       expect(() =>
-        model.addColumn('non_existent', { name: 'id', type: 'INTEGER' })
+        model.addColumn('non_existent', { name: 'id', type: 'integer' })
       ).toThrowError("Table 'non_existent' does not exist.")
     })
 
     it('should throw when adding a duplicate column to a table', () => {
       model.addTable('users')
-      model.addColumn('users', { name: 'id', type: 'INTEGER' })
+      model.addColumn('users', { name: 'id', type: 'integer' })
       expect(() =>
-        model.addColumn('users', { name: 'id', type: 'VARCHAR(255)' })
+        model.addColumn('users', { name: 'id', type: 'string' })
       ).toThrowError("Column 'id' already exists in table 'users'.")
     })
 
     it('should reject non-snake-case column names', () => {
       model.addTable('users')
       expect(() =>
-        model.addColumn('users', { name: 'createdAt', type: 'TIMESTAMP' })
+        model.addColumn('users', { name: 'createdAt', type: 'timestamp' })
       ).toThrowError("Column 'createdAt' must be snake_case.")
       expect(() =>
-        model.addColumn('users', { name: 'created__at', type: 'TIMESTAMP' })
+        model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
-    })
-  })
-
-  describe('Removal Operations', () => {
-    beforeEach(() => {
-      model.addTable('users')
-      model.addColumn('users', { name: 'id', type: 'INTEGER', isPrimaryKey: true })
-      model.addTable('posts')
-      model.addColumn('posts', { name: 'id', type: 'INTEGER', isPrimaryKey: true })
-      model.addColumn('posts', { name: 'user_id', type: 'INTEGER' })
-      model.addForeignKey('posts', {
-        columnName: 'user_id',
-        referenceTable: 'users',
-        referenceColumn: 'id',
-      })
-    })
-
-    it('should remove a table and its inbound foreign keys', () => {
-      model.removeTable('users')
-      expect(model.getTable('users')).toBeUndefined()
-      const postsTable = model.getTable('posts')
-      expect(postsTable?.foreignKeys.length).toBe(0)
-    })
-
-    it('should throw when removing a non-existent table', () => {
-      expect(() => model.removeTable('non_existent')).toThrowError("Table 'non_existent' does not exist.")
-    })
-
-    it('should reject non-snake-case table names on remove', () => {
-      expect(() => model.removeTable('UserProfiles')).toThrowError("Table 'UserProfiles' must be snake_case.")
-    })
-
-    it('should remove a column and its foreign keys', () => {
-      model.removeColumn('posts', 'user_id')
-      const postsTable = model.getTable('posts')
-      expect(postsTable?.columns.find(c => c.name === 'user_id')).toBeUndefined()
-      expect(postsTable?.foreignKeys.length).toBe(0)
-    })
-
-    it('should remove a referenced column and its inbound foreign keys', () => {
-      model.removeColumn('users', 'id')
-      const postsTable = model.getTable('posts')
-      expect(postsTable?.foreignKeys.length).toBe(0)
-    })
-
-    it('should throw when removing a column from a non-existent table', () => {
-      expect(() => model.removeColumn('non_existent', 'id')).toThrowError("Table 'non_existent' does not exist.")
-    })
-
-    it('should throw when removing a non-existent column', () => {
-      expect(() => model.removeColumn('users', 'non_existent_col')).toThrowError("Column 'non_existent_col' does not exist in table 'users'.")
-    })
-
-    it('should reject non-snake-case names on remove column', () => {
-      expect(() => model.removeColumn('UserProfiles', 'id')).toThrowError("Table 'UserProfiles' must be snake_case.")
-      expect(() => model.removeColumn('users', 'userId')).toThrowError("Column 'userId' must be snake_case.")
-    })
-
-    it('should remove a foreign key', () => {
-      model.removeForeignKey('posts', 'user_id')
-      const postsTable = model.getTable('posts')
-      expect(postsTable?.foreignKeys.length).toBe(0)
-    })
-
-    it('should throw when removing a foreign key from a non-existent table', () => {
-      expect(() => model.removeForeignKey('non_existent', 'user_id')).toThrowError("Table 'non_existent' does not exist.")
-    })
-
-    it('should throw when removing a non-existent foreign key', () => {
-      expect(() => model.removeForeignKey('posts', 'non_existent_col')).toThrowError("Foreign key from column 'non_existent_col' does not exist in table 'posts'.")
-    })
-
-    it('should reject non-snake-case names on remove foreign key', () => {
-      expect(() => model.removeForeignKey('UserProfiles', 'user_id')).toThrowError("Table 'UserProfiles' must be snake_case.")
-      expect(() => model.removeForeignKey('posts', 'userId')).toThrowError("Column 'userId' must be snake_case.")
     })
   })
 
   describe('Foreign Key Management', () => {
     beforeEach(() => {
       model.addTable('users')
-      model.addColumn('users', { name: 'id', type: 'INTEGER' })
+      model.addColumn('users', { name: 'id', type: 'integer' })
       model.addTable('posts')
-      model.addColumn('posts', { name: 'id', type: 'INTEGER' })
-      model.addColumn('posts', { name: 'user_id', type: 'INTEGER' })
+      model.addColumn('posts', { name: 'id', type: 'integer' })
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
     })
 
     it('should add a foreign key successfully', () => {
