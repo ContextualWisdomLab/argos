@@ -1,10 +1,14 @@
-import coreWebVitals from 'eslint-config-next/core-web-vitals.js'
-import nextTypescript from 'eslint-config-next/typescript.js'
+import { FlatCompat } from "@eslint/eslintrc"
+
+const compat = new FlatCompat()
 
 const eslintConfig = [
-  ...coreWebVitals,
-  ...nextTypescript,
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    ignores: ['node_modules', '.next', 'dist', 'build'],
+  },
+  {
+    files: ['src/**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
     },
