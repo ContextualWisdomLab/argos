@@ -39,11 +39,12 @@ type FlatRow =
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+// ⚡ Bolt: `sessionStartedAtMs`를 props로 받아 렌더링마다 반복되던 파싱 오버헤드를 제거함.
+// Date.getTime() 호출이 리스트의 모든 아이템에서 반복되는 병목을 줄였습니다.
+function formatElapsed(timestamp: string, sessionStartedAtMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+  if (Number.isNaN(t) || Number.isNaN(sessionStartedAtMs)) return "";
+  const diffSec = Math.max(0, Math.floor((t - sessionStartedAtMs) / 1000));
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -123,7 +124,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -207,7 +209,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedAtMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +219,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedAtMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +232,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAtMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -241,18 +243,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.event.timestamp, sessionStartedAtMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -276,6 +279,12 @@ export function EventList({
     [groups, expandedGroups, selectedIdx],
   );
 
+  // ⚡ Bolt: 기준 시간이 되는 sessionStartedAt 문자열 파싱을 가상화 렌더 루프 바깥으로
+  // 분리하여, 리스트가 길어질 때마다 반복되는 Date 객체 생성 비용을 최적화함.
+  const sessionStartedAtMs = useMemo(() => {
+    return new Date(sessionStartedAt).getTime();
+  }, [sessionStartedAt]);
+
   if (events.length === 0) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">
@@ -292,7 +301,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedAtMs,
         onSelect,
         onToggleGroup,
       }}
