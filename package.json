@@ -29,7 +29,8 @@
       "sharp": "0.35.0",
       "@hono/node-server": "2.0.10",
       "body-parser": "2.3.0",
-      "brace-expansion": "2.0.1",
+      "minimatch@3>brace-expansion": "1.1.16",
+      "minimatch@10>brace-expansion": "5.0.8",
       "fast-uri": "3.1.4"
     }
   }
