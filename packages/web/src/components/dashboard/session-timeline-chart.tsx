@@ -35,24 +35,7 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
+function buildToolSummaryString(relevantTools: ToolCallPoint[]): string {
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
@@ -144,14 +127,43 @@ export function SessionTimelineChart({
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
-    return usageTimeline.map((u, idx) => ({
-      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-      input: u.inputTokens,
-      output: u.outputTokens,
-      cost: u.estimatedCostUsd,
-      model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
+    // ⚡ Bolt: O(N+M) pointer-based algorithm to aggregate time-series events
+    // Prevent O(N*M) nested `.filter()` loop which scales poorly on large sessions
+    const sortedUsage = [...usageTimeline].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    const sortedTools = [...toolCalls].sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+
+    let toolIndex = 0
+    let prevTimestamp = 0
+
+    return sortedUsage.map((u) => {
+      const currentTimestamp = new Date(u.timestamp).getTime()
+      const relevantTools: ToolCallPoint[] = []
+
+      while (toolIndex < sortedTools.length) {
+        const tool = sortedTools[toolIndex]!
+        if (tool.parsedTimestamp <= currentTimestamp && tool.parsedTimestamp > prevTimestamp) {
+          relevantTools.push(tool)
+          toolIndex++
+        } else if (tool.parsedTimestamp <= prevTimestamp) {
+          // Skip tools that are before the previous timestamp (should theoretically not happen with sorted data and logic, but safe guard)
+          toolIndex++
+        } else {
+          // tool is after current timestamp, stop processing for this usage point
+          break
+        }
+      }
+
+      prevTimestamp = currentTimestamp
+
+      return {
+        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+        input: u.inputTokens,
+        output: u.outputTokens,
+        cost: u.estimatedCostUsd,
+        model: u.model,
+        toolSummary: buildToolSummaryString(relevantTools),
+      }
+    })
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
   if (usageTimeline.length === 0) {
