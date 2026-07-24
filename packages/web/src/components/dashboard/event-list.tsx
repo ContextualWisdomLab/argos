@@ -3,7 +3,6 @@ import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
 import {
   formatSlashCommandText,
-  buildTimelineGroups,
   type TimelineEvent,
   type TimelineGroup,
 } from "@/lib/timeline-events";
@@ -11,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 type EventListProps = {
   events: TimelineEvent[];
+  groups: TimelineGroup[];
   selectedIdx: number;
   onSelect: (idx: number) => void;
   sessionStartedAt: string;
@@ -164,8 +164,11 @@ function RowView({
     <button
       type="button"
       onClick={onClick}
+      aria-current={isSelected ? "step" : undefined}
+      aria-expanded={chevron ? chevron === "expanded" : undefined}
       className={cn(
         "w-full h-full text-left flex items-center gap-3 py-2 border-b border-border/60 transition-colors",
+        "focus-visible:outline-none focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
         indented ? "pl-10 pr-3" : "px-3",
         isSelected
           ? "border-l-2 border-l-brand bg-brand-subtle"
@@ -261,14 +264,13 @@ function Row({
 
 export function EventList({
   events,
+  groups,
   selectedIdx,
   onSelect,
   sessionStartedAt,
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
-  const groups = useMemo(() => buildTimelineGroups(events), [events]);
-
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
