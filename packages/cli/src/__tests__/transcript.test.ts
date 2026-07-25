@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import { resolve } from 'path'
 import { tmpdir } from 'os'
 import {
   extractUsageFromTranscript,
@@ -9,7 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = resolve(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
@@ -18,7 +18,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(resolve(tmpdir(), 'argos-test-'))
   })
 
   afterEach(() => {
@@ -26,7 +26,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('returns null for a non-existent file', async () => {
-    const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
+    const result = await extractUsageFromTranscript(resolve(tempDir, 'no-file.jsonl'))
     expect(result).toBeNull()
   })
 
@@ -90,7 +90,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('handles malformed lines without throwing', async () => {
-    const path = join(tempDir, 'transcript.jsonl')
+    const path = resolve(tempDir, 'transcript.jsonl')
     writeFileSync(
       path,
       [
@@ -109,7 +109,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(resolve(tmpdir(), 'argos-test-'))
   })
 
   afterEach(() => {
@@ -122,7 +122,7 @@ describe('detectSlashCommand', () => {
   })
 
   it('returns null for non-existent file', async () => {
-    expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
+    expect(await detectSlashCommand(resolve(tempDir, 'nope.jsonl'))).toBeNull()
   })
 
   it('returns skill name without the leading slash', async () => {
@@ -159,7 +159,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(resolve(tmpdir(), 'argos-test-'))
   })
 
   afterEach(() => {
@@ -167,7 +167,7 @@ describe('extractMessages', () => {
   })
 
   it('returns empty array for non-existent file', async () => {
-    const result = await extractMessages(join(tempDir, 'nope.jsonl'))
+    const result = await extractMessages(resolve(tempDir, 'nope.jsonl'))
     expect(result).toEqual([])
   })
 
@@ -292,7 +292,7 @@ describe('extractMessages', () => {
     expect(result[0].durationMs).toBe(2500)
   })
 
-  it('tool_result with array content is flattened to joined text', async () => {
+  it('tool_result with array content is flattened to resolveed text', async () => {
     const path = writejsonl(tempDir, [
       {
         type: 'assistant',
@@ -365,7 +365,7 @@ describe('extractMessages', () => {
     expect(result.map((m) => m.role)).toEqual(['HUMAN', 'ASSISTANT', 'TOOL', 'HUMAN'])
   })
 
-  it('joins multiple text blocks within one assistant message', async () => {
+  it('resolves multiple text blocks within one assistant message', async () => {
     const path = writejsonl(tempDir, [
       {
         type: 'assistant',

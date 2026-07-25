@@ -20,6 +20,7 @@ import socket
 import subprocess
 import time
 import urllib.request
+import re
 from pathlib import Path
 
 
@@ -33,6 +34,8 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
+            if not url.startswith("http://") and not url.startswith("https://"):
+                raise ValueError("URL must use HTTP or HTTPS")
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:

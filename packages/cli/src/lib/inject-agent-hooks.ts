@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { resolve } from 'path'
 import chalk from 'chalk'
 import type { ExternalDeps } from '../deps.js'
 
@@ -15,8 +15,8 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
-    claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
+    claude: deps.hooks.inject(resolve(cwd, '.claude', 'settings.json'), 'claude'),
+    codex: deps.hooks.inject(resolve(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
 

@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from 'path'
+import { dirname, resolve, join } from 'path'
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
 import { normalizeApiUrl } from './config.js'
 
