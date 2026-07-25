@@ -102,6 +102,8 @@ export function OverviewStats({
 
       <div
         id="overview-stats-explanation"
+        role="region"
+        aria-labelledby="overview-stats-explanation-toggle"
         hidden={!expanded}
         className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed"
       >
