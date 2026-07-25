@@ -1,3 +1,4 @@
+import React from "react";
 import { useMemo } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
@@ -39,9 +40,9 @@ type FlatRow =
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+function formatElapsed(timestamp: string, sessionStartedAtMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
+  const start = sessionStartedAtMs;
   if (Number.isNaN(t) || Number.isNaN(start)) return "";
   const diffSec = Math.max(0, Math.floor((t - start) / 1000));
   const h = Math.floor(diffSec / 3600);
@@ -123,7 +124,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -207,7 +209,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedAtMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +219,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedAtMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +232,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAtMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -241,18 +243,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.event.timestamp, sessionStartedAtMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -271,6 +274,13 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  // ⚡ Bolt: 가상화된 리스트 스크롤 시 반복되는 `new Date()` 파싱을 방지하기 위해
+  // 정적 계산을 렌더링 루프 외부로 끌어올림(lifting)
+  const sessionStartedAtMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt],
+  );
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -292,7 +302,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedAtMs,
         onSelect,
         onToggleGroup,
       }}
