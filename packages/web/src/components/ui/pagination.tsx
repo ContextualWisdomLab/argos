@@ -1,27 +1,27 @@
-"use client";
+'use client'
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 type PaginationProps = {
-  page: number;
-  pageSize: number;
-  total: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange?: (pageSize: number) => void;
-  pageSizeOptions?: number[];
-  className?: string;
+  page: number
+  pageSize: number
+  total: number
+  onPageChange: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
+  pageSizeOptions?: number[]
+  className?: string
   /** 페이지 수가 1 이하여도 count 라벨은 표시 (기본 true). false면 전체 숨김 */
-  alwaysShowLabel?: boolean;
-};
+  alwaysShowLabel?: boolean
+}
 
 /**
  * 1 … x-1 [x] x+1 … N 형태로 축약된 페이지 번호를 계산.
@@ -29,19 +29,19 @@ type PaginationProps = {
  */
 function getPageList(current: number, totalPages: number): (number | -1)[] {
   if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
+    return Array.from({ length: totalPages }, (_, i) => i + 1)
   }
 
-  const pages: (number | -1)[] = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(totalPages - 1, current + 1);
+  const pages: (number | -1)[] = [1]
+  const start = Math.max(2, current - 1)
+  const end = Math.min(totalPages - 1, current + 1)
 
-  if (start > 2) pages.push(-1);
-  for (let p = start; p <= end; p++) pages.push(p);
-  if (end < totalPages - 1) pages.push(-1);
+  if (start > 2) pages.push(-1)
+  for (let p = start; p <= end; p++) pages.push(p)
+  if (end < totalPages - 1) pages.push(-1)
 
-  pages.push(totalPages);
-  return pages;
+  pages.push(totalPages)
+  return pages
 }
 
 export function Pagination({
@@ -54,19 +54,19 @@ export function Pagination({
   className,
   alwaysShowLabel = true,
 }: PaginationProps) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const safePage = Math.min(Math.max(1, page), totalPages);
-  const startIdx = total === 0 ? 0 : (safePage - 1) * pageSize + 1;
-  const endIdx = Math.min(safePage * pageSize, total);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const safePage = Math.min(Math.max(1, page), totalPages)
+  const startIdx = total === 0 ? 0 : (safePage - 1) * pageSize + 1
+  const endIdx = Math.min(safePage * pageSize, total)
 
-  if (totalPages <= 1 && !alwaysShowLabel) return null;
+  if (totalPages <= 1 && !alwaysShowLabel) return null
 
-  const pageList = getPageList(safePage, totalPages);
+  const pageList = getPageList(safePage, totalPages)
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 border-t border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between",
+        'flex flex-col gap-3 border-t border-border bg-muted/20 px-4 py-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between',
         className,
       )}
     >
@@ -75,11 +75,7 @@ export function Pagination({
           <span>결과 없음</span>
         ) : (
           <span>
-            총{" "}
-            <span className="text-foreground font-medium">
-              {total.toLocaleString()}
-            </span>
-            개 중{" "}
+            총 <span className="text-foreground font-medium">{total.toLocaleString()}</span>개 중{' '}
             <span className="text-foreground font-medium">
               {startIdx.toLocaleString()}–{endIdx.toLocaleString()}
             </span>
@@ -94,7 +90,7 @@ export function Pagination({
             <Select
               value={String(pageSize)}
               onValueChange={(value) => {
-                if (value) onPageSizeChange(Number(value));
+                if (value) onPageSizeChange(Number(value))
               }}
             >
               <SelectTrigger size="sm" className="min-w-[60px]">
@@ -102,11 +98,7 @@ export function Pagination({
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false} className="p-1">
                 {pageSizeOptions.map((size) => (
-                  <SelectItem
-                    key={size}
-                    value={String(size)}
-                    className="px-2 py-1.5"
-                  >
+                  <SelectItem key={size} value={String(size)} className="px-2 py-1.5">
                     {size}
                   </SelectItem>
                 ))}
@@ -124,7 +116,7 @@ export function Pagination({
               disabled={safePage <= 1}
               aria-label="이전 페이지"
             >
-              <ChevronLeftIcon aria-hidden="true" />
+              <ChevronLeftIcon />
             </Button>
 
             {/* 모바일: 현재 페이지 / 전체만 표시 */}
@@ -145,11 +137,11 @@ export function Pagination({
                 ) : (
                   <Button
                     key={p}
-                    variant={p === safePage ? "default" : "ghost"}
+                    variant={p === safePage ? 'default' : 'ghost'}
                     size="icon-sm"
                     onClick={() => onPageChange(p)}
                     className="tabular-nums"
-                    aria-current={p === safePage ? "page" : undefined}
+                    aria-current={p === safePage ? 'page' : undefined}
                   >
                     {p}
                   </Button>
@@ -164,11 +156,11 @@ export function Pagination({
               disabled={safePage >= totalPages}
               aria-label="다음 페이지"
             >
-              <ChevronRightIcon aria-hidden="true" />
+              <ChevronRightIcon />
             </Button>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

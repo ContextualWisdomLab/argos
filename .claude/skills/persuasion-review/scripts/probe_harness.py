@@ -20,7 +20,6 @@ import socket
 import subprocess
 import time
 import urllib.request
-import re
 from pathlib import Path
 
 

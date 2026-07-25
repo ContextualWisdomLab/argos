@@ -292,7 +292,7 @@ describe('extractMessages', () => {
     expect(result[0].durationMs).toBe(2500)
   })
 
-  it('tool_result with array content is flattened to resolveed text', async () => {
+  it('tool_result with array content is flattened to joined text', async () => {
     const path = writejsonl(tempDir, [
       {
         type: 'assistant',
@@ -365,7 +365,7 @@ describe('extractMessages', () => {
     expect(result.map((m) => m.role)).toEqual(['HUMAN', 'ASSISTANT', 'TOOL', 'HUMAN'])
   })
 
-  it('resolves multiple text blocks within one assistant message', async () => {
+  it('joins multiple text blocks within one assistant message', async () => {
     const path = writejsonl(tempDir, [
       {
         type: 'assistant',
