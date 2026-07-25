@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2025-07-25 - [ERD 엔지니어링 도구 내 DDL 생성 시 SQL 인젝션 방지]
+**Vulnerability:** ERD 도구(`packages/web/src/lib/erd.ts`)의 DDL 생성 기능에서, 컬럼 타입(`column.type`) 값에 대한 검증이 부족하여 사용자가 의도적으로 세미콜론(`;`) 등을 주입해 여러 개의 악의적인 SQL 문을 실행하도록 조작할 수 있었습니다 (예: `integer; DROP TABLE users;`).
+**Learning:** 데이터베이스 스키마 생성 및 SQL을 동적으로 조립할 때 사용자 입력을 있는 그대로 연결(concatenate)하면 커맨드 인젝션 또는 SQL 인젝션 위험이 있습니다. 특히 DDL문에서는 Prepared Statement를 적용할 수 없는 경우가 많아, 입력값에 대한 명시적인 화이트리스트 기반의 검증이나 철저한 제한(세미콜론 차단 등)이 필수적입니다.
+**Prevention:** 사용자로부터 제공되는 컬럼명이나 타입 정보에 구문 종료를 의미하는 세미콜론과 같은 메타 문자가 포함되지 않도록 추가적인 타입 검증(예: `column.type.includes(';')`)을 실시하여 DDL 생성 로직을 보호해야 합니다.
