@@ -5,7 +5,3 @@
 ## 2024-07-10 - 접을 수 있는 영역(Collapsible Region) 접근성 개선
 **Learning:** `ContextSection` 컴포넌트와 같이 아코디언 형태의 접을 수 있는 영역은 스크린 리더가 컨텐츠의 상태를 올바르게 인식하고 읽어주기 위해 토글 버튼과 컨텐츠 컨테이너 간의 명확한 ARIA 연결이 필요합니다. React의 `useId()` 훅을 사용하여 `aria-controls`, `id`, `aria-labelledby`를 동적으로 생성해 서로 연결하면 안정적입니다. 또한, 컨텐츠 영역에는 `role="region"`이 반드시 필요하다는 점을 확인했습니다.
 **Action:** 향후 접을 수 있는 컴포넌트(Collapsible Region)를 만들거나 수정할 때는 항상 `useId()`를 사용하여 토글 버튼(`aria-controls`)과 컨텐츠 컨테이너(`id`, `role="region"`, `aria-labelledby`)를 동적으로 연결하도록 합니다. 추가로 키보드 네비게이션 사용자를 위한 명확한 포커스 링(`focus-visible` 관련 클래스 적용) 처리도 잊지 말아야 합니다.
-
-## 2024-07-26 - 클립보드 복사(Copy to Clipboard) UX 개선
-**Learning:** `AdminDashboard` 컴포넌트의 비밀번호 재설정 링크 복사 기능에서 클립보드 복사 시도 시 에러 처리가 누락되어 있었고, 복사 성공 후 시각적 피드백(아이콘 변경 및 텍스트 원래 상태로 복귀)이 부족했습니다.
-**Action:** `navigator.clipboard.writeText` 호출 시 항상 `try...catch` 블록으로 감싸 권한이 없거나 지원되지 않는 환경에서의 에러를 방지해야 합니다. 또한, 복사 성공 시 `Copy` 아이콘을 `Check` 아이콘으로 전환하고, `setTimeout`을 사용해 일정 시간(예: 2초) 후 다시 원래 상태로 되돌아오도록 처리하여 명확하고 일관된 시각적 피드백을 제공해야 합니다.
