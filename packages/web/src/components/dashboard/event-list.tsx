@@ -39,11 +39,10 @@ type FlatRow =
 
 const ROW_HEIGHT = 36;
 
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
+function formatElapsed(timestamp: string, sessionStartMs: number): string {
   const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
+  if (Number.isNaN(t) || Number.isNaN(sessionStartMs)) return "";
+  const diffSec = Math.max(0, Math.floor((t - sessionStartMs) / 1000));
   const h = Math.floor(diffSec / 3600);
   const m = Math.floor((diffSec % 3600) / 60);
   const s = diffSec % 60;
@@ -123,7 +122,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -207,7 +207,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +217,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +230,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsed(row.firstEvent.timestamp, sessionStartMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -241,18 +241,19 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsed(row.event.timestamp, sessionStartMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -271,6 +272,13 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  // ⚡ Bolt: 부모 컴포넌트에서 고정된 시작 시간을 한 번만 파싱하여
+  // Row 렌더러 내부에서 매번 Date 객체를 생성하는 오버헤드를 제거함.
+  const sessionStartMs = useMemo(
+    () => new Date(sessionStartedAt).getTime(),
+    [sessionStartedAt],
+  );
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -292,7 +300,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartMs,
         onSelect,
         onToggleGroup,
       }}
