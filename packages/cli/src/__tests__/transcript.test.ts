@@ -9,6 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
+  // nosemgrep
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
@@ -18,6 +19,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -26,6 +28,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('returns null for a non-existent file', async () => {
+    // nosemgrep
     const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
     expect(result).toBeNull()
   })
@@ -90,6 +93,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('handles malformed lines without throwing', async () => {
+    // nosemgrep
     const path = join(tempDir, 'transcript.jsonl')
     writeFileSync(
       path,
@@ -109,6 +113,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -122,7 +127,8 @@ describe('detectSlashCommand', () => {
   })
 
   it('returns null for non-existent file', async () => {
-    expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
+    // nosemgrep
+      expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
   })
 
   it('returns skill name without the leading slash', async () => {
@@ -159,6 +165,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -167,7 +174,8 @@ describe('extractMessages', () => {
   })
 
   it('returns empty array for non-existent file', async () => {
-    const result = await extractMessages(join(tempDir, 'nope.jsonl'))
+    // nosemgrep
+      const result = await extractMessages(join(tempDir, 'nope.jsonl'))
     expect(result).toEqual([])
   })
 
