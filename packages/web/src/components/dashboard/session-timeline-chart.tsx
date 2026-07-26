@@ -35,43 +35,30 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
+function formatToolSummary(relevantTools: ToolCallPoint[]): string {
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
-  const counts = new Map<string, number>()
-  for (const tool of relevantTools) {
-    const name = tool.toolName || 'unknown'
-    counts.set(name, (counts.get(name) || 0) + 1)
+  const counts: Record<string, number> = {}
+  for (let i = 0; i < relevantTools.length; i++) {
+    const name = relevantTools[i]!.toolName || 'unknown'
+    counts[name] = (counts[name] || 0) + 1
   }
 
-  // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+  // Object.keys()를 사용하여 가비지 컬렉션 오버헤드 감소
+  const keys = Object.keys(counts)
+  keys.sort((a, b) => counts[b]! - counts[a]!)
 
   // 최대 3개까지만 표시
-  const displayCount = Math.min(3, sorted.length)
-  const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
-    return count > 1 ? `${name} x${count}` : name
-  })
+  const displayCount = Math.min(3, keys.length)
+  const displayItems = []
+  for (let i = 0; i < displayCount; i++) {
+    const name = keys[i]!
+    const count = counts[name]!
+    displayItems.push(count > 1 ? `${name} x${count}` : name)
+  }
 
-  const remaining = sorted.length - displayCount
+  const remaining = keys.length - displayCount
   if (remaining > 0) {
     return `${displayItems.join(', ')} +${remaining} more`
   }
@@ -138,20 +125,49 @@ export function SessionTimelineChart({
         toolName: m.toolName ?? 'unknown',
         parsedTimestamp: new Date(m.timestamp).getTime(),
       }))
+      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
-  // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
-  // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
-  // 이로 인해 리렌더링 속도가 향상됨.
+  // ⚡ Bolt: O(N*M) 복잡도의 중첩 필터링을 방지하기 위해 배열을 시간순으로 정렬한 후,
+  // 포인터를 사용하여 O(N+M) 복잡도로 최적화함. (리렌더링 지연시간 대폭 감소)
   const chartData: ChartDataItem[] = useMemo(() => {
-    return usageTimeline.map((u, idx) => ({
-      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-      input: u.inputTokens,
-      output: u.outputTokens,
-      cost: u.estimatedCostUsd,
-      model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
+    const sortedUsage = [...usageTimeline].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    )
+
+    const data: ChartDataItem[] = []
+    let toolIndex = 0
+    let prevTimestamp = 0
+
+    for (let i = 0; i < sortedUsage.length; i++) {
+      const u = sortedUsage[i]!
+      const currentTimestamp = new Date(u.timestamp).getTime()
+
+      // prevTimestamp 이하인 툴은 무시
+      while (toolIndex < toolCalls.length && toolCalls[toolIndex]!.parsedTimestamp <= prevTimestamp) {
+        toolIndex++
+      }
+
+      const relevantTools: ToolCallPoint[] = []
+      // currentTimestamp 이하인 툴들을 수집
+      while (toolIndex < toolCalls.length && toolCalls[toolIndex]!.parsedTimestamp <= currentTimestamp) {
+        relevantTools.push(toolCalls[toolIndex]!)
+        toolIndex++
+      }
+
+      data.push({
+        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+        input: u.inputTokens,
+        output: u.outputTokens,
+        cost: u.estimatedCostUsd,
+        model: u.model,
+        toolSummary: formatToolSummary(relevantTools),
+      })
+
+      prevTimestamp = currentTimestamp
+    }
+
+    return data
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
   if (usageTimeline.length === 0) {
