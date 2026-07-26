@@ -20,3 +20,7 @@
 **Vulnerability:** Semgrep flagged `path.join` usage in the CLI as potential path traversal (`javascript.lang.security.audit.path-traversal.path-join-resolve-traversal`).
 **Learning:** `path.join` is frequently used with explicitly safe base directories (like `process.cwd()` or `tmpdir()`) in CLI development to locate config files or transcripts. When the base path is known to be safe and the appended path parts are not untrusted dynamic user input, the vulnerability is a false positive.
 **Prevention:** Add the inline ignore comment `// nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal` precisely on the line preceding the safe `path.join` or `path.resolve` usage to satisfy the CI Semgrep scanner without altering functional logic.
+## 2026-07-26 - [OSV Scanner Missing Package Sub-Dependencies]
+**Vulnerability:** Even after running `pnpm up -r <packages>`, OSV scanner continued to fail with dependency vulnerabilities on `postcss` because Next.js/Next-Auth bundles internally resolve specific sub-dependency limits or transitive requirements.
+**Learning:** `pnpm up -r` alone may not always safely flush out all transitive occurrences of a vulnerable package if the parent dependency stringently locks the version.
+**Prevention:** In monorepos, use `pnpm i --filter <package> <dep>@<version>` to force-override the lockfile to the safe version for a specific transitive dependency globally, or use `pnpm store prune && pnpm install --no-frozen-lockfile` to recalculate transitive overrides properly.

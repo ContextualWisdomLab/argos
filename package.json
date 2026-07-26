@@ -23,5 +23,8 @@
       "hono": "4.12.25",
       "js-yaml": "4.2.0"
     }
+  },
+  "dependencies": {
+    "postcss": "^8.5.23"
   }
 }
