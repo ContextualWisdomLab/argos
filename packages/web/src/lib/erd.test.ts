@@ -33,6 +33,40 @@ describe('ERDModel', () => {
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
     })
+
+    describe('removeTable', () => {
+      it('should remove a table and cascade delete foreign keys', () => {
+        model.addTable('users')
+        model.addColumn('users', { name: 'id', type: 'integer' })
+
+        model.addTable('posts')
+        model.addColumn('posts', { name: 'id', type: 'integer' })
+        model.addColumn('posts', { name: 'user_id', type: 'integer' })
+
+        model.addForeignKey('posts', {
+          columnName: 'user_id',
+          referenceTable: 'users',
+          referenceColumn: 'id'
+        })
+
+        expect(model.getTable('posts')?.foreignKeys.length).toBe(1)
+
+        model.removeTable('users')
+
+        expect(model.getTable('users')).toBeUndefined()
+        expect(model.getTable('posts')?.foreignKeys.length).toBe(0)
+      })
+
+      it('should throw when removing non-existent table', () => {
+        expect(() => model.removeTable('non_existent')).toThrowError("Table 'non_existent' does not exist.")
+      })
+
+      it('should reject non-snake-case table names', () => {
+        expect(() => model.removeTable('UserProfiles')).toThrowError(
+          "Table 'UserProfiles' must be snake_case."
+        )
+      })
+    })
   })
 
   describe('Column Management', () => {
@@ -66,6 +100,60 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
+    })
+
+    it('should reject SQL injection attempts in column types', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer; DROP TABLE users;' })
+      ).toThrowError("SQL type 'integer; DROP TABLE users;' contains invalid characters (;)")
+    })
+
+    describe('removeColumn', () => {
+      beforeEach(() => {
+        model.addTable('users')
+        model.addColumn('users', { name: 'id', type: 'integer' })
+
+        model.addTable('posts')
+        model.addColumn('posts', { name: 'id', type: 'integer' })
+        model.addColumn('posts', { name: 'user_id', type: 'integer' })
+
+        model.addForeignKey('posts', {
+          columnName: 'user_id',
+          referenceTable: 'users',
+          referenceColumn: 'id'
+        })
+      })
+
+      it('should remove a column', () => {
+        model.removeColumn('posts', 'id')
+        const table = model.getTable('posts')
+        expect(table?.columns.length).toBe(1)
+        expect(table?.columns[0].name).toBe('user_id')
+      })
+
+      it('should throw when removing column from non-existent table', () => {
+        expect(() => model.removeColumn('non_existent', 'id')).toThrowError("Table 'non_existent' does not exist.")
+      })
+
+      it('should throw when removing non-existent column', () => {
+        expect(() => model.removeColumn('posts', 'non_existent')).toThrowError("Column 'non_existent' does not exist in table 'posts'.")
+      })
+
+      it('should reject non-snake-case names', () => {
+        expect(() => model.removeColumn('UserProfiles', 'id')).toThrowError("Table 'UserProfiles' must be snake_case.")
+        expect(() => model.removeColumn('posts', 'userId')).toThrowError("Column 'userId' must be snake_case.")
+      })
+
+      it('should cascade delete foreign keys originating from this column', () => {
+        model.removeColumn('posts', 'user_id')
+        expect(model.getTable('posts')?.foreignKeys.length).toBe(0)
+      })
+
+      it('should cascade delete foreign keys in other tables referencing this column', () => {
+        model.removeColumn('users', 'id')
+        expect(model.getTable('posts')?.foreignKeys.length).toBe(0)
+      })
     })
   })
 
@@ -157,12 +245,14 @@ describe('ERDModel', () => {
       model.addTable('users')
       model.addColumn('users', { name: 'id', type: 'SERIAL', isPrimaryKey: true })
       model.addColumn('users', { name: 'name', type: 'VARCHAR(255)', isNullable: false })
+      model.addColumn('users', { name: 'email', type: 'VARCHAR(255)', isUnique: true, isNullable: false })
       model.addColumn('users', { name: 'bio', type: 'TEXT' })
 
       const ddl = model.generateDDL()
       const expected = `CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
   bio TEXT
 );`
       expect(ddl).toBe(expected)

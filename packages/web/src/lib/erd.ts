@@ -3,6 +3,7 @@ export interface Column {
   type: string
   isPrimaryKey?: boolean
   isNullable?: boolean
+  isUnique?: boolean
 }
 
 export interface ForeignKey {
@@ -22,6 +23,12 @@ const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`)
+  }
+}
+
+function assertSafeSqlType(type: string): void {
+  if (type.includes(';')) {
+    throw new Error(`SQL type '${type}' contains invalid characters (;)`)
   }
 }
 
@@ -49,6 +56,7 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertSafeSqlType(column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -57,6 +65,50 @@ export class ERDModel {
       throw new Error(`Column '${column.name}' already exists in table '${tableName}'.`)
     }
     table.columns.push(column)
+  }
+
+  removeTable(name: string): void {
+    assertSnakeCaseIdentifier('Table', name)
+    if (!this.tables.has(name)) {
+      throw new Error(`Table '${name}' does not exist.`)
+    }
+
+    // Remove foreign keys in other tables that reference this table
+    for (const table of this.tables.values()) {
+      table.foreignKeys = table.foreignKeys.filter(
+        (fk) => fk.referenceTable !== name
+      )
+    }
+
+    this.tables.delete(name)
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier('Table', tableName)
+    assertSnakeCaseIdentifier('Column', columnName)
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+    const columnIndex = table.columns.findIndex((c) => c.name === columnName)
+    if (columnIndex === -1) {
+      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
+    }
+
+    // Remove the column
+    table.columns.splice(columnIndex, 1)
+
+    // Remove foreign keys originating from this column in this table
+    table.foreignKeys = table.foreignKeys.filter(
+      (fk) => fk.columnName !== columnName
+    )
+
+    // Remove foreign keys in other tables referencing this column
+    for (const t of this.tables.values()) {
+      t.foreignKeys = t.foreignKeys.filter(
+        (fk) => !(fk.referenceTable === tableName && fk.referenceColumn === columnName)
+      )
+    }
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
@@ -91,6 +143,9 @@ export class ERDModel {
         let def = `  ${col.name} ${col.type}`
         if (col.isPrimaryKey) {
           def += ' PRIMARY KEY'
+        }
+        if (col.isUnique) {
+          def += ' UNIQUE'
         }
         if (col.isNullable === false) {
           def += ' NOT NULL'
