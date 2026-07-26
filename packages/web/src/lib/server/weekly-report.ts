@@ -346,30 +346,27 @@ export async function getWeeklyReport(
   }
 
   const userStats = aggregateUserStats(thisWeekRollups)
-  const eligibleUsers = userStats.filter((u) => u.sessionCount >= 3)
-  const eligibleUserIds = eligibleUsers.map((u) => u.userId)
+  // ⚡ Bolt Optimization:
+  // 병목 지점: 기존 코드는 `userStats`를 filter로 순회한 뒤 4번의 map 호출로 각각의 candidate 배열을 생성하며 O(5N) 순회와 불필요한 배열 메모리 할당이 발생했습니다.
+  // 최적화 방법: 단일 for 루프로 통합하여 O(N) 순회로 줄이고 배열 할당 비용을 최소화했습니다.
+  // 기대 효과: 수많은 사용자가 존재하는 대규모 환경에서 report 생성 성능과 메모리 사용 효율이 크게 개선됩니다.
+  const eligibleUserIds: string[] = []
+  const skillUsageCandidates: Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }> = []
+  const delegationCandidates: Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }> = []
+  const sessionCountCandidates: Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }> = []
+  let eligibleUserCount = 0
 
-  // #1 skill usage leader — from aggregated userStats
-  const skillUsageCandidates = eligibleUsers.map((u) => ({
-    userId: u.userId,
-    userName: u.name,
-    avatarUrl: u.avatarUrl,
-    value: u.skillCalls,
-  }))
-  // #3 delegation (agentCalls)
-  const delegationCandidates = eligibleUsers.map((u) => ({
-    userId: u.userId,
-    userName: u.name,
-    avatarUrl: u.avatarUrl,
-    value: u.agentCalls,
-  }))
-  // #5 session count
-  const sessionCountCandidates = eligibleUsers.map((u) => ({
-    userId: u.userId,
-    userName: u.name,
-    avatarUrl: u.avatarUrl,
-    value: u.sessionCount,
-  }))
+  for (let i = 0; i < userStats.length; i++) {
+    const u = userStats[i]
+    if (u.sessionCount >= 3) {
+      eligibleUserCount++
+      eligibleUserIds.push(u.userId)
+      const base = { userId: u.userId, userName: u.name, avatarUrl: u.avatarUrl }
+      skillUsageCandidates.push({ ...base, value: u.skillCalls })
+      delegationCandidates.push({ ...base, value: u.agentCalls })
+      sessionCountCandidates.push({ ...base, value: u.sessionCount })
+    }
+  }
 
   // #2 diversity, #6 tokens — separate queries, restricted to eligible
   const [diversityCandidates, tokenCandidates] = await Promise.all([
@@ -388,7 +385,7 @@ export async function getWeeklyReport(
       sessionCount: pickLeader(sessionCountCandidates),
       tokenUsage: pickLeader(tokenCandidates),
     },
-    eligibleUserCount: eligibleUsers.length,
+    eligibleUserCount,
   }
 
   // Insights — delegation
