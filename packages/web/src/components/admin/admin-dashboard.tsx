@@ -1,7 +1,8 @@
+import React from "react"
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { useEffect, useMemo, useState, useRef } from 'react'
+import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -41,6 +42,7 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyTimeoutRef = useRef<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -145,8 +147,16 @@ export function AdminDashboard() {
 
   async function handleCopy() {
     if (!resetLink) return
-    await navigator.clipboard.writeText(resetLink.url)
-    setCopied(true)
+    try {
+      await navigator.clipboard.writeText(resetLink.url)
+      setCopied(true)
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current)
+      }
+      copyTimeoutRef.current = window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard API unavailable or blocked; fail silently
+    }
   }
 
   return (
@@ -279,7 +289,11 @@ export function AdminDashboard() {
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
                       <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        <Copy className="size-4" aria-hidden="true" />
+                        {copied ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-4" aria-hidden="true" />
+                        )}
                         {copied ? 'Copied' : 'Copy link'}
                       </Button>
                       <p className="text-xs text-muted-foreground">
