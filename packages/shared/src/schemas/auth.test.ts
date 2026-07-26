@@ -19,6 +19,13 @@ describe('LoginRequestSchema', () => {
       LoginRequestSchema.safeParse({ email: 'a@b.com', password: '1234567' }).success,
     ).toBe(false)
   })
+
+  it('비밀번호가 1024자를 초과하면 실패한다 (DoS 방지)', () => {
+    const longPassword = 'a'.repeat(1025)
+    expect(
+      LoginRequestSchema.safeParse({ email: 'a@b.com', password: longPassword }).success,
+    ).toBe(false)
+  })
 })
 
 describe('RegisterRequestSchema', () => {
