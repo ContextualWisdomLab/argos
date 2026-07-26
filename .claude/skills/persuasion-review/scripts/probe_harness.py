@@ -31,6 +31,8 @@ def free_port() -> int:
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return False
     while time.time() < deadline:
         try:
             urllib.request.urlopen(url, timeout=1).read()
