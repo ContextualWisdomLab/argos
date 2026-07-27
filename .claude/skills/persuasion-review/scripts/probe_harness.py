@@ -33,7 +33,9 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
+            if not (url.startswith("http://") or url.startswith("https://")):
+                raise ValueError("Invalid URL schema")
+            urllib.request.urlopen(urllib.request.Request(url), timeout=1).read()
             return True
         except Exception:
             time.sleep(0.2)

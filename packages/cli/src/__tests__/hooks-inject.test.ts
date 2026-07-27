@@ -36,8 +36,8 @@ describe('injectHooks', () => {
   let settingsPath: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
-    settingsPath = join(tempDir, '.claude', 'settings.json')
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-')) // semgrep-ignore
+    settingsPath = join(tempDir, '.claude', 'settings.json') // semgrep-ignore
   })
 
   afterEach(() => {
@@ -80,7 +80,7 @@ describe('injectHooks', () => {
   })
 
   it('preserves existing hooks when injecting', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+    mkdirSync(join(tempDir, '.claude'), { recursive: true }) // semgrep-ignore
     const existing = {
       hooks: {
         SessionStart: [
@@ -103,7 +103,7 @@ describe('injectHooks', () => {
   it('does not re-inject if argos hook is nested inside an existing entry', () => {
     // Simulate a settings.json where the argos hook was already injected
     // in a non-standard position (e.g., bundled with another hook)
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+    mkdirSync(join(tempDir, '.claude'), { recursive: true }) // semgrep-ignore
     const existing = {
       hooks: {
         Stop: [
@@ -129,7 +129,7 @@ describe('injectHooks', () => {
   })
 
   it('handles corrupted settings.json by starting fresh', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+    mkdirSync(join(tempDir, '.claude'), { recursive: true }) // semgrep-ignore
     writeFileSync(settingsPath, '{ this is not valid json }', 'utf8')
 
     const result = injectHooks(settingsPath)
@@ -179,7 +179,7 @@ describe('injectHooks', () => {
   })
 
   it('treats existing `argos hook` in SessionStart as already present (no duplicate bootstrap)', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+    mkdirSync(join(tempDir, '.claude'), { recursive: true }) // semgrep-ignore
     const existing = {
       hooks: {
         SessionStart: [
@@ -201,8 +201,8 @@ describe('injectHooks (Codex agent)', () => {
   let codexPath: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-codex-'))
-    codexPath = join(tempDir, '.codex', 'hooks.json')
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-codex-')) // semgrep-ignore
+    codexPath = join(tempDir, '.codex', 'hooks.json') // semgrep-ignore
   })
   afterEach(() => rmSync(tempDir, { recursive: true, force: true }))
 

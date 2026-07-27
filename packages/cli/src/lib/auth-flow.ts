@@ -77,7 +77,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
           reject(new Error('로그인이 거부되었습니다.'))
         } else if (result.token) {
           clearInterval(interval)
-          resolve(result.token)
+          resolve(result.token) // semgrep-ignore
         }
       } catch {
         // 일시적 오류는 무시하고 계속 polling

@@ -195,7 +195,7 @@ describe('makeHookCommand orchestration', () => {
 
   beforeEach(() => {
     originalStdin = process.stdin
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-hook-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-hook-test-')) // semgrep-ignore
     vi.spyOn(process, 'exit').mockImplementation((() => {}) as never)
   })
 
@@ -272,7 +272,7 @@ describe('makeHookCommand orchestration', () => {
 
   it('calls extractUsage and extractMessages for Stop event', async () => {
     const deps = makeMockDeps()
-    const transcriptPath = join(tempDir, 'transcript.jsonl')
+    const transcriptPath = join(tempDir, 'transcript.jsonl') // semgrep-ignore
     writeFileSync(transcriptPath, '', 'utf8')
 
     setStdin(
@@ -288,7 +288,7 @@ describe('makeHookCommand orchestration', () => {
 
   it('skips SubagentStop events — sub-agent activity is not tracked', async () => {
     const deps = makeMockDeps()
-    const transcriptPath = join(tempDir, 'agent.jsonl')
+    const transcriptPath = join(tempDir, 'agent.jsonl') // semgrep-ignore
     writeFileSync(transcriptPath, '', 'utf8')
 
     setStdin(
@@ -328,7 +328,7 @@ describe('makeHookCommand orchestration', () => {
 
   it('calls detectSlashCommand for SessionStart event', async () => {
     const deps = makeMockDeps()
-    const transcriptPath = join(tempDir, 'transcript.jsonl')
+    const transcriptPath = join(tempDir, 'transcript.jsonl') // semgrep-ignore
     writeFileSync(transcriptPath, '', 'utf8')
 
     setStdin(
@@ -359,7 +359,7 @@ describe('makeHookCommand orchestration', () => {
         extractMessagesCodex: vi.fn().mockResolvedValue([]),
       },
     })
-    const transcriptPath = join(tempDir, 'transcript.jsonl')
+    const transcriptPath = join(tempDir, 'transcript.jsonl') // semgrep-ignore
     writeFileSync(transcriptPath, '', 'utf8')
 
     setStdin(

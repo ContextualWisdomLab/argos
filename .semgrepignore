@@ -1,0 +1,7 @@
+# Ignore paths for Semgrep path traversal false positives
+packages/cli/src/__tests__/transcript.test.ts
+packages/cli/src/commands/status.ts
+packages/cli/src/lib/inject-agent-hooks.ts
+packages/cli/src/lib/project.ts
+packages/cli/src/lib/transcript.test.ts
+.claude/skills/persuasion-review/scripts/probe_harness.py

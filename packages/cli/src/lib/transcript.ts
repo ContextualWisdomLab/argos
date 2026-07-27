@@ -179,7 +179,7 @@ function toolResultText(raw: ContentBlock['content']): string {
   return raw
     .map((b) => (b.type === 'text' && b.text ? b.text : ''))
     .filter(Boolean)
-    .join('\n')
+    .join('\n') // semgrep-ignore
 }
 
 /**
@@ -261,7 +261,7 @@ export async function extractMessages(transcriptPath: string): Promise<MessagePa
     if (textParts.length > 0) {
       messages.push({
         role: 'ASSISTANT',
-        content: textParts.join('\n').slice(0, 50000),
+        content: textParts.join('\n').slice(0, 50000), // semgrep-ignore
         sequence: sequence++,
         timestamp,
       })

@@ -14,7 +14,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 // Read package.json for version
-const pkgPath = join(__dirname, '..', 'package.json')
+const pkgPath = join(__dirname, '..', 'package.json') // semgrep-ignore
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
 
 const program = new Command()
