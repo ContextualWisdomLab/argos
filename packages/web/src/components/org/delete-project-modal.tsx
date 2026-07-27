@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,17 +28,11 @@ export function DeleteProjectModal({
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteProject()
 
-  useEffect(() => {
-    if (!project) {
-      setConfirmName('')
-      mutation.reset()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project])
-
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setConfirmName('')
+    mutation.reset()
     onClose()
   }
 

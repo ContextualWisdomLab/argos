@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,16 +28,12 @@ export function CreateProjectModal({
   const [name, setName] = useState('')
   const mutation = useCreateProject(orgSlug)
 
-  useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (next: boolean) => {
+    if (!next && mutation.isPending) return
+    if (!next) {
       setName('')
       mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
     onOpenChange(next)
   }
 

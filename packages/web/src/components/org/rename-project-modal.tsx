@@ -28,17 +28,16 @@ export function RenameProjectModal({
 
   useEffect(() => {
     if (project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(project.name)
-    } else {
-      setName('')
-      mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project])
 
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setName('')
+    mutation.reset()
     onClose()
   }
 

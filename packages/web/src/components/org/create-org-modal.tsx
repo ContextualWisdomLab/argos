@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertDialog,
@@ -27,17 +27,13 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mutation = useCreateOrg()
 
-  useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (next: boolean) => {
+    if (!next && mutation.isPending) return
+    if (!next) {
       setName('')
       setErrorMessage(null)
       mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
     onOpenChange(next)
   }
 

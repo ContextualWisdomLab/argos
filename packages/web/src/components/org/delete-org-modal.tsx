@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertDialog,
@@ -32,16 +32,12 @@ export function DeleteOrgModal({
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteOrg()
 
-  useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (next: boolean) => {
+    if (!next && mutation.isPending) return
+    if (!next) {
       setConfirmName('')
       mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
     onOpenChange(next)
   }
 
