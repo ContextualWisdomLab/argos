@@ -30,6 +30,9 @@ def free_port() -> int:
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
+    if not url.startswith("http://") and not url.startswith("https://"):
+        raise ValueError("URL scheme must be http:// or https://")
+
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
