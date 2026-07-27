@@ -23,13 +23,14 @@
       "hono": "4.12.27",
       "js-yaml": "4.3.0",
       "body-parser": "2.3.0",
-      "@hono/node-server": "2.0.5",
+      "@hono/node-server": "2.0.10",
       "sharp": "0.35.0",
       "@auth/core": "0.41.3",
-      "brace-expansion": "5.0.8",
       "fast-uri": "3.1.4",
       "postcss": "8.5.18",
-      "postcss@8.4.31": "8.5.18"
+      "postcss@8.4.31": "8.5.18",
+      "brace-expansion@1.1.15": "1.1.16",
+      "brace-expansion@2.1.2": "2.1.2"
     }
   }
 }
