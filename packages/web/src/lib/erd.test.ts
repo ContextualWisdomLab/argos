@@ -67,6 +67,16 @@ describe('ERDModel', () => {
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
+
+    it('should reject column types containing semicolons to prevent SQL injection', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer;' })
+      ).toThrowError("Invalid SQL type 'integer;': semicolons are not allowed.")
+      expect(() =>
+        model.addColumn('users', { name: 'name', type: 'VARCHAR(255); DROP TABLE users;' })
+      ).toThrowError("Invalid SQL type 'VARCHAR(255); DROP TABLE users;': semicolons are not allowed.")
+    })
   })
 
   describe('Foreign Key Management', () => {

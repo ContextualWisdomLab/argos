@@ -25,6 +25,12 @@ function assertSnakeCaseIdentifier(kind: string, name: string): void {
   }
 }
 
+function assertValidSqlType(type: string): void {
+  if (type.includes(';')) {
+    throw new Error(`Invalid SQL type '${type}': semicolons are not allowed.`)
+  }
+}
+
 export class ERDModel {
   private tables: Map<string, Table> = new Map()
 
@@ -49,6 +55,7 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertValidSqlType(column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
