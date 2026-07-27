@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2025-02-12 - [CI/Trivy 취약점 수정]
+**Vulnerability:** Github Actions trivy-fs 스캔 과정에서 `@auth/core`, `next`, `next-auth`, `postcss`, `sharp` 등에서 다수의 HIGH, CRITICAL 취약점이 발견되었습니다.
+**Learning:** `pnpm` workspace 구조에서 `pnpm.overrides`를 이용해 하위 종속성을 일괄적으로 보안 패치된 버전으로 올려야 하는 경우가 있습니다. `pnpm update -r`로는 `pnpm-lock.yaml`이 꼬일 수 있어 `package.json` 오버라이드 및 재생성이 효과적입니다.
+**Prevention:** 의존성을 최신 버전으로 관리하고, 주기적으로 보안 취약점을 스캔해 `pnpm.overrides`나 lockfile 재정리를 통해 패치된 버전이 설치되도록 강제합니다.
