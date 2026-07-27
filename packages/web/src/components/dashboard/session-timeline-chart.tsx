@@ -35,24 +35,7 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
+function formatToolSummary(relevantTools: ToolCallPoint[]): string {
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
@@ -144,14 +127,31 @@ export function SessionTimelineChart({
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
-    return usageTimeline.map((u, idx) => ({
-      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-      input: u.inputTokens,
-      output: u.outputTokens,
-      cost: u.estimatedCostUsd,
-      model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
+    // ⚡ Bolt: [Performance Optimization] O(N+M) pointer-based algorithm instead of O(N*M) nested filtering
+    // Sort usage and toolCalls by timestamp to safely handle any out-of-order events
+    const sortedUsage = [...usageTimeline].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    const sortedTools = [...toolCalls].sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+
+    let toolIndex = 0
+
+    return sortedUsage.map((u) => {
+      const currentTimestamp = new Date(u.timestamp).getTime()
+
+      const relevantTools: ToolCallPoint[] = []
+      while (toolIndex < sortedTools.length && sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp) {
+        relevantTools.push(sortedTools[toolIndex]!)
+        toolIndex++
+      }
+
+      return {
+        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+        input: u.inputTokens,
+        output: u.outputTokens,
+        cost: u.estimatedCostUsd,
+        model: u.model,
+        toolSummary: formatToolSummary(relevantTools),
+      }
+    })
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
   if (usageTimeline.length === 0) {
