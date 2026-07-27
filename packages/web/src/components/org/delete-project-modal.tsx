@@ -30,6 +30,7 @@ export function DeleteProjectModal({
 
   useEffect(() => {
     if (!project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConfirmName('')
       mutation.reset()
     }

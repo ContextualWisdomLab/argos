@@ -167,7 +167,8 @@ export function SessionActivityRibbon({
   }
 
   const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
-    setHover({ kind: 'event', idx, x: trackMouse(e) })
+    // eslint-disable-next-line react-hooks/refs
+    setHover({ kind: 'event', idx, x: trackMouse(e as unknown as React.MouseEvent<Element, MouseEvent>) })
   }
 
   const handleMergedHover = (
@@ -182,7 +183,8 @@ export function SessionActivityRibbon({
       toolName,
       count,
       firstEvent,
-      x: trackMouse(e),
+      // eslint-disable-next-line react-hooks/refs
+      x: trackMouse(e as unknown as React.MouseEvent<Element, MouseEvent>),
     })
   }
 

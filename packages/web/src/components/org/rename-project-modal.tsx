@@ -28,6 +28,7 @@ export function RenameProjectModal({
 
   useEffect(() => {
     if (project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(project.name)
     } else {
       setName('')
