@@ -8,9 +8,10 @@ packages:
 # pnpm 10+ readers; keep them disjoint from package.json to avoid a
 # duplicate-declaration error under pnpm 10.
 overrides:
-  brace-expansion: 5.0.8
   fast-uri: 3.1.4
   ip-address: 10.1.1
   postcss: 8.5.18
   "postcss@8.4.31": 8.5.18
   qs: 6.15.2
+  "brace-expansion@1.1.15": 1.1.16
+  "brace-expansion@2.1.2": 2.1.2
