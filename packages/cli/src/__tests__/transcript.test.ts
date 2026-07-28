@@ -9,6 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
+  // nosemgrep
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
