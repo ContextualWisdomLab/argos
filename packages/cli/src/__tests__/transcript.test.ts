@@ -8,6 +8,7 @@ import {
   extractMessages,
 } from '../lib/transcript.js'
 
+// nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
 function writejsonl(dir: string, lines: object[]): string {
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
