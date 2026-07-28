@@ -18,10 +18,19 @@
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
   "pnpm": {
     "overrides": {
+      "@auth/core": "0.41.3",
+      "next-auth": "5.0.0-beta.32",
+      "next": "15.5.22",
+      "@hono/node-server": "2.0.5",
+      "body-parser": "2.3.0",
+
+      "fast-uri": "3.1.4",
+      "postcss": "8.5.18",
+      "sharp": "0.35.0",
       "@babel/core": "7.29.7",
       "esbuild": "0.28.1",
-      "hono": "4.12.25",
-      "js-yaml": "4.2.0"
+      "hono": "4.12.27",
+      "js-yaml": "4.3.0"
     }
   }
 }
