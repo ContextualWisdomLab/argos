@@ -36,15 +36,11 @@ interface ChartDataItem {
 }
 
 function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
+  currentTimestamp: number,
+  prevTimestamp: number,
   toolCalls: ToolCallPoint[]
 ): string {
   if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
 
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
@@ -140,19 +136,29 @@ export function SessionTimelineChart({
       }))
   }, [messages])
 
+  // ⚡ Bolt: 각 타임라인 아이템의 날짜 문자열을 차트 렌더링 시마다 매번 파싱하지 않도록,
+  // useMemo를 통해 O(n) 비용의 파싱 작업을 분리하고 숫자형(number) 배열로 캐싱함.
+  const parsedTimestamps = useMemo(() => {
+    return usageTimeline.map((u) => new Date(u.timestamp).getTime())
+  }, [usageTimeline])
+
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
-    return usageTimeline.map((u, idx) => ({
-      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-      input: u.inputTokens,
-      output: u.outputTokens,
-      cost: u.estimatedCostUsd,
-      model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
-  }, [usageTimeline, sessionStartedAt, toolCalls])
+    return usageTimeline.map((u, idx) => {
+      const currentTimestamp = parsedTimestamps[idx]!
+      const prevTimestamp = idx > 0 ? parsedTimestamps[idx - 1]! : 0
+      return {
+        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+        input: u.inputTokens,
+        output: u.outputTokens,
+        cost: u.estimatedCostUsd,
+        model: u.model,
+        toolSummary: getToolSummaryForIndex(currentTimestamp, prevTimestamp, toolCalls),
+      }
+    })
+  }, [usageTimeline, sessionStartedAt, toolCalls, parsedTimestamps])
 
   if (usageTimeline.length === 0) {
     return (
