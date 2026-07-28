@@ -21,7 +21,12 @@
       "@babel/core": "7.29.7",
       "esbuild": "0.28.1",
       "hono": "4.12.25",
-      "js-yaml": "4.2.0"
+      "js-yaml": "4.2.0",
+      "next": "15.5.22",
+      "postcss": "8.5.24",
+      "sharp": "0.35.3",
+      "next-auth": "5.0.0-beta.32",
+      "@auth/core": "0.41.3"
     }
   }
 }
