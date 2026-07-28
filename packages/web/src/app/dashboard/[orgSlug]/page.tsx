@@ -1,34 +1,34 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Card } from '@/components/ui/card'
-import { useProjects } from '@/hooks/use-projects'
-import { useOrgs } from '@/hooks/use-orgs'
-import { CreateProjectModal } from '@/components/org/create-project-modal'
-import { DeleteProjectModal } from '@/components/org/delete-project-modal'
-import { RenameProjectModal } from '@/components/org/rename-project-modal'
+import { useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { useProjects } from "@/hooks/use-projects";
+import { useOrgs } from "@/hooks/use-orgs";
+import { CreateProjectModal } from "@/components/org/create-project-modal";
+import { DeleteProjectModal } from "@/components/org/delete-project-modal";
+import { RenameProjectModal } from "@/components/org/rename-project-modal";
 
 interface ProjectItem {
-  id: string
-  slug: string
-  name: string
-  createdAt: string
+  id: string;
+  slug: string;
+  name: string;
+  createdAt: string;
 }
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return new Date(iso).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   } catch {
-    return iso
+    return iso;
   }
 }
 
@@ -38,10 +38,10 @@ function ProjectCard({
   onRename,
   onDelete,
 }: {
-  orgSlug: string
-  project: ProjectItem
-  onRename: (p: ProjectItem) => void
-  onDelete: (p: ProjectItem) => void
+  orgSlug: string;
+  project: ProjectItem;
+  onRename: (p: ProjectItem) => void;
+  onDelete: (p: ProjectItem) => void;
 }) {
   return (
     <Card className="group relative transition-colors hover:bg-card-elevated">
@@ -65,26 +65,26 @@ function ProjectCard({
             size="icon-sm"
             aria-label="프로젝트 이름 변경"
             onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onRename(project)
+              e.preventDefault();
+              e.stopPropagation();
+              onRename(project);
             }}
             className="pointer-events-auto relative text-muted-foreground hover:text-foreground"
           >
-            <PencilIcon />
+            <PencilIcon aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="icon-sm"
             aria-label="프로젝트 삭제"
             onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onDelete(project)
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete(project);
             }}
             className="pointer-events-auto relative text-muted-foreground hover:text-destructive"
           >
-            <Trash2Icon />
+            <Trash2Icon aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -92,7 +92,7 @@ function ProjectCard({
         생성일 {formatDate(project.createdAt)}
       </div>
     </Card>
-  )
+  );
 }
 
 function ProjectsGridSkeleton() {
@@ -102,26 +102,26 @@ function ProjectsGridSkeleton() {
         <Skeleton key={i} className="h-24 w-full rounded-xl" />
       ))}
     </div>
-  )
+  );
 }
 
 export default function OrgHomePage() {
-  const params = useParams()
-  const orgSlug = params.orgSlug as string
+  const params = useParams();
+  const orgSlug = params.orgSlug as string;
 
-  const { data, isLoading } = useProjects(orgSlug)
-  const { data: orgsData } = useOrgs()
-  const currentOrg = orgsData?.orgs.find((o) => o.slug === orgSlug)
+  const { data, isLoading } = useProjects(orgSlug);
+  const { data: orgsData } = useOrgs();
+  const currentOrg = orgsData?.orgs.find((o) => o.slug === orgSlug);
 
-  const [createOpen, setCreateOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<ProjectItem | null>(
-    null
-  )
+    null,
+  );
   const [projectToRename, setProjectToRename] = useState<ProjectItem | null>(
-    null
-  )
+    null,
+  );
 
-  const projects = data?.projects ?? []
+  const projects = data?.projects ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -133,7 +133,7 @@ export default function OrgHomePage() {
           <p className="text-sm text-muted-foreground">Projects</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <PlusIcon />
+          <PlusIcon aria-hidden="true" />
           Create project
         </Button>
       </div>
@@ -151,7 +151,7 @@ export default function OrgHomePage() {
             </p>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <PlusIcon />
+            <PlusIcon aria-hidden="true" />
             Create project
           </Button>
         </div>
@@ -184,5 +184,5 @@ export default function OrgHomePage() {
         onClose={() => setProjectToRename(null)}
       />
     </div>
-  )
+  );
 }
