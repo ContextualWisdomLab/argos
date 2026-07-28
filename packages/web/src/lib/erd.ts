@@ -25,6 +25,12 @@ function assertSnakeCaseIdentifier(kind: string, name: string): void {
   }
 }
 
+function assertNoStatementTerminator(kind: string, value: string): void {
+  if (value.includes(';')) {
+    throw new Error(`${kind} cannot contain statement terminators like ';'.`)
+  }
+}
+
 export class ERDModel {
   private tables: Map<string, Table> = new Map()
 
@@ -49,6 +55,7 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertNoStatementTerminator('Column type', column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -57,6 +64,59 @@ export class ERDModel {
       throw new Error(`Column '${column.name}' already exists in table '${tableName}'.`)
     }
     table.columns.push(column)
+  }
+
+  removeTable(name: string): void {
+    assertSnakeCaseIdentifier('Table', name)
+    const table = this.tables.get(name)
+    if (!table) {
+      throw new Error(`Table '${name}' does not exist.`)
+    }
+
+    // Check if any other table has a foreign key referencing this table
+    for (const otherTable of this.tables.values()) {
+      if (otherTable.name !== name) {
+        for (const fk of otherTable.foreignKeys) {
+          if (fk.referenceTable === name) {
+            throw new Error(`Cannot remove table '${name}' because it is referenced by foreign key in table '${otherTable.name}'.`)
+          }
+        }
+      }
+    }
+
+    this.tables.delete(name)
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier('Table', tableName)
+    assertSnakeCaseIdentifier('Column', columnName)
+    const table = this.tables.get(tableName)
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`)
+    }
+
+    const columnIndex = table.columns.findIndex(c => c.name === columnName)
+    if (columnIndex === -1) {
+      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
+    }
+
+    // Check if this column is used as a foreign key in the same table
+    for (const fk of table.foreignKeys) {
+      if (fk.columnName === columnName) {
+        throw new Error(`Cannot remove column '${columnName}' because it is used in a foreign key in table '${tableName}'.`)
+      }
+    }
+
+    // Check if any table (including this one) references this column in a foreign key
+    for (const otherTable of this.tables.values()) {
+      for (const fk of otherTable.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
+          throw new Error(`Cannot remove column '${columnName}' because it is referenced by foreign key in table '${otherTable.name}'.`)
+        }
+      }
+    }
+
+    table.columns.splice(columnIndex, 1)
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {

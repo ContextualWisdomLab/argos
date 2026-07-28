@@ -33,6 +33,46 @@ describe('ERDModel', () => {
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
     })
+
+    it('should remove a table successfully if not referenced', () => {
+      model.addTable('users')
+      model.removeTable('users')
+      expect(model.getTable('users')).toBeUndefined()
+      expect(model.getTables().length).toBe(0)
+    })
+
+    it('should throw when removing a non-existent table', () => {
+      expect(() => model.removeTable('non_existent')).toThrowError("Table 'non_existent' does not exist.")
+    })
+
+    it('should throw when removing a table referenced by a foreign key in another table', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'id', type: 'integer' })
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      expect(() => model.removeTable('users')).toThrowError(
+        "Cannot remove table 'users' because it is referenced by foreign key in table 'posts'."
+      )
+    })
+
+    it('should remove a table that exists alongside another table not referencing it', () => {
+      model.addTable('users')
+      model.addTable('posts')
+      model.removeTable('users')
+      expect(model.getTable('users')).toBeUndefined()
+      expect(model.getTable('posts')).toBeDefined()
+    })
+
+    it('should reject non-snake-case table names on remove', () => {
+      expect(() => model.removeTable('UserProfiles')).toThrowError("Table 'UserProfiles' must be snake_case.")
+    })
   })
 
   describe('Column Management', () => {
@@ -66,6 +106,82 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
+    })
+
+    it('should reject column types containing statement terminators like semicolon to prevent SQL injection', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'VARCHAR(255); DROP TABLE users; --' })
+      ).toThrowError("Column type cannot contain statement terminators like ';'.")
+    })
+
+    it('should remove a column successfully if not referenced', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.removeColumn('users', 'id')
+      const table = model.getTable('users')
+      expect(table?.columns.length).toBe(0)
+    })
+
+    it('should throw when removing a column from a non-existent table', () => {
+      expect(() => model.removeColumn('non_existent', 'id')).toThrowError("Table 'non_existent' does not exist.")
+    })
+
+    it('should throw when removing a non-existent column', () => {
+      model.addTable('users')
+      expect(() => model.removeColumn('users', 'non_existent')).toThrowError("Column 'non_existent' does not exist in table 'users'.")
+    })
+
+    it('should throw when removing a column used in a local foreign key', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addColumn('users', { name: 'parent_id', type: 'integer' })
+      model.addForeignKey('users', {
+        columnName: 'parent_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      expect(() => model.removeColumn('users', 'parent_id')).toThrowError(
+        "Cannot remove column 'parent_id' because it is used in a foreign key in table 'users'."
+      )
+    })
+
+    it('should throw when removing a column referenced by a foreign key', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      expect(() => model.removeColumn('users', 'id')).toThrowError(
+        "Cannot remove column 'id' because it is referenced by foreign key in table 'posts'."
+      )
+    })
+
+    it('should remove a column when there is a foreign key present but it does not reference the removed column', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      model.addColumn('users', { name: 'other_col', type: 'integer' })
+      model.addTable('posts')
+      model.addColumn('posts', { name: 'user_id', type: 'integer' })
+      model.addForeignKey('posts', {
+        columnName: 'user_id',
+        referenceTable: 'users',
+        referenceColumn: 'id',
+      })
+
+      model.removeColumn('users', 'other_col')
+      expect(model.getTable('users')?.columns.length).toBe(1)
+    })
+
+    it('should reject non-snake-case names on column remove', () => {
+      expect(() => model.removeColumn('UserProfiles', 'id')).toThrowError("Table 'UserProfiles' must be snake_case.")
+      expect(() => model.removeColumn('users', 'userId')).toThrowError("Column 'userId' must be snake_case.")
     })
   })
 
