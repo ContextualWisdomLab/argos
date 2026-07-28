@@ -14,9 +14,7 @@ export interface AgentHookResult {
  * 두 에이전트 중 무엇을 쓰든 argos 가 추적하도록 기본적으로 둘 다 설치한다(미사용 에이전트의 파일은 무해).
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   return {
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
