@@ -1,15 +1,10 @@
 packages:
   - "packages/*"
 
-# NOTE: This project pins pnpm@9.15.4 (packageManager). pnpm 9 does NOT read
-# overrides from pnpm-workspace.yaml (that is a pnpm 10 feature), so the
-# security override pins that must actually take effect live in the root
-# package.json under "pnpm.overrides". The entries below are retained for
-# pnpm 10+ readers; keep them disjoint from package.json to avoid a
-# duplicate-declaration error under pnpm 10.
 overrides:
   brace-expansion: 5.0.6
   fast-uri: 3.1.2
+  hono: 4.12.23
   ip-address: 10.1.1
   postcss: 8.5.15
   "postcss@8.4.31": 8.5.15
