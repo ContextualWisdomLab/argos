@@ -26,3 +26,8 @@
 **Vulnerability:** Trivy FS scanner detected multiple CRITICAL, HIGH, and MEDIUM severity vulnerabilities across packages like `next`, `next-auth`, `@auth/core`, `body-parser`, `brace-expansion`, `fast-uri`, `hono`, `js-yaml`, `postcss`, and `sharp`.
 **Learning:** Legacy vulnerable versions inside `pnpm.overrides` and `pnpm-workspace.yaml` overrides blocked resolution of updated versions causing CI failures.
 **Prevention:** Always maintain up-to-date versions inside pnpm `overrides` across `package.json` and `pnpm-workspace.yaml`.
+
+## 2026-07-29 - brace-expansion High severity finding
+**Vulnerability:** Trivy FS scanner also found a high severity finding (`brace-expansion: DoS via unbounded expansion length`) alongside minimatch.
+**Learning:** `minimatch` overrides were applied correctly but the vulnerable dependency tree explicitly brought in `brace-expansion`. The previous update scripts inadvertently removed the `brace-expansion` fix entirely.
+**Prevention:** Always verify all requested package overrides and don't delete them if they fix distinct high severity vulnerabilities.
