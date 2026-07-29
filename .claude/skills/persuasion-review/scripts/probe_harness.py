@@ -33,8 +33,9 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
-            return True
+            if url.startswith("http://") or url.startswith("https://"):
+                urllib.request.urlopen(url, timeout=1).read()
+                return True
         except Exception:
             time.sleep(0.2)
     return False
