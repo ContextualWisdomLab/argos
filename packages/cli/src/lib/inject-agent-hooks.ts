@@ -15,7 +15,9 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal config segments joined onto the caller-supplied project cwd; local CLI on the user's own filesystem
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal config segments joined onto the caller-supplied project cwd; local CLI on the user's own filesystem
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }

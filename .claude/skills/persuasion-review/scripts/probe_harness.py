@@ -30,10 +30,13 @@ def free_port() -> int:
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
+    if not url.startswith(("http://", "https://")):
+        raise ValueError("readiness probe URL must use http(s)")
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
+            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- internal localhost readiness probe; scheme restricted to http(s) above
+            urllib.request.urlopen(url, timeout=1).read()  # noqa: S310
             return True
         except Exception:
             time.sleep(0.2)

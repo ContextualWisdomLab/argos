@@ -22,11 +22,13 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- resolves the caller's own project directory (or cwd); local CLI, no untrusted input
   let currentDir = resolve(startDir || process.cwd())
   let depth = 0
   const maxDepth = 10
 
   while (depth < maxDepth) {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal .argos/project.json segments under the user's own project dir
     const configPath = join(currentDir, '.argos', 'project.json')
     if (existsSync(configPath)) {
       try {
@@ -74,16 +76,19 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal .argos segment under the caller's own target/cwd; local CLI
   const argosDir = join(targetDir, '.argos')
 
   if (!existsSync(argosDir)) {
     mkdirSync(argosDir, { recursive: true })
   }
 
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal project.json under the CLI's own .argos dir
   const configPath = join(argosDir, 'project.json')
   writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
 
   // Create .gitignore with comment (but don't actually ignore anything)
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- literal .gitignore under the CLI's own .argos dir
   const gitignorePath = join(argosDir, '.gitignore')
   const gitignoreComment = '# argos 설정 (gitignore 하지 않음)\n'
   writeFileSync(gitignorePath, gitignoreComment, 'utf8')
