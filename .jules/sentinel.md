@@ -17,7 +17,7 @@
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
 
-## 2025-02-15 - [DoS via extremely long input to bcrypt]
-**Vulnerability:** Registration, login, password reset, and admin login forms did not enforce maximum length restrictions on passwords.
-**Learning:** Bcrypt (and other key derivation functions) is intentionally slow. If an attacker submits a massive string (e.g. 100,000 characters) for hashing, the CPU will spend an excessive amount of time processing it, which can easily be exploited to cause a Denial of Service (DoS).
-**Prevention:** Always enforce a strict maximum length (e.g. `.max(1024)`) on password inputs in Zod validation schemas across all endpoints to prevent CPU exhaustion.
+## 2025-02-15 - [Path traversal false positive suppression]
+**Vulnerability:** Semgrep path-traversal rule mistakenly flags safe, non-user-controlled uses of `path.join` and `path.resolve` (e.g. `join(deps.cwd(), ...)`).
+**Learning:** Tools like `osv-scanner` run `semgrep` which can be quite noisy. When we control the inputs, these path traversal findings are false positives.
+**Prevention:** Use `// nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal` immediately above the flagged function calls to ignore these false alarms, as outlined in AGENTS.md.
