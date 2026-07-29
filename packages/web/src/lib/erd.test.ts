@@ -67,6 +67,20 @@ describe('ERDModel', () => {
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
+
+    it('should throw when type contains semicolon', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'INTEGER;' })
+      ).toThrowError("Column type cannot contain statement terminators (';').")
+    })
+
+    it('should throw when defaultValue contains semicolon', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'status', type: 'VARCHAR(20)', defaultValue: "'active';" })
+      ).toThrowError("Column default value cannot contain statement terminators (';').")
+    })
   })
 
   describe('Foreign Key Management', () => {
@@ -158,12 +172,16 @@ describe('ERDModel', () => {
       model.addColumn('users', { name: 'id', type: 'SERIAL', isPrimaryKey: true })
       model.addColumn('users', { name: 'name', type: 'VARCHAR(255)', isNullable: false })
       model.addColumn('users', { name: 'bio', type: 'TEXT' })
+      model.addColumn('users', { name: 'email', type: 'VARCHAR(255)', isUnique: true, isNullable: false })
+      model.addColumn('users', { name: 'status', type: 'VARCHAR(20)', defaultValue: "'active'" })
 
       const ddl = model.generateDDL()
       const expected = `CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  bio TEXT
+  bio TEXT,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  status VARCHAR(20) DEFAULT 'active'
 );`
       expect(ddl).toBe(expected)
     })

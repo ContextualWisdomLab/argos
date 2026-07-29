@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2025-02-15 - [DDL SQL Injection 취약점 방지]
+**Vulnerability:** ERD Engineering Tool의 DDL 생성 기능에서 Column의 `type` 및 `defaultValue` 속성을 통해 세미콜론(`;`)을 포함한 악의적인 SQL 구문이 주입될 수 있었습니다. (예: `type: 'INTEGER; DROP TABLE users'`)
+**Learning:** `generateDDL` 등 동적으로 SQL 구문을 조합하여 실행 또는 출력하는 환경에서는 문자열 연결(String concatenation) 방식이 SQL Injection에 매우 취약합니다. 특히 타입이나 기본값처럼 사용자가 자유롭게 입력할 수 있는 필드에 대한 검증이 누락되면 치명적입니다.
+**Prevention:** 입력값 검증(Input validation)을 강화해야 합니다. 세미콜론과 같은 SQL 구문 종결자를 명시적으로 차단하는 검증 로직(`assertNoStatementTerminator`)을 도입하여 악의적인 다중 쿼리 실행을 방지해야 합니다.

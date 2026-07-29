@@ -3,6 +3,8 @@ export interface Column {
   type: string
   isPrimaryKey?: boolean
   isNullable?: boolean
+  isUnique?: boolean
+  defaultValue?: string
 }
 
 export interface ForeignKey {
@@ -22,6 +24,12 @@ const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`)
+  }
+}
+
+function assertNoStatementTerminator(kind: string, value: string): void {
+  if (value.includes(';')) {
+    throw new Error(`${kind} cannot contain statement terminators (';').`)
   }
 }
 
@@ -49,6 +57,11 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertNoStatementTerminator('Column type', column.type)
+    if (column.defaultValue !== undefined) {
+      assertNoStatementTerminator('Column default value', column.defaultValue)
+    }
+
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -94,6 +107,12 @@ export class ERDModel {
         }
         if (col.isNullable === false) {
           def += ' NOT NULL'
+        }
+        if (col.isUnique) {
+          def += ' UNIQUE'
+        }
+        if (col.defaultValue !== undefined) {
+          def += ` DEFAULT ${col.defaultValue}`
         }
         return def
       })
