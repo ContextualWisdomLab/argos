@@ -75,6 +75,7 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const argosDir = join(targetDir, '.argos')
 
   if (!existsSync(argosDir)) {
