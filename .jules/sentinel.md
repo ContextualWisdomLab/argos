@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2026-07-29 - [Semgrep Path Traversal Warnings]
+**Vulnerability:** Semgrep flagged multiple warnings (`javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal`) on `path.join` and `path.resolve` usage in the CLI package. Python scripts had `dynamic-urllib-use-detected`.
+**Learning:** Even when inputs to `path.join` are safe (like `process.cwd()`), Semgrep's strict rules will flag them if it thinks the inputs are dynamically resolved or user-controlled. Python `urllib` can open local files if a `file://` scheme is passed dynamically.
+**Prevention:** For TypeScript, use the Semgrep ignore comment (`// nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal`) when the base path is known to be safe. For Python, explicitly validate the URL scheme (e.g. `url.startswith("http://") or url.startswith("https://")`) before calling `urllib.request.urlopen`.
