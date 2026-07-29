@@ -209,7 +209,7 @@ export function AdminDashboard() {
                       <button
                         key={user.id}
                         type="button"
-                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
+                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
                           setSelectedUserId(user.id)
                           setResetLink(null)

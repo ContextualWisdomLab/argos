@@ -36,7 +36,7 @@ export function NoOrganizationState({
             <span className="text-sm text-muted-foreground">{email}</span>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-sm text-destructive hover:underline"
+              className="text-sm text-destructive hover:underline rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Log out of your account"
             >
               Log out
