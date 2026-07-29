@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatTokens, formatCost } from '@/lib/format'
 
@@ -94,7 +95,7 @@ export function OverviewStats({
           aria-hidden="true"
           className={cn('inline-block transition-transform', expanded && 'rotate-90')}
         >
-          ▸
+          <ChevronRight className="h-4 w-4" />
         </span>
         <span className="font-medium text-foreground">What do these numbers mean?</span>
         <span aria-hidden="true">— {expanded ? 'click to collapse' : 'click to expand'}</span>

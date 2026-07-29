@@ -1,6 +1,11 @@
 # Changelog
 
+
 ## [Unreleased]
+### Added
+- [UX] 오버뷰 통계 토글에 `ChevronRight` 아이콘을 적용하여 전체 앱 아이콘 디자인 시스템과 통일성 제고
+
+
 
 ### ✨ 추가 기능 (Feature)
 
