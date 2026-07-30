@@ -1,0 +1,25 @@
+# OSV-Scanner configuration — narrowly scoped, time-boxed ignores only.
+# Every entry documents a real advisory that is not fixable in this repo without
+# breaking the build, with a re-evaluation date. Do NOT use this to silence
+# fixable production findings — bump the dependency instead.
+
+[[IgnoredVulns]]
+id = "GHSA-mh99-v99m-4gvg"
+ignoreUntil = 2026-10-28
+# brace-expansion ReDoS (CVE-2025-5889, CVSS 7.5). GitHub's advisory publishes a
+# single flat affected range "<= 5.0.7" (fix: 5.0.8), so every 1.x / 2.x release
+# is flagged even though 5.0.8 is the only "fixed" version. The only brace-expansion
+# instances that remain on the 1.x / 2.x line in this repo are DEV-ONLY transitive
+# deps of the ESLint lint toolchain, pulled through minimatch@3.1.5
+# (@eslint/config-array, @eslint/eslintrc, eslint-plugin-import,
+# eslint-plugin-jsx-a11y, eslint-plugin-react). minimatch 3.x calls
+# brace-expansion as a function (CJS callable default export); brace-expansion 5.0.8
+# is ESM-only and drops that export, so forcing 5.0.8 breaks `next build`/eslint with
+# "expand is not a function". No published minimatch version depends on
+# brace-expansion >= 5, and no current ESLint-plugin release drops minimatch 3.x, so
+# the finding is not fixable without forking the lint toolchain.
+# The production runtime bundle (@argos/web via Next.js) does NOT ship the lint
+# toolchain, and the prod-reachable 5.x line is pinned to the fixed 5.0.8 in the root
+# pnpm.overrides. This mirrors the org-central trivy-fs gate, which already suppresses
+# dev/test dependencies. Re-evaluate when the ESLint ecosystem moves off minimatch 3.x.
+reason = "brace-expansion <5.0.8 only reachable via dev-only ESLint toolchain (minimatch@3.1.5, CJS-callable); 5.0.8 is ESM-only and breaks the build. Prod 5.x line pinned to fixed 5.0.8."

@@ -22,12 +22,12 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
-  let currentDir = resolve(startDir || process.cwd())
+  let currentDir = resolve(startDir || process.cwd()) // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- local CLI path from cwd, no untrusted input
   let depth = 0
   const maxDepth = 10
 
   while (depth < maxDepth) {
-    const configPath = join(currentDir, '.argos', 'project.json')
+    const configPath = join(currentDir, '.argos', 'project.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- local CLI path from cwd, no untrusted input
     if (existsSync(configPath)) {
       try {
         const content = readFileSync(configPath, 'utf8')
@@ -74,17 +74,17 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
-  const argosDir = join(targetDir, '.argos')
+  const argosDir = join(targetDir, '.argos') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- local CLI path from cwd, no untrusted input
 
   if (!existsSync(argosDir)) {
     mkdirSync(argosDir, { recursive: true })
   }
 
-  const configPath = join(argosDir, 'project.json')
+  const configPath = join(argosDir, 'project.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- local CLI path from cwd, no untrusted input
   writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
 
   // Create .gitignore with comment (but don't actually ignore anything)
-  const gitignorePath = join(argosDir, '.gitignore')
+  const gitignorePath = join(argosDir, '.gitignore') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- local CLI path from cwd, no untrusted input
   const gitignoreComment = '# argos 설정 (gitignore 하지 않음)\n'
   writeFileSync(gitignorePath, gitignoreComment, 'utf8')
 }
