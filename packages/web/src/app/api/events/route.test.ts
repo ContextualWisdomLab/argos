@@ -38,8 +38,10 @@ vi.mock('@/lib/server/db', () => {
       findUnique: vi.fn(),
     },
     claudeSession: {
+      findUnique: vi.fn(),
       upsert: vi.fn(),
       update: vi.fn(),
+      delete: vi.fn(),
     },
     event: {
       create: vi.fn(),
@@ -109,8 +111,11 @@ describe('POST /api/events — WU-4 응답 shape', () => {
     vi.clearAllMocks()
     // 기본 auth mock: 인증 성공
     vi.mocked(requireAuth).mockResolvedValue({ userId: 'user-1' })
+    // 기본: 해당 sessionId 는 아직 존재하지 않음 (신규 세션 create 경로)
+    vi.mocked(db.claudeSession.findUnique).mockResolvedValue(null)
     // claudeSession.upsert 기본 stub
     vi.mocked(db.claudeSession.upsert).mockResolvedValue({} as unknown as ClaudeSession)
+    vi.mocked(db.claudeSession.update).mockResolvedValue({} as unknown as ClaudeSession)
     // event.create 기본 stub
     vi.mocked(db.event.create).mockResolvedValue({} as unknown as Event)
   })
@@ -180,5 +185,49 @@ describe('POST /api/events — WU-4 응답 shape', () => {
     expect(db.claudeSession.upsert).toHaveBeenCalledWith(
       expect.objectContaining({ create: expect.objectContaining({ agent: 'CLAUDE' }) }),
     )
+  })
+
+  it('(e) 다른 유저 소유 세션 하이재킹 차단 — 403, 피해자 세션/메시지 미변경', async () => {
+    // 공격자(user-1)는 자기 org 의 프로젝트에 대한 멤버십이 있다.
+    vi.mocked(db.project.findUnique).mockResolvedValue({
+      id: 'project-1',
+      orgId: 'org-1',
+      organization: {
+        slug: 'attacker-org',
+        memberships: [{ userId: 'user-1', role: 'MEMBER' }],
+      },
+    } as unknown as Awaited<ReturnType<typeof db.project.findUnique>>)
+
+    // 그러나 대상 sessionId 는 이미 '다른 유저(victim)' 소유의 세션이다.
+    vi.mocked(db.claudeSession.findUnique).mockResolvedValue({
+      userId: 'victim',
+    } as unknown as ClaudeSession)
+
+    const res = await POST(
+      makeRequest({
+        sessionId: 'victim-session',
+        projectId: 'project-1',
+        hookEventName: 'STOP',
+        title: 'attacker-overwrite',
+        summary: 'attacker-overwrite',
+        messages: [
+          {
+            role: 'HUMAN',
+            content: 'attacker-injected-content',
+            sequence: 0,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }),
+    )
+
+    // 소유권 없는 세션에 대한 쓰기는 거부되어야 한다.
+    expect(res.status).toBe(403)
+
+    // 피해자 세션 메타/메시지가 절대 변경/삭제되면 안 된다.
+    expect(db.claudeSession.update).not.toHaveBeenCalled()
+    expect(db.message.deleteMany).not.toHaveBeenCalled()
+    expect(db.event.create).not.toHaveBeenCalled()
+    expect(db.claudeSession.upsert).not.toHaveBeenCalled()
   })
 })

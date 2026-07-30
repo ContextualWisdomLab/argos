@@ -60,6 +60,24 @@ export async function POST(req: Request) {
       )
     }
 
+    // 2-1. 세션 소유권 가드.
+    // sessionId 는 클라이언트가 정하는 값이므로, 이미 존재하는 세션이면 그 세션이
+    // 요청자 소유인지 확인한다. 이 확인이 없으면 어떤 인증 사용자든(자기 org·프로젝트
+    // 멤버십만 있으면) 타인의 sessionId 를 실어 STOP 이벤트를 보내 해당 세션의
+    // 메타(endedAt/title/summary)를 덮어쓰고 messages 전체를 삭제·교체할 수 있다
+    // (아래 STOP 핸들러의 deleteMany/createMany). owner 격리로 cross-user·cross-tenant
+    // 쓰기를 차단한다.
+    const existingSession = await db.claudeSession.findUnique({
+      where: { id: payload.sessionId },
+      select: { userId: true },
+    })
+    if (existingSession && existingSession.userId !== userId) {
+      return NextResponse.json(
+        { error: 'Forbidden: session belongs to another user' },
+        { status: 403 }
+      )
+    }
+
     // 3. ClaudeSession upsert (create-only, 이미 존재하면 update 없음)
     // 세션 출처(agent)는 생성 시 payload.agent 로 기록. 모든 Codex 이벤트가 'CODEX' 를 실어 보내므로
     // 어느 이벤트가 세션을 만들든 올바르게 기록된다. 미지정(구버전 CLI)은 CLAUDE.
