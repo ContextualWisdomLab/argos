@@ -3,68 +3,69 @@
  */
 
 export interface ApiRequestOptions extends RequestInit {
-  token?: string
-  baseUrl?: string
+  token?: string;
+  baseUrl?: string;
 }
 
 export async function apiRequest<T>(
   path: string,
-  options: ApiRequestOptions
+  options: ApiRequestOptions,
 ): Promise<T> {
-  const { token, baseUrl, ...fetchOptions } = options
+  const { token, baseUrl, ...fetchOptions } = options;
 
-  const url = `${baseUrl || ''}${path}`
+  const url = `${baseUrl || ""}${path}`;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
+    "Content-Type": "application/json",
+  };
 
   // Merge existing headers
   if (fetchOptions.headers) {
-    const existingHeaders = new Headers(fetchOptions.headers)
+    const existingHeaders = new Headers(fetchOptions.headers);
     existingHeaders.forEach((value, key) => {
-      headers[key] = value
-    })
+      headers[key] = value;
+    });
   }
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
       signal: fetchOptions.signal || controller.signal,
-    })
+    });
 
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      let errorMessage: string
+      const errorText = await response.text().catch(() => "Unknown error");
+      let errorMessage: string;
 
       try {
-        const errorJson = JSON.parse(errorText)
-        errorMessage = errorJson.error?.message || errorJson.message || response.statusText
+        const errorJson = JSON.parse(errorText);
+        errorMessage =
+          errorJson.error?.message || errorJson.message || response.statusText;
       } catch {
-        errorMessage = errorText || response.statusText
+        errorMessage = errorText || response.statusText;
       }
 
-      throw new Error(`API Error (${response.status}): ${errorMessage}`)
+      throw new Error(`API Error (${response.status}): ${errorMessage}`);
     }
 
-    return await response.json()
+    return await response.json();
   } catch (err) {
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
     if (err instanceof Error) {
-      if (err.name === 'AbortError') {
-        throw new Error('API request timed out')
+      if (err.name === "AbortError") {
+        throw new Error("API request timed out");
       }
-      throw err
+      throw err;
     }
-    throw new Error('Unknown API error')
+    throw new Error("Unknown API error");
   }
 }

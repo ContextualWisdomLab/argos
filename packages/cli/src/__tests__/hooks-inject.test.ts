@@ -1,238 +1,262 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { join } from 'path'
-import { tmpdir } from 'os'
-import { injectHooks } from '../lib/hooks-inject.js'
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {
+  mkdtempSync,
+  rmSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+} from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { injectHooks } from "../lib/hooks-inject.js";
 
-const HOOK_EVENTS = ['SessionStart', 'PreToolUse', 'PostToolUse', 'Stop', 'SubagentStop']
-const ARGOS_COMMAND = 'argos hook'
+const HOOK_EVENTS = [
+  "SessionStart",
+  "PreToolUse",
+  "PostToolUse",
+  "Stop",
+  "SubagentStop",
+];
+const ARGOS_COMMAND = "argos hook";
 const ARGOS_SESSION_START_COMMAND =
-  'command -v argos >/dev/null 2>&1 || npm install -g argos-ai@latest; argos hook'
+  "command -v argos >/dev/null 2>&1 || npm install -g argos-ai@latest; argos hook";
 
 interface HookEntry {
-  matcher: string
-  hooks: { type: string; command: string }[]
+  matcher: string;
+  hooks: { type: string; command: string }[];
 }
 
 function isArgosCommand(cmd: string): boolean {
   // 프로덕션 로직과 동일하게 claude/codex/bootstrap 변형을 모두 인식한다.
-  return cmd.includes('argos hook')
+  return cmd.includes("argos hook");
 }
 
 function hasArgosHook(entries: HookEntry[]): boolean {
   return entries.some((entry) =>
-    entry.hooks?.some((h) => isArgosCommand(h.command))
-  )
+    entry.hooks?.some((h) => isArgosCommand(h.command)),
+  );
 }
 
 function argosHookCount(entries: HookEntry[]): number {
   return entries.filter((entry) =>
-    entry.hooks?.some((h) => isArgosCommand(h.command))
-  ).length
+    entry.hooks?.some((h) => isArgosCommand(h.command)),
+  ).length;
 }
 
-describe('injectHooks', () => {
-  let tempDir: string
-  let settingsPath: string
+describe("injectHooks", () => {
+  let tempDir: string;
+  let settingsPath: string;
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
-    settingsPath = join(tempDir, '.claude', 'settings.json')
-  })
+    tempDir = mkdtempSync(join(tmpdir(), "argos-test-"));
+    settingsPath = join(tempDir, ".claude", "settings.json");
+  });
 
   afterEach(() => {
-    rmSync(tempDir, { recursive: true, force: true })
-  })
+    rmSync(tempDir, { recursive: true, force: true });
+  });
 
-  it('creates settings.json with all 5 hooks when file does not exist', () => {
-    const result = injectHooks(settingsPath)
+  it("creates settings.json with all 5 hooks when file does not exist", () => {
+    const result = injectHooks(settingsPath);
 
-    expect(result).toBe('injected')
+    expect(result).toBe("injected");
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
     for (const event of HOOK_EVENTS) {
-      expect(settings.hooks[event], `missing hook for ${event}`).toBeDefined()
-      expect(hasArgosHook(settings.hooks[event]), `argos hook not found in ${event}`).toBe(true)
+      expect(settings.hooks[event], `missing hook for ${event}`).toBeDefined();
+      expect(
+        hasArgosHook(settings.hooks[event]),
+        `argos hook not found in ${event}`,
+      ).toBe(true);
     }
-  })
+  });
 
-  it('returns already_present on second call without duplicating hooks', () => {
-    injectHooks(settingsPath)
-    const result = injectHooks(settingsPath)
+  it("returns already_present on second call without duplicating hooks", () => {
+    injectHooks(settingsPath);
+    const result = injectHooks(settingsPath);
 
-    expect(result).toBe('already_present')
+    expect(result).toBe("already_present");
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
     for (const event of HOOK_EVENTS) {
-      expect(argosHookCount(settings.hooks[event]), `duplicate in ${event}`).toBe(1)
+      expect(
+        argosHookCount(settings.hooks[event]),
+        `duplicate in ${event}`,
+      ).toBe(1);
     }
-  })
+  });
 
-  it('is idempotent across 3+ repeated calls', () => {
+  it("is idempotent across 3+ repeated calls", () => {
     for (let i = 0; i < 5; i++) {
-      injectHooks(settingsPath)
+      injectHooks(settingsPath);
     }
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
     for (const event of HOOK_EVENTS) {
-      expect(argosHookCount(settings.hooks[event])).toBe(1)
+      expect(argosHookCount(settings.hooks[event])).toBe(1);
     }
-  })
+  });
 
-  it('preserves existing hooks when injecting', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+  it("preserves existing hooks when injecting", () => {
+    mkdirSync(join(tempDir, ".claude"), { recursive: true });
     const existing = {
       hooks: {
         SessionStart: [
-          { matcher: 'my-tool', hooks: [{ type: 'command', command: 'my-custom-script' }] },
+          {
+            matcher: "my-tool",
+            hooks: [{ type: "command", command: "my-custom-script" }],
+          },
         ],
       },
-    }
-    writeFileSync(settingsPath, JSON.stringify(existing), 'utf8')
+    };
+    writeFileSync(settingsPath, JSON.stringify(existing), "utf8");
 
-    injectHooks(settingsPath)
+    injectHooks(settingsPath);
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
     // Original hook is preserved
-    expect(settings.hooks.SessionStart).toHaveLength(2)
-    expect(settings.hooks.SessionStart[0].hooks[0].command).toBe('my-custom-script')
+    expect(settings.hooks.SessionStart).toHaveLength(2);
+    expect(settings.hooks.SessionStart[0].hooks[0].command).toBe(
+      "my-custom-script",
+    );
     // Argos hook is appended
-    expect(hasArgosHook(settings.hooks.SessionStart)).toBe(true)
-  })
+    expect(hasArgosHook(settings.hooks.SessionStart)).toBe(true);
+  });
 
-  it('does not re-inject if argos hook is nested inside an existing entry', () => {
+  it("does not re-inject if argos hook is nested inside an existing entry", () => {
     // Simulate a settings.json where the argos hook was already injected
     // in a non-standard position (e.g., bundled with another hook)
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+    mkdirSync(join(tempDir, ".claude"), { recursive: true });
     const existing = {
       hooks: {
         Stop: [
           {
-            matcher: '',
+            matcher: "",
             hooks: [
-              { type: 'command', command: 'other-hook' },
-              { type: 'command', command: ARGOS_COMMAND },
+              { type: "command", command: "other-hook" },
+              { type: "command", command: ARGOS_COMMAND },
             ],
           },
         ],
       },
-    }
-    writeFileSync(settingsPath, JSON.stringify(existing), 'utf8')
+    };
+    writeFileSync(settingsPath, JSON.stringify(existing), "utf8");
 
     // Partial inject: Stop already has argos hook, others don't
-    const result = injectHooks(settingsPath)
-    expect(result).toBe('injected') // other 4 events still need injection
+    const result = injectHooks(settingsPath);
+    expect(result).toBe("injected"); // other 4 events still need injection
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
     // Stop should not have been duplicated
-    expect(argosHookCount(settings.hooks.Stop)).toBe(1)
-  })
+    expect(argosHookCount(settings.hooks.Stop)).toBe(1);
+  });
 
-  it('handles corrupted settings.json by starting fresh', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
-    writeFileSync(settingsPath, '{ this is not valid json }', 'utf8')
+  it("handles corrupted settings.json by starting fresh", () => {
+    mkdirSync(join(tempDir, ".claude"), { recursive: true });
+    writeFileSync(settingsPath, "{ this is not valid json }", "utf8");
 
-    const result = injectHooks(settingsPath)
-    expect(result).toBe('injected')
+    const result = injectHooks(settingsPath);
+    expect(result).toBe("injected");
 
     // Output should be valid JSON with all hooks
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    expect(settings.hooks).toBeDefined()
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+    expect(settings.hooks).toBeDefined();
     for (const event of HOOK_EVENTS) {
-      expect(hasArgosHook(settings.hooks[event])).toBe(true)
+      expect(hasArgosHook(settings.hooks[event])).toBe(true);
     }
-  })
+  });
 
-  it('creates the .claude directory if it does not exist', () => {
+  it("creates the .claude directory if it does not exist", () => {
     // tempDir has no .claude subdir
-    expect(() => injectHooks(settingsPath)).not.toThrow()
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    expect(settings.hooks).toBeDefined()
-  })
+    expect(() => injectHooks(settingsPath)).not.toThrow();
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+    expect(settings.hooks).toBeDefined();
+  });
 
-  it('writes hooks with correct structure (matcher, type, command)', () => {
-    injectHooks(settingsPath)
+  it("writes hooks with correct structure (matcher, type, command)", () => {
+    injectHooks(settingsPath);
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    const stopEntries = settings.hooks.Stop as HookEntry[]
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+    const stopEntries = settings.hooks.Stop as HookEntry[];
     const argosEntry = stopEntries.find((e) =>
-      e.hooks?.some((h) => h.command === ARGOS_COMMAND)
-    )
+      e.hooks?.some((h) => h.command === ARGOS_COMMAND),
+    );
 
-    expect(argosEntry).toBeDefined()
-    expect(argosEntry!.matcher).toBe('')
-    expect(argosEntry!.hooks[0].type).toBe('command')
-    expect(argosEntry!.hooks[0].command).toBe(ARGOS_COMMAND)
-  })
+    expect(argosEntry).toBeDefined();
+    expect(argosEntry!.matcher).toBe("");
+    expect(argosEntry!.hooks[0].type).toBe("command");
+    expect(argosEntry!.hooks[0].command).toBe(ARGOS_COMMAND);
+  });
 
-  it('uses bootstrap command for SessionStart so fresh clones auto-install argos', () => {
-    injectHooks(settingsPath)
+  it("uses bootstrap command for SessionStart so fresh clones auto-install argos", () => {
+    injectHooks(settingsPath);
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    const sessionStartEntries = settings.hooks.SessionStart as HookEntry[]
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+    const sessionStartEntries = settings.hooks.SessionStart as HookEntry[];
     const argosEntry = sessionStartEntries.find((e) =>
-      e.hooks?.some((h) => isArgosCommand(h.command))
-    )
+      e.hooks?.some((h) => isArgosCommand(h.command)),
+    );
 
-    expect(argosEntry).toBeDefined()
-    expect(argosEntry!.hooks[0].command).toBe(ARGOS_SESSION_START_COMMAND)
-  })
+    expect(argosEntry).toBeDefined();
+    expect(argosEntry!.hooks[0].command).toBe(ARGOS_SESSION_START_COMMAND);
+  });
 
-  it('treats existing `argos hook` in SessionStart as already present (no duplicate bootstrap)', () => {
-    mkdirSync(join(tempDir, '.claude'), { recursive: true })
+  it("treats existing `argos hook` in SessionStart as already present (no duplicate bootstrap)", () => {
+    mkdirSync(join(tempDir, ".claude"), { recursive: true });
     const existing = {
       hooks: {
         SessionStart: [
-          { matcher: '', hooks: [{ type: 'command', command: ARGOS_COMMAND }] },
+          { matcher: "", hooks: [{ type: "command", command: ARGOS_COMMAND }] },
         ],
       },
-    }
-    writeFileSync(settingsPath, JSON.stringify(existing), 'utf8')
+    };
+    writeFileSync(settingsPath, JSON.stringify(existing), "utf8");
 
-    injectHooks(settingsPath)
+    injectHooks(settingsPath);
 
-    const settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
-    expect(argosHookCount(settings.hooks.SessionStart)).toBe(1)
-  })
-})
+    const settings = JSON.parse(readFileSync(settingsPath, "utf8"));
+    expect(argosHookCount(settings.hooks.SessionStart)).toBe(1);
+  });
+});
 
-describe('injectHooks (Codex agent)', () => {
-  let tempDir: string
-  let codexPath: string
+describe("injectHooks (Codex agent)", () => {
+  let tempDir: string;
+  let codexPath: string;
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-codex-'))
-    codexPath = join(tempDir, '.codex', 'hooks.json')
-  })
-  afterEach(() => rmSync(tempDir, { recursive: true, force: true }))
+    tempDir = mkdtempSync(join(tmpdir(), "argos-codex-"));
+    codexPath = join(tempDir, ".codex", "hooks.json");
+  });
+  afterEach(() => rmSync(tempDir, { recursive: true, force: true }));
 
-  it('writes .codex/hooks.json with `argos hook --agent codex` for all 5 events', () => {
-    const result = injectHooks(codexPath, 'codex')
-    expect(result).toBe('injected')
-    const settings = JSON.parse(readFileSync(codexPath, 'utf8'))
+  it("writes .codex/hooks.json with `argos hook --agent codex` for all 5 events", () => {
+    const result = injectHooks(codexPath, "codex");
+    expect(result).toBe("injected");
+    const settings = JSON.parse(readFileSync(codexPath, "utf8"));
     for (const event of HOOK_EVENTS) {
-      const entries = settings.hooks[event] as HookEntry[]
-      expect(entries, `missing ${event}`).toBeDefined()
-      const cmd = entries[entries.length - 1].hooks[0].command
-      expect(cmd).toContain('argos hook --agent codex')
+      const entries = settings.hooks[event] as HookEntry[];
+      expect(entries, `missing ${event}`).toBeDefined();
+      const cmd = entries[entries.length - 1].hooks[0].command;
+      expect(cmd).toContain("argos hook --agent codex");
     }
-  })
+  });
 
-  it('SessionStart uses bootstrap + --agent codex', () => {
-    injectHooks(codexPath, 'codex')
-    const settings = JSON.parse(readFileSync(codexPath, 'utf8'))
-    const cmd = (settings.hooks.SessionStart as HookEntry[])[0].hooks[0].command
-    expect(cmd).toContain('npm install -g argos-ai@latest')
-    expect(cmd).toContain('argos hook --agent codex')
-  })
+  it("SessionStart uses bootstrap + --agent codex", () => {
+    injectHooks(codexPath, "codex");
+    const settings = JSON.parse(readFileSync(codexPath, "utf8"));
+    const cmd = (settings.hooks.SessionStart as HookEntry[])[0].hooks[0]
+      .command;
+    expect(cmd).toContain("npm install -g argos-ai@latest");
+    expect(cmd).toContain("argos hook --agent codex");
+  });
 
-  it('is idempotent and does not duplicate across calls', () => {
-    injectHooks(codexPath, 'codex')
-    const result = injectHooks(codexPath, 'codex')
-    expect(result).toBe('already_present')
-    const settings = JSON.parse(readFileSync(codexPath, 'utf8'))
+  it("is idempotent and does not duplicate across calls", () => {
+    injectHooks(codexPath, "codex");
+    const result = injectHooks(codexPath, "codex");
+    expect(result).toBe("already_present");
+    const settings = JSON.parse(readFileSync(codexPath, "utf8"));
     for (const event of HOOK_EVENTS) {
-      expect(argosHookCount(settings.hooks[event])).toBe(1)
+      expect(argosHookCount(settings.hooks[event])).toBe(1);
     }
-  })
-})
+  });
+});

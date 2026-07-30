@@ -1,18 +1,18 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
-import { tmpdir } from 'os'
-import { spawn } from 'child_process'
-import type { IngestEventPayload } from '@argos/shared'
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
+import { spawn } from "child_process";
+import type { IngestEventPayload } from "@argos/shared";
 
 /**
  * Config snapshot captured at hook invocation time.
  * Only the fields needed for self-heal comparison.
  */
 export interface CurrentConfig {
-  projectId: string
-  orgId: string
-  orgSlug: string
-  [key: string]: unknown
+  projectId: string;
+  orgId: string;
+  orgSlug: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -20,13 +20,13 @@ export interface CurrentConfig {
  * projectJsonPath must be the absolute path discovered by findProjectConfig traversal.
  */
 export interface SendEventBackgroundOpts {
-  url: string
-  token: string
-  payload: IngestEventPayload
+  url: string;
+  token: string;
+  payload: IngestEventPayload;
   /** Absolute path to .argos/project.json as found by findProjectConfig traversal. */
-  projectJsonPath: string
+  projectJsonPath: string;
   /** Snapshot of the config at hook invocation time. */
-  currentConfig: CurrentConfig
+  currentConfig: CurrentConfig;
 }
 
 /**
@@ -51,14 +51,14 @@ export function buildSelfHealScript({
   tmpDir,
   projectJsonPath,
 }: {
-  tmpFile: string
-  tmpDir?: string
-  projectJsonPath: string
+  tmpFile: string;
+  tmpDir?: string;
+  projectJsonPath: string;
 }): string {
   // Serialize paths as JSON so they are safely embedded in the script string.
-  const tmpFileJson = JSON.stringify(tmpFile)
-  const tmpDirJson = tmpDir ? JSON.stringify(tmpDir) : 'null'
-  const projectJsonPathJson = JSON.stringify(projectJsonPath)
+  const tmpFileJson = JSON.stringify(tmpFile);
+  const tmpDirJson = tmpDir ? JSON.stringify(tmpDir) : "null";
+  const projectJsonPathJson = JSON.stringify(projectJsonPath);
 
   return [
     `const fs=require('fs');`,
@@ -105,7 +105,7 @@ export function buildSelfHealScript({
     // Cleanup tmp file/dir in finally (runs whether self-heal succeeded or any early return)
     `finally{try{fs.unlinkSync(${tmpFileJson});}catch{};if(${tmpDirJson})try{fs.rmSync(${tmpDirJson},{recursive:true,force:true});}catch{}}`,
     `})()`,
-  ].join('')
+  ].join("");
 }
 
 /**
@@ -118,28 +118,28 @@ export function buildSelfHealScript({
  * A temp JSON file is used to pass the payload safely (avoids shell-escaping issues).
  */
 export function sendEventBackground(opts: SendEventBackgroundOpts): void {
-  const { url, token, payload, projectJsonPath, currentConfig } = opts
+  const { url, token, payload, projectJsonPath, currentConfig } = opts;
 
-  let tmpDir: string | undefined
+  let tmpDir: string | undefined;
   try {
-    tmpDir = mkdtempSync(join(tmpdir(), 'argos-'))
-    const tmpFile = join(tmpDir, 'payload.json')
+    tmpDir = mkdtempSync(join(tmpdir(), "argos-"));
+    const tmpFile = join(tmpDir, "payload.json");
     writeFileSync(
       tmpFile,
       JSON.stringify({ url, token, payload, projectJsonPath, currentConfig }),
-      'utf8',
-    )
+      "utf8",
+    );
 
-    const script = buildSelfHealScript({ tmpFile, tmpDir, projectJsonPath })
+    const script = buildSelfHealScript({ tmpFile, tmpDir, projectJsonPath });
 
-    const child = spawn(process.execPath, ['-e', script], {
+    const child = spawn(process.execPath, ["-e", script], {
       detached: true,
-      stdio: 'ignore',
-    })
-    child.unref()
+      stdio: "ignore",
+    });
+    child.unref();
   } catch {
     try {
-      if (tmpDir) rmSync(tmpDir, { recursive: true, force: true })
+      if (tmpDir) rmSync(tmpDir, { recursive: true, force: true });
     } catch {}
   }
 }

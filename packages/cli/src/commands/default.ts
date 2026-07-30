@@ -1,56 +1,67 @@
-import chalk from 'chalk'
-import ora from 'ora'
-import { DEFAULT_API_URL, normalizeApiUrl, type Config } from '../lib/config.js'
-import { injectAgentHooks, printAgentHookResult, printCodexTrustNotice } from '../lib/inject-agent-hooks.js'
-import type { ProjectConfig } from '../lib/project.js'
-import type { CreateProjectResponse } from '@argos/shared'
-import type { ExternalDeps, CommandFactory } from '../deps.js'
+import chalk from "chalk";
+import ora from "ora";
+import {
+  DEFAULT_API_URL,
+  normalizeApiUrl,
+  type Config,
+} from "../lib/config.js";
+import {
+  injectAgentHooks,
+  printAgentHookResult,
+  printCodexTrustNotice,
+} from "../lib/inject-agent-hooks.js";
+import type { ProjectConfig } from "../lib/project.js";
+import type { CreateProjectResponse } from "@argos/shared";
+import type { ExternalDeps, CommandFactory } from "../deps.js";
 
 interface DefaultCommandOptions {
-  apiUrl?: string
+  apiUrl?: string;
 }
 
 export const makeDefaultCommand: CommandFactory<DefaultCommandOptions> =
   (deps) => async (options) => {
-    const config = deps.config.read()
-    const project = deps.project.find()
+    const config = deps.config.read();
+    const project = deps.project.find();
     // customApiUrl is undefined unless the user passed a real self-hosted URL.
     // When undefined, the field is omitted from newly-written configs so they
     // track DEFAULT_API_URL automatically.
-    const customApiUrl = normalizeApiUrl(options.apiUrl)
+    const customApiUrl = normalizeApiUrl(options.apiUrl);
 
     // 4-way branch based on config and project presence
     if (!config && !project) {
-      await runFullSetup(deps, customApiUrl)
+      await runFullSetup(deps, customApiUrl);
     } else if (!config && project) {
-      await runLoginAndJoin(deps, project, customApiUrl)
+      await runLoginAndJoin(deps, project, customApiUrl);
     } else if (config && !project) {
-      await runProjectInit(deps, config, customApiUrl)
+      await runProjectInit(deps, config, customApiUrl);
     } else if (config && project) {
-      await ensureOrgMembershipAndShowStatus(deps, config, project)
+      await ensureOrgMembershipAndShowStatus(deps, config, project);
     }
-  }
+  };
 
 /**
  * Flow 1: Full setup (login + create project + inject hooks)
  */
-async function runFullSetup(deps: ExternalDeps, customApiUrl: string | undefined): Promise<void> {
-  console.log(chalk.bold('Argos 초기 설정'))
-  console.log()
+async function runFullSetup(
+  deps: ExternalDeps,
+  customApiUrl: string | undefined,
+): Promise<void> {
+  console.log(chalk.bold("Argos 초기 설정"));
+  console.log();
 
-  const effectiveApiUrl = customApiUrl ?? DEFAULT_API_URL
+  const effectiveApiUrl = customApiUrl ?? DEFAULT_API_URL;
 
   // Step 1: Login
-  console.log('→ 로그인')
+  console.log("→ 로그인");
 
-  let loginResponse
+  let loginResponse;
   try {
-    loginResponse = await deps.auth.login(effectiveApiUrl)
-    console.log(chalk.green(`✓ 로그인 완료 (${loginResponse.user.email})`))
+    loginResponse = await deps.auth.login(effectiveApiUrl);
+    console.log(chalk.green(`✓ 로그인 완료 (${loginResponse.user.email})`));
   } catch (err) {
-    console.error(chalk.red('✗ 로그인 실패'))
-    console.error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
+    console.error(chalk.red("✗ 로그인 실패"));
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
   // Save config — omit apiUrl unless user provided a self-hosted override
@@ -59,25 +70,31 @@ async function runFullSetup(deps: ExternalDeps, customApiUrl: string | undefined
     userId: loginResponse.user.id,
     email: loginResponse.user.email,
     ...(customApiUrl && { apiUrl: customApiUrl }),
-  })
+  });
 
   // Step 2: Create project
-  console.log()
-  console.log('→ 프로젝트 생성')
+  console.log();
+  console.log("→ 프로젝트 생성");
 
-  const projectName = deps.cwd().split('/').pop() || 'my-project'
+  const projectName = deps.cwd().split("/").pop() || "my-project";
 
-  const spinner = ora('프로젝트 생성 중...').start()
+  const spinner = ora("프로젝트 생성 중...").start();
 
-  let projectResponse: CreateProjectResponse
+  let projectResponse: CreateProjectResponse;
   try {
-    projectResponse = await deps.api.createProject(projectName, loginResponse.token, effectiveApiUrl)
-    spinner.succeed(chalk.green(`✓ 프로젝트 생성: ${projectResponse.projectName}`))
-    console.log(`  조직: ${projectResponse.orgName}`)
+    projectResponse = await deps.api.createProject(
+      projectName,
+      loginResponse.token,
+      effectiveApiUrl,
+    );
+    spinner.succeed(
+      chalk.green(`✓ 프로젝트 생성: ${projectResponse.projectName}`),
+    );
+    console.log(`  조직: ${projectResponse.orgName}`);
   } catch (err) {
-    spinner.fail(chalk.red('✗ 프로젝트 생성 실패'))
-    console.error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
+    spinner.fail(chalk.red("✗ 프로젝트 생성 실패"));
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
   // Step 3: Write project config
@@ -88,43 +105,51 @@ async function runFullSetup(deps: ExternalDeps, customApiUrl: string | undefined
     orgName: projectResponse.orgName,
     projectName: projectResponse.projectName,
     ...(customApiUrl && { apiUrl: customApiUrl }),
-  })
-  console.log(chalk.green('✓ .argos/project.json 작성'))
+  });
+  console.log(chalk.green("✓ .argos/project.json 작성"));
 
   // Step 4: Inject hooks (Claude Code + Codex)
-  printAgentHookResult(injectAgentHooks(deps, deps.cwd()))
-  printCodexTrustNotice()
+  printAgentHookResult(injectAgentHooks(deps, deps.cwd()));
+  printCodexTrustNotice();
 
   // Success message
-  console.log()
-  console.log(chalk.bold.green('✓ 설정 완료!'))
-  console.log()
-  console.log('다음 단계:')
-  console.log('  git add .argos/project.json .claude/settings.json .codex/hooks.json')
-  console.log('  git commit -m "chore: add argos tracking"')
-  console.log()
-  console.log('팀원들이 이 저장소를 clone한 뒤 argos를 실행하면 자동으로 팀에 합류됩니다.')
+  console.log();
+  console.log(chalk.bold.green("✓ 설정 완료!"));
+  console.log();
+  console.log("다음 단계:");
+  console.log(
+    "  git add .argos/project.json .claude/settings.json .codex/hooks.json",
+  );
+  console.log('  git commit -m "chore: add argos tracking"');
+  console.log();
+  console.log(
+    "팀원들이 이 저장소를 clone한 뒤 argos를 실행하면 자동으로 팀에 합류됩니다.",
+  );
 }
 
 /**
  * Flow 2: Login and join existing org (project.json exists, but not logged in)
  */
-async function runLoginAndJoin(deps: ExternalDeps, project: ProjectConfig, customApiUrl: string | undefined): Promise<void> {
-  console.log(chalk.bold('Argos 로그인'))
-  console.log(`프로젝트: ${project.projectName}`)
-  console.log()
+async function runLoginAndJoin(
+  deps: ExternalDeps,
+  project: ProjectConfig,
+  customApiUrl: string | undefined,
+): Promise<void> {
+  console.log(chalk.bold("Argos 로그인"));
+  console.log(`프로젝트: ${project.projectName}`);
+  console.log();
 
-  const inheritedApiUrl = customApiUrl ?? project.apiUrl
-  const effectiveApiUrl = inheritedApiUrl ?? DEFAULT_API_URL
+  const inheritedApiUrl = customApiUrl ?? project.apiUrl;
+  const effectiveApiUrl = inheritedApiUrl ?? DEFAULT_API_URL;
 
-  let loginResponse
+  let loginResponse;
   try {
-    loginResponse = await deps.auth.login(effectiveApiUrl)
-    console.log(chalk.green(`✓ 로그인 완료 (${loginResponse.user.email})`))
+    loginResponse = await deps.auth.login(effectiveApiUrl);
+    console.log(chalk.green(`✓ 로그인 완료 (${loginResponse.user.email})`));
   } catch (err) {
-    console.error(chalk.red('✗ 로그인 실패'))
-    console.error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
+    console.error(chalk.red("✗ 로그인 실패"));
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
   // Save config — inherit project's override if present, otherwise omit to track default
@@ -133,51 +158,67 @@ async function runLoginAndJoin(deps: ExternalDeps, project: ProjectConfig, custo
     userId: loginResponse.user.id,
     email: loginResponse.user.email,
     ...(inheritedApiUrl && { apiUrl: inheritedApiUrl }),
-  })
+  });
 
   // Join org. Legacy project.json may lack orgSlug — fall back to orgId.
-  const orgIdentifier = project.orgSlug ?? project.orgId
-  const spinner = ora('조직 합류 중...').start()
+  const orgIdentifier = project.orgSlug ?? project.orgId;
+  const spinner = ora("조직 합류 중...").start();
   try {
-    await deps.api.joinOrg(orgIdentifier, loginResponse.token, effectiveApiUrl)
-    spinner.succeed(chalk.green(`✓ 조직 합류: ${project.orgName}`))
+    await deps.api.joinOrg(orgIdentifier, loginResponse.token, effectiveApiUrl);
+    spinner.succeed(chalk.green(`✓ 조직 합류: ${project.orgName}`));
   } catch (err) {
-    spinner.fail(chalk.red('✗ 조직 합류 실패'))
-    console.error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
+    spinner.fail(chalk.red("✗ 조직 합류 실패"));
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
-  console.log()
-  console.log(chalk.bold.green('✓ 설정 완료!'))
-  console.log()
-  console.log('트래킹이 활성화되었습니다. Claude Code · Codex 를 사용하면 자동으로 기록됩니다.')
-  console.log(chalk.dim('(Codex 는 codex 실행 후 /hooks 에서 argos hook 들을 trust 해야 동작합니다.)'))
+  console.log();
+  console.log(chalk.bold.green("✓ 설정 완료!"));
+  console.log();
+  console.log(
+    "트래킹이 활성화되었습니다. Claude Code · Codex 를 사용하면 자동으로 기록됩니다.",
+  );
+  console.log(
+    chalk.dim(
+      "(Codex 는 codex 실행 후 /hooks 에서 argos hook 들을 trust 해야 동작합니다.)",
+    ),
+  );
 }
 
 /**
  * Flow 3: Create project (already logged in, but no project.json)
  */
-async function runProjectInit(deps: ExternalDeps, config: Config, customApiUrl: string | undefined): Promise<void> {
-  console.log(chalk.green(`✓ 로그인됨: ${config.email}`))
-  console.log('→ 이 디렉토리는 아직 Argos 프로젝트가 아닙니다.')
-  console.log()
+async function runProjectInit(
+  deps: ExternalDeps,
+  config: Config,
+  customApiUrl: string | undefined,
+): Promise<void> {
+  console.log(chalk.green(`✓ 로그인됨: ${config.email}`));
+  console.log("→ 이 디렉토리는 아직 Argos 프로젝트가 아닙니다.");
+  console.log();
 
-  const inheritedApiUrl = customApiUrl ?? config.apiUrl
-  const effectiveApiUrl = inheritedApiUrl ?? DEFAULT_API_URL
+  const inheritedApiUrl = customApiUrl ?? config.apiUrl;
+  const effectiveApiUrl = inheritedApiUrl ?? DEFAULT_API_URL;
 
-  const projectName = deps.cwd().split('/').pop() || 'my-project'
+  const projectName = deps.cwd().split("/").pop() || "my-project";
 
-  const spinner = ora('프로젝트 생성 중...').start()
+  const spinner = ora("프로젝트 생성 중...").start();
 
-  let projectResponse: CreateProjectResponse
+  let projectResponse: CreateProjectResponse;
   try {
-    projectResponse = await deps.api.createProject(projectName, config.token, effectiveApiUrl)
-    spinner.succeed(chalk.green(`✓ 프로젝트 생성: ${projectResponse.projectName}`))
-    console.log(`  조직: ${projectResponse.orgName}`)
+    projectResponse = await deps.api.createProject(
+      projectName,
+      config.token,
+      effectiveApiUrl,
+    );
+    spinner.succeed(
+      chalk.green(`✓ 프로젝트 생성: ${projectResponse.projectName}`),
+    );
+    console.log(`  조직: ${projectResponse.orgName}`);
   } catch (err) {
-    spinner.fail(chalk.red('✗ 프로젝트 생성 실패'))
-    console.error(err instanceof Error ? err.message : String(err))
-    process.exit(1)
+    spinner.fail(chalk.red("✗ 프로젝트 생성 실패"));
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
   }
 
   // Write project config — inherit user's override if present, otherwise omit
@@ -188,15 +229,15 @@ async function runProjectInit(deps: ExternalDeps, config: Config, customApiUrl: 
     orgName: projectResponse.orgName,
     projectName: projectResponse.projectName,
     ...(inheritedApiUrl && { apiUrl: inheritedApiUrl }),
-  })
-  console.log(chalk.green('✓ .argos/project.json 작성'))
+  });
+  console.log(chalk.green("✓ .argos/project.json 작성"));
 
   // Inject hooks (Claude Code + Codex)
-  printAgentHookResult(injectAgentHooks(deps, deps.cwd()))
-  printCodexTrustNotice()
+  printAgentHookResult(injectAgentHooks(deps, deps.cwd()));
+  printCodexTrustNotice();
 
-  console.log()
-  console.log(chalk.bold.green('✓ 설정 완료!'))
+  console.log();
+  console.log(chalk.bold.green("✓ 설정 완료!"));
 }
 
 /**
@@ -205,28 +246,37 @@ async function runProjectInit(deps: ExternalDeps, config: Config, customApiUrl: 
 async function ensureOrgMembershipAndShowStatus(
   deps: ExternalDeps,
   config: Config,
-  project: ProjectConfig
+  project: ProjectConfig,
 ): Promise<void> {
   // Check if user is already a member
-  const spinner = ora('멤버십 확인 중...').start()
+  const spinner = ora("멤버십 확인 중...").start();
 
   try {
-    await deps.api.ensureMembership(project.orgSlug ?? project.orgId, config.token, project.apiUrl ?? config.apiUrl ?? DEFAULT_API_URL)
-    spinner.stop()
+    await deps.api.ensureMembership(
+      project.orgSlug ?? project.orgId,
+      config.token,
+      project.apiUrl ?? config.apiUrl ?? DEFAULT_API_URL,
+    );
+    spinner.stop();
   } catch {
-    spinner.stop()
+    spinner.stop();
     // Ignore error - user might already be a member
   }
 
   // Show status
-  console.log(chalk.bold.green('✓ 모두 준비되어 있습니다.'))
-  console.log()
-  console.log('사용자:  ' + config.email)
-  console.log('프로젝트:' + ` ${project.projectName} (${project.projectId})`)
-  console.log('조직:    ' + project.orgName)
-  console.log('API:     ' + (project.apiUrl ?? config.apiUrl ?? DEFAULT_API_URL))
+  console.log(chalk.bold.green("✓ 모두 준비되어 있습니다."));
+  console.log();
+  console.log("사용자:  " + config.email);
+  console.log("프로젝트:" + ` ${project.projectName} (${project.projectId})`);
+  console.log("조직:    " + project.orgName);
+  console.log(
+    "API:     " + (project.apiUrl ?? config.apiUrl ?? DEFAULT_API_URL),
+  );
 
   // Check hooks (self-heal: 누락 시 주입)
-  injectAgentHooks(deps, deps.cwd())
-  console.log('Hooks:   ' + chalk.green('✓ .claude/settings.json · .codex/hooks.json 설치됨'))
+  injectAgentHooks(deps, deps.cwd());
+  console.log(
+    "Hooks:   " +
+      chalk.green("✓ .claude/settings.json · .codex/hooks.json 설치됨"),
+  );
 }

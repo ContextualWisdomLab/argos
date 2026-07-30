@@ -1,27 +1,31 @@
-import { spawn } from 'child_process'
-import chalk from 'chalk'
-import ora from 'ora'
-import type { User, LoginResponse } from '@argos/shared'
-import { apiRequest } from './api-client.js'
+import { spawn } from "child_process";
+import chalk from "chalk";
+import ora from "ora";
+import type { User, LoginResponse } from "@argos/shared";
+import { apiRequest } from "./api-client.js";
 
 function openBrowser(url: string): void {
   // Command Injection 방지를 위해 exec 대신 spawn 사용
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
-      windowsVerbatimArguments: true,
-      detached: true,
-      stdio: 'ignore'
-    })
-    child.unref()
-  } else if (process.platform === 'darwin') {
+    const child = spawn(
+      "cmd.exe",
+      ["/c", "start", '""', url.replace(/&/g, "^&")],
+      {
+        windowsVerbatimArguments: true,
+        detached: true,
+        stdio: "ignore",
+      },
+    );
+    child.unref();
+  } else if (process.platform === "darwin") {
     // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
-    child.unref()
+    const child = spawn("open", [url], { detached: true, stdio: "ignore" });
+    child.unref();
   } else {
     // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
-    child.unref()
+    const child = spawn("xdg-open", [url], { detached: true, stdio: "ignore" });
+    child.unref();
   }
 }
 
@@ -33,66 +37,72 @@ function openBrowser(url: string): void {
  */
 export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
   // Step 1: state 발급
-  let state: string, authUrl: string
+  let state: string, authUrl: string;
   try {
     const res = await apiRequest<{ state: string; authUrl: string }>(
       `${apiUrl}/api/auth/cli-request`,
-      { method: 'POST', baseUrl: '' }
-    )
-    state = res.state
-    authUrl = res.authUrl
+      { method: "POST", baseUrl: "" },
+    );
+    state = res.state;
+    authUrl = res.authUrl;
   } catch (err) {
-    throw new Error(`인증 요청 실패: ${err instanceof Error ? err.message : String(err)}`)
+    throw new Error(
+      `인증 요청 실패: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 
   // Step 2: 브라우저 즉시 열기
-  openBrowser(authUrl)
-  console.log()
-  console.log(`브라우저에서 허용해 주세요: ${authUrl}`)
-  console.log()
+  openBrowser(authUrl);
+  console.log();
+  console.log(`브라우저에서 허용해 주세요: ${authUrl}`);
+  console.log();
 
   // Step 3: 승인 polling
-  const spinner = ora('브라우저 로그인 대기 중...').start()
+  const spinner = ora("브라우저 로그인 대기 중...").start();
 
   const token = await new Promise<string>((resolve, reject) => {
-    let attempts = 0
-    const maxAttempts = 450 // 15분 (2초 간격)
+    let attempts = 0;
+    const maxAttempts = 450; // 15분 (2초 간격)
 
     const interval = setInterval(async () => {
-      attempts++
+      attempts++;
       if (attempts > maxAttempts) {
-        clearInterval(interval)
-        reject(new Error('로그인 시간이 초과되었습니다.'))
-        return
+        clearInterval(interval);
+        reject(new Error("로그인 시간이 초과되었습니다."));
+        return;
       }
 
       try {
-        const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: string }>(
-          `${apiUrl}/api/auth/cli-poll?state=${state}`,
-          { method: 'GET', baseUrl: '' }
-        )
+        const result = await apiRequest<{
+          pending?: boolean;
+          denied?: boolean;
+          token?: string;
+        }>(`${apiUrl}/api/auth/cli-poll?state=${state}`, {
+          method: "GET",
+          baseUrl: "",
+        });
 
         if (result.denied) {
-          clearInterval(interval)
-          reject(new Error('로그인이 거부되었습니다.'))
+          clearInterval(interval);
+          reject(new Error("로그인이 거부되었습니다."));
         } else if (result.token) {
-          clearInterval(interval)
-          resolve(result.token)
+          clearInterval(interval);
+          resolve(result.token);
         }
       } catch {
         // 일시적 오류는 무시하고 계속 polling
       }
-    }, 2000)
-  })
+    }, 2000);
+  });
 
-  spinner.succeed(chalk.green('✓ 로그인 완료'))
+  spinner.succeed(chalk.green("✓ 로그인 완료"));
 
   // Step 5: 사용자 정보 조회
   const { user } = await apiRequest<{ user: User }>(`${apiUrl}/api/auth/me`, {
-    method: 'GET',
+    method: "GET",
     token,
-    baseUrl: '',
-  })
+    baseUrl: "",
+  });
 
-  return { token, user }
+  return { token, user };
 }
