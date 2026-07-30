@@ -9,6 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- test-only helper joining a test-created temp directory with a static filename; there is no untrusted input.
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
