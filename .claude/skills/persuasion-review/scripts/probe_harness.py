@@ -33,7 +33,9 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
+            # Advisory (.audit.) false positive: url is a local 127.0.0.1 probe
+            # URL for a test server spawned by this harness, not user input.
+            urllib.request.urlopen(url, timeout=1).read()  # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
             return True
         except Exception:
             time.sleep(0.2)

@@ -22,12 +22,15 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
-  let currentDir = resolve(startDir || process.cwd())
+  // Advisory (.audit.) false positive: startDir defaults to the CLI's own cwd;
+  // resolving it is not attacker-controlled path traversal.
+  let currentDir = resolve(startDir || process.cwd()) // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   let depth = 0
   const maxDepth = 10
 
   while (depth < maxDepth) {
-    const configPath = join(currentDir, '.argos', 'project.json')
+    // Advisory (.audit.) false positive: fixed literals under the CLI's own dir.
+    const configPath = join(currentDir, '.argos', 'project.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     if (existsSync(configPath)) {
       try {
         const content = readFileSync(configPath, 'utf8')
@@ -74,17 +77,21 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
-  const argosDir = join(targetDir, '.argos')
+  // Advisory (.audit.) false positive: targetDir defaults to the CLI's own cwd,
+  // joined with a fixed literal — not attacker-controlled input.
+  const argosDir = join(targetDir, '.argos') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
 
   if (!existsSync(argosDir)) {
     mkdirSync(argosDir, { recursive: true })
   }
 
-  const configPath = join(argosDir, 'project.json')
+  // Advisory (.audit.) false positive: fixed literal under the CLI's own dir.
+  const configPath = join(argosDir, 'project.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
 
   // Create .gitignore with comment (but don't actually ignore anything)
-  const gitignorePath = join(argosDir, '.gitignore')
+  // Advisory (.audit.) false positive: fixed literal under the CLI's own dir.
+  const gitignorePath = join(argosDir, '.gitignore') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const gitignoreComment = '# argos 설정 (gitignore 하지 않음)\n'
   writeFileSync(gitignorePath, gitignoreComment, 'utf8')
 }

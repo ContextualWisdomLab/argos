@@ -11,7 +11,8 @@ import {
 
 /** Write an array of objects as JSONL to a temp file and return the path. */
 function writeJsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  // Advisory (.audit.) false positive: dir is a test-created temp directory.
+  const path = join(dir, 'transcript.jsonl') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
