@@ -3,7 +3,7 @@ import { EventType, Prisma } from '@prisma/client'
 import { IngestEventSchema, type IngestEventResponse } from '@argos/shared'
 import { db } from '@/lib/server/db'
 import { requireAuth } from '@/lib/server/auth-helper'
-import { handleRouteError } from '@/lib/server/error-helper'
+import { handleRouteError, jsonError } from '@/lib/server/error-helper'
 import {
   deriveFields,
   truncateMessageContent,
@@ -72,9 +72,10 @@ export async function POST(req: Request) {
       select: { userId: true },
     })
     if (existingSession && existingSession.userId !== userId) {
-      return NextResponse.json(
-        { error: 'Forbidden: session belongs to another user' },
-        { status: 403 }
+      return jsonError(
+        'SESSION_FORBIDDEN',
+        'session belongs to another user',
+        403
       )
     }
 

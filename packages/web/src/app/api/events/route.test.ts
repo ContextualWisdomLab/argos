@@ -65,6 +65,9 @@ vi.mock('@/lib/server/error-helper', () => ({
   handleRouteError: vi.fn((err: unknown) =>
     NextResponse.json({ error: String(err) }, { status: 500 })
   ),
+  jsonError: vi.fn((code: string, message: string, status: number) =>
+    NextResponse.json({ error: { code, message } }, { status })
+  ),
 }))
 
 vi.mock('@/lib/server/events', () => ({
