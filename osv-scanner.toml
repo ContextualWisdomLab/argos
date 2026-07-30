@@ -3,22 +3,32 @@
 # Policy: single-CVE, documented, time-boxed entries only. This file does NOT
 # disable or weaken the OSV gate — every other advisory still fails the build.
 # Re-evaluate each entry on/before its ignoreUntil date; delete it the moment a
-# compatible fixed version is reachable.
+# runtime-reachable, dependency-review-compatible fixed version is available.
+#
+# Both entries below are the two co-located brace-expansion advisories. In this
+# repo brace-expansion is reached ONLY transitively through dev/build-time tooling
+# (ESLint -> @eslint/eslintrc -> minimatch@3, glob, vitest); it is never in the
+# Next.js runtime bundle, so neither is exploitable in production.
+#
+# Why not simply bump the version: the only release that clears GHSA-mh99 is 5.0.8,
+# which is ESM-first (`"type":"module"`, tshy build whose CommonJS entry exports
+# `{ default, expand }`, not a bare function), so forcing it breaks the
+# `require('brace-expansion')(...)` call pattern used by minimatch@3 and the wider
+# CJS ecosystem. GHSA-3jxr alone is fixed in the 1.x line (>=1.1.16), but the base
+# branch already ships brace-expansion 1.1.15/2.1.2, and bumping the 1.x/2.x pins
+# makes brace-expansion a "changed dependency" for the diff-scoped central
+# Dependency Review gate, which then hard-fails on the still-present GHSA-mh99.
+# So the 1.x/2.x pins are held at the base versions (no dependency-review diff) and
+# both advisories are suppressed here; the 5.x path IS actively fixed (pinned 5.0.8).
+# Remove both once ESLint/minimatch/glob ship brace-expansion >= 5.0.8 (or a
+# back-ported CJS fix lands in the 1.x/2.x maintenance lines).
 
 [[IgnoredVulns]]
 id = "GHSA-mh99-v99m-4gvg"
 ignoreUntil = 2026-10-30T00:00:00Z
-# brace-expansion "DoS via unbounded expansion length (OOM)". Advisory range is
-# `<=5.0.7`, i.e. EVERY published version across all majors is affected and the
-# only fixed release is 5.0.8. 5.0.8 is ESM-first (`"type":"module"`, tshy build:
-# its CommonJS entry exports `{ default, expand }`, not a bare function), so a
-# `require('brace-expansion')(...)` call — the pattern used by minimatch@3 and the
-# wider CJS ecosystem — throws "expand is not a function" when forced to 5.0.8.
-# In this repo brace-expansion is only reached transitively through dev/build-time
-# tooling (ESLint -> @eslint/eslintrc -> minimatch@3, glob, vitest), never in the
-# Next.js runtime bundle, so it is not exploitable in production. There is
-# currently no runtime-reachable, API-compatible fixed version. GHSA-3jxr-9vmj-r5cp
-# (the other brace-expansion advisory) IS fixed here by pinning the 1.x/2.x
-# maintenance releases (1.1.17 / 2.1.3) via pnpm overrides. Remove this entry once
-# ESLint/minimatch/glob ship brace-expansion >= 5.0.8 (or a back-ported CJS fix).
-reason = "dev/build-only transitive (minimatch@3 via ESLint); sole fix 5.0.8 is ESM-first and breaks CJS require()-call consumers; not runtime-reachable. Revisit 2026-10-30."
+reason = "brace-expansion OOM DoS; vulnerable <=5.0.7 (all majors); sole fix 5.0.8 is ESM-first and breaks CJS require()-call consumers; dev/build-only transitive (minimatch@3 via ESLint), not runtime-reachable. Revisit 2026-10-30."
+
+[[IgnoredVulns]]
+id = "GHSA-3jxr-9vmj-r5cp"
+ignoreUntil = 2026-10-30T00:00:00Z
+reason = "brace-expansion consecutive-{}-groups DoS on 1.x <1.1.16; co-located with GHSA-mh99 on the same dev-only 1.1.15 pin. A within-1.x fix exists (>=1.1.16) but bumping it trips the diff-scoped Dependency Review gate on the unfixable GHSA-mh99, so the base version is held. Not runtime-reachable. Revisit 2026-10-30."
