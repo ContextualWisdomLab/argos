@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { useMemo } from 'react'
+import React, { useMemo } from "react";
 import {
   ComposedChart,
   Bar,
@@ -10,83 +10,82 @@ import {
   Tooltip,
   ResponsiveContainer,
   TooltipProps,
-} from 'recharts'
-import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
-import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
+} from "recharts";
+import { formatTokens, formatCost, formatRelativeTime } from "@/lib/format";
+import type { SessionTimelineUsage, SessionDetail } from "@argos/shared";
 
 interface SessionTimelineChartProps {
-  usageTimeline: SessionTimelineUsage[]
-  messages: SessionDetail['messages']
-  sessionStartedAt: string
+  usageTimeline: SessionTimelineUsage[];
+  messages: SessionDetail["messages"];
+  sessionStartedAt: string;
 }
 
 interface ToolCallPoint {
-  timestamp: string
-  toolName: string
-  parsedTimestamp: number
+  timestamp: string;
+  toolName: string;
+  parsedTimestamp: number;
 }
 
 interface ChartDataItem {
-  relativeTime: string
-  input: number
-  output: number
-  cost: number
-  model?: string | null
-  toolSummary: string
+  relativeTime: string;
+  input: number;
+  output: number;
+  cost: number;
+  model?: string | null;
+  toolSummary: string;
 }
 
 function getToolSummaryForIndex(
   index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
+  parsedTimestamps: number[],
+  toolCalls: ToolCallPoint[],
 ): string {
-  if (toolCalls.length === 0) return ''
+  if (toolCalls.length === 0) return "";
 
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
+  const currentTimestamp = parsedTimestamps[index]!;
+  const prevTimestamp = index > 0 ? parsedTimestamps[index - 1]! : 0;
 
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
   const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
+    const toolTimestamp = e.parsedTimestamp;
+    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp;
+  });
 
-  if (relevantTools.length === 0) return ''
+  if (relevantTools.length === 0) return "";
 
   // 이름별로 카운트
-  const counts = new Map<string, number>()
+  const counts = new Map<string, number>();
   for (const tool of relevantTools) {
-    const name = tool.toolName || 'unknown'
-    counts.set(name, (counts.get(name) || 0) + 1)
+    const name = tool.toolName || "unknown";
+    counts.set(name, (counts.get(name) || 0) + 1);
   }
 
   // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
 
   // 최대 3개까지만 표시
-  const displayCount = Math.min(3, sorted.length)
+  const displayCount = Math.min(3, sorted.length);
   const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
-    return count > 1 ? `${name} x${count}` : name
-  })
+    return count > 1 ? `${name} x${count}` : name;
+  });
 
-  const remaining = sorted.length - displayCount
+  const remaining = sorted.length - displayCount;
   if (remaining > 0) {
-    return `${displayItems.join(', ')} +${remaining} more`
+    return `${displayItems.join(", ")} +${remaining} more`;
   }
 
-  return displayItems.join(', ')
+  return displayItems.join(", ");
 }
 
 function CustomTooltip({
   active,
   payload,
 }: TooltipProps<number, string> & { chartData?: ChartDataItem[] }) {
-  if (!active || !payload || payload.length === 0) return null
+  if (!active || !payload || payload.length === 0) return null;
 
-  const data = payload[0]?.payload as ChartDataItem | undefined
-  if (!data) return null
+  const data = payload[0]?.payload as ChartDataItem | undefined;
+  if (!data) return null;
 
   return (
     <div className="rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-3">
@@ -95,16 +94,22 @@ function CustomTooltip({
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-chart-1" />
           <span className="text-muted-foreground">Input Tokens:</span>
-          <span className="font-medium tabular-nums">{formatTokens(data.input)}</span>
+          <span className="font-medium tabular-nums">
+            {formatTokens(data.input)}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-chart-2" />
           <span className="text-muted-foreground">Output Tokens:</span>
-          <span className="font-medium tabular-nums">{formatTokens(data.output)}</span>
+          <span className="font-medium tabular-nums">
+            {formatTokens(data.output)}
+          </span>
         </div>
         <div className="pt-1 mt-1 border-t border-border">
           <span className="text-muted-foreground">Cost:</span>
-          <span className="font-medium ml-2 tabular-nums">{formatCost(data.cost)}</span>
+          <span className="font-medium ml-2 tabular-nums">
+            {formatCost(data.cost)}
+          </span>
         </div>
         {data.model && (
           <div>
@@ -120,7 +125,7 @@ function CustomTooltip({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export function SessionTimelineChart({
@@ -132,13 +137,19 @@ export function SessionTimelineChart({
   // 리렌더링 시마다 발생하는 불필요한 연산을 방지함. (배열 생성 오버헤드 감소)
   const toolCalls: ToolCallPoint[] = useMemo(() => {
     return messages
-      .filter((m) => m.role === 'TOOL')
+      .filter((m) => m.role === "TOOL")
       .map((m) => ({
         timestamp: m.timestamp,
-        toolName: m.toolName ?? 'unknown',
-        parsedTimestamp: new Date(m.timestamp).getTime(),
-      }))
-  }, [messages])
+        toolName: m.toolName ?? "unknown",
+        parsedTimestamp: Date.parse(m.timestamp),
+      }));
+  }, [messages]);
+
+  // ⚡ Bolt: 렌더링 맵핑 루프 내에서 중복되는 Date 생성 및 파싱 비용을 줄이기 위해,
+  // 타임스탬프를 먼저 숫자형으로 파싱해두는 최적화를 적용함.
+  const parsedTimestamps = useMemo(() => {
+    return usageTimeline.map((u) => Date.parse(u.timestamp));
+  }, [usageTimeline]);
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
@@ -150,14 +161,16 @@ export function SessionTimelineChart({
       output: u.outputTokens,
       cost: u.estimatedCostUsd,
       model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
-    }))
-  }, [usageTimeline, sessionStartedAt, toolCalls])
+      toolSummary: getToolSummaryForIndex(idx, parsedTimestamps, toolCalls),
+    }));
+  }, [usageTimeline, sessionStartedAt, toolCalls, parsedTimestamps]);
 
   if (usageTimeline.length === 0) {
     return (
-      <p className="text-center text-muted-foreground py-8">No timeline data available</p>
-    )
+      <p className="text-center text-muted-foreground py-8">
+        No timeline data available
+      </p>
+    );
   }
 
   return (
@@ -169,16 +182,19 @@ export function SessionTimelineChart({
           stroke="var(--color-muted-foreground)"
           tickLine={false}
           axisLine={false}
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: "11px" }}
         />
         <YAxis
           tickFormatter={formatTokens}
           stroke="var(--color-muted-foreground)"
           tickLine={false}
           axisLine={false}
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: "11px" }}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-muted)', opacity: 0.4 }} />
+        <Tooltip
+          content={<CustomTooltip />}
+          cursor={{ fill: "var(--color-muted)", opacity: 0.4 }}
+        />
         <Bar
           dataKey="input"
           stackId="tokens"
@@ -193,5 +209,5 @@ export function SessionTimelineChart({
         />
       </ComposedChart>
     </ResponsiveContainer>
-  )
+  );
 }
