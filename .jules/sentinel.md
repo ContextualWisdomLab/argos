@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2025-02-15 - [DoS via long inputs for bcrypt hashing]
+**Vulnerability:** Zod validation schemas for passwords lacked a maximum length limit before passing the input to `bcrypt` or `bcryptjs`.
+**Learning:** `bcrypt`'s execution time grows significantly with the length of the input string. Without a strict length limit (e.g., `.max(1024)`), attackers can submit extremely long passwords to cause CPU exhaustion and Denial-of-Service (DoS) on the server.
+**Prevention:** In Zod validation schemas or any input validation, always enforce a maximum string length limit (e.g., `.max(1024)`) on password inputs that will be passed to `bcrypt` or `bcryptjs` to prevent CPU exhaustion vulnerabilities.
