@@ -35,7 +35,24 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function formatToolSummary(relevantTools: ToolCallPoint[]): string {
+function getToolSummaryForIndex(
+  index: number,
+  usageTimeline: SessionTimelineUsage[],
+  toolCalls: ToolCallPoint[]
+): string {
+  if (toolCalls.length === 0) return ''
+
+  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
+  const prevTimestamp =
+    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
+
+  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
+  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
+  const relevantTools = toolCalls.filter((e) => {
+    const toolTimestamp = e.parsedTimestamp
+    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
+  })
+
   if (relevantTools.length === 0) return ''
 
   // 이름별로 카운트
@@ -62,7 +79,7 @@ function formatToolSummary(relevantTools: ToolCallPoint[]): string {
   return displayItems.join(', ')
 }
 
-export function CustomTooltip({
+function CustomTooltip({
   active,
   payload,
 }: TooltipProps<number, string> & { chartData?: ChartDataItem[] }) {
@@ -121,42 +138,20 @@ export function SessionTimelineChart({
         toolName: m.toolName ?? 'unknown',
         parsedTimestamp: new Date(m.timestamp).getTime(),
       }))
-      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
-  // [Bolt: Performance Optimization] O(N*M) nested filter를 O(N+M) pointer approach로 개선
   const chartData: ChartDataItem[] = useMemo(() => {
-    const sortedIndices = usageTimeline
-      .map((u, idx) => ({ idx, timestamp: new Date(u.timestamp).getTime() }))
-      .sort((a, b) => a.timestamp - b.timestamp)
-
-    const result = new Array<ChartDataItem>(usageTimeline.length)
-    let toolIdx = 0
-
-    for (let i = 0; i < sortedIndices.length; i++) {
-      const { idx, timestamp: currentTimestamp } = sortedIndices[i]!
-      const u = usageTimeline[idx]!
-
-      const relevantTools: ToolCallPoint[] = []
-      while (toolIdx < toolCalls.length && toolCalls[toolIdx]!.parsedTimestamp <= currentTimestamp) {
-        relevantTools.push(toolCalls[toolIdx]!)
-        toolIdx++
-      }
-
-      result[idx] = {
-        relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
-        input: u.inputTokens,
-        output: u.outputTokens,
-        cost: u.estimatedCostUsd,
-        model: u.model,
-        toolSummary: formatToolSummary(relevantTools),
-      }
-    }
-
-    return result
+    return usageTimeline.map((u, idx) => ({
+      relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
+      input: u.inputTokens,
+      output: u.outputTokens,
+      cost: u.estimatedCostUsd,
+      model: u.model,
+      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+    }))
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
   if (usageTimeline.length === 0) {

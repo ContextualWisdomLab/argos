@@ -27,6 +27,7 @@ export function findProjectConfigWithPath(
   const maxDepth = 10
 
   while (depth < maxDepth) {
+
     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const configPath = join(currentDir, '.argos', 'project.json')
     if (existsSync(configPath)) {
