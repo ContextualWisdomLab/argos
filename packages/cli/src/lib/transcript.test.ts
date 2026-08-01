@@ -11,7 +11,9 @@ import {
 
 /** Write an array of objects as JSONL to a temp file and return the path. */
 function writeJsonl(dir: string, lines: object[]): string {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
@@ -23,6 +25,7 @@ describe('readTranscriptLines', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-rtl-'))
   })
 
@@ -31,6 +34,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파일이 없으면 빈 배열을 반환한다', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const result = await readTranscriptLines(join(tempDir, 'nonexistent.jsonl'))
     expect(result).toEqual([])
   })
@@ -48,6 +52,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파싱 실패한 줄은 {} 로 반환한다', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'bad.jsonl')
     writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
 
@@ -58,6 +63,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('빈 줄은 제거한다', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'empty-lines.jsonl')
     writeFileSync(
       path,
@@ -77,6 +83,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-usage-'))
   })
 
@@ -191,6 +198,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-slash-'))
   })
 
@@ -233,6 +241,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-msg-'))
   })
 
