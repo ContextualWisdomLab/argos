@@ -25,6 +25,12 @@ function assertSnakeCaseIdentifier(kind: string, name: string): void {
   }
 }
 
+function assertNoStatementTerminator(value: string): void {
+  if (value.includes(';')) {
+    throw new Error(`SQL injection prevention: Statement terminators (;) are not allowed.`)
+  }
+}
+
 export class ERDModel {
   private tables: Map<string, Table> = new Map()
 
@@ -49,6 +55,7 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertNoStatementTerminator(column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
