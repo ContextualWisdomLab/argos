@@ -40,3 +40,17 @@ describe('ExchangeRequestSchema', () => {
     expect(ExchangeRequestSchema.safeParse({ onboardToken: '' }).success).toBe(false)
   })
 })
+
+describe('Password Length Limits', () => {
+  it('LoginRequestSchema에서 1024자를 초과하는 비밀번호는 실패한다', () => {
+    expect(
+      LoginRequestSchema.safeParse({ email: 'a@b.com', password: 'a'.repeat(1025) }).success,
+    ).toBe(false)
+  })
+
+  it('RegisterRequestSchema에서 1024자를 초과하는 비밀번호는 실패한다', () => {
+    expect(
+      RegisterRequestSchema.safeParse({ email: 'a@b.com', password: 'a'.repeat(1025), name: 'user' }).success,
+    ).toBe(false)
+  })
+})
