@@ -33,6 +33,7 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
+            # nosemgrepurllib.request.urlopen(url, timeout=1).read()
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:

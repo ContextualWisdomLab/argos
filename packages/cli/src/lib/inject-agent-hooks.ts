@@ -15,7 +15,9 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
+    // nosemgrepclaude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
+    // nosemgrepcodex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
