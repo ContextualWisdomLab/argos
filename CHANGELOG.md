@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### 🛡️ 보안 (Security)
+
+- ERD 도구의 DDL 생성 기능에서 데이터 타입 필드(`column.type`)에 문장 종결자(세미콜론 등)를 주입할 수 없도록 검증 로직(`assertNoStatementTerminator`)을 추가하여 SQL 인젝션 취약점을 수정했습니다.
+
 ### ✨ 추가 기능 (Feature)
 
 - ERD (Entity-Relationship Diagram) 엔진의 코어 모델 클래스(`ERDModel`)를 신규 구현했습니다.
