@@ -20,6 +20,7 @@ overrides:
   sharp: 0.35.0
   '@emnapi/runtime': 1.11.3
   semver: 7.8.5
+  '@img/sharp-wasm32': 0.35.0
 
 pnpmfileChecksum: qsp27c6veblwg3gxusbbzrumtm
 
