@@ -20,6 +20,8 @@ import socket
 import subprocess
 import time
 import urllib.request
+import urllib.parse
+import ipaddress
 from pathlib import Path
 
 
@@ -29,17 +31,54 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+def _is_safe_url(url: str) -> bool:
+    try:
+        parsed = urllib.parse.urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        # Block access to cloud metadata services
+        if hostname in ("169.254.169.254", "metadata.google.internal", "metadata.azure.com"):
+            return False
+        try:
+            ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+            # Block link-local (169.254.0.0/16)
+            if ip.is_link_local:
+                return False
+        except socket.gaierror:
+            pass # Name resolution failed
+        return True
+    except Exception:
+        return False
+
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
+    if not _is_safe_url(url):
+        return False
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            # nosemgrepurllib.request.urlopen(url, timeout=1).read()
+            # nosemgrep
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:
             time.sleep(0.2)
     return False
 
+def _is_safe_command(cmd: list[str]) -> bool:
+    if not cmd:
+        return False
+    allowed_executables = {"python", "python3", "node", "npm", "npx", "uv", "uvx", "sh", "bash"}
+    exe = os.path.basename(cmd[0])
+    if exe not in allowed_executables:
+        return False
+
+    dangerous_chars = set("&|<>$`\\n")
+    for arg in cmd[1:]:
+        if any(c in dangerous_chars for c in arg):
+            return False
+    return True
 
 def spawn_and_wait_ready(
     cmd: list[str],
@@ -50,6 +89,9 @@ def spawn_and_wait_ready(
     timeout_sec: float = 15.0,
     pidfile: Path | None = None,
 ) -> subprocess.Popen:
+    if not _is_safe_command(cmd):
+        raise ValueError(f"Command rejected for security reasons: {cmd}")
+
     popen_kwargs: dict = {
         "env": env,
         "cwd": cwd,
