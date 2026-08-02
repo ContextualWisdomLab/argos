@@ -35,49 +35,8 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryForIndex(
-  index: number,
-  usageTimeline: SessionTimelineUsage[],
-  toolCalls: ToolCallPoint[]
-): string {
-  if (toolCalls.length === 0) return ''
-
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
-  const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
-
-  // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
-  // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
-  const relevantTools = toolCalls.filter((e) => {
-    const toolTimestamp = e.parsedTimestamp
-    return toolTimestamp <= currentTimestamp && toolTimestamp > prevTimestamp
-  })
-
-  if (relevantTools.length === 0) return ''
-
-  // 이름별로 카운트
-  const counts = new Map<string, number>()
-  for (const tool of relevantTools) {
-    const name = tool.toolName || 'unknown'
-    counts.set(name, (counts.get(name) || 0) + 1)
-  }
-
-  // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
-
-  // 최대 3개까지만 표시
-  const displayCount = Math.min(3, sorted.length)
-  const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
-    return count > 1 ? `${name} x${count}` : name
-  })
-
-  const remaining = sorted.length - displayCount
-  if (remaining > 0) {
-    return `${displayItems.join(', ')} +${remaining} more`
-  }
-
-  return displayItems.join(', ')
-}
+// ⚡ Bolt: O(N*M) 중첩 반복문을 방지하고 불필요한 날짜 파싱을 피하기 위해
+// O(N+M) 투 포인터(Two-pointer) 방식으로 타임라인 버킷별 도구 요약을 사전 계산하는 로직은 차트 데이터 생성 시 수행됩니다.
 
 function CustomTooltip({
   active,
@@ -130,6 +89,7 @@ export function SessionTimelineChart({
 }: SessionTimelineChartProps) {
   // ⚡ Bolt: messages 배열을 필터링하고 매핑하는 비용이 높은 작업을 useMemo로 최적화하여
   // 리렌더링 시마다 발생하는 불필요한 연산을 방지함. (배열 생성 오버헤드 감소)
+  // 투 포인터 접근 시 안전한 순회 처리를 위해 타임스탬프 기준으로 정렬합니다.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
     return messages
       .filter((m) => m.role === 'TOOL')
@@ -138,19 +98,66 @@ export function SessionTimelineChart({
         toolName: m.toolName ?? 'unknown',
         parsedTimestamp: new Date(m.timestamp).getTime(),
       }))
+      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
-  // 이로 인해 리렌더링 속도가 향상됨.
+  // 중첩된 O(N*M) filter 대신 O(N+M) 투 포인터 방식을 사용하여 도구 요약을 단일 패스로 그룹화하고
+  // 내부 반복문에서의 불필요한 날짜 파싱(new Date().getTime())을 제거하여 메모리 할당과 GC 오버헤드를 줄임.
   const chartData: ChartDataItem[] = useMemo(() => {
+    const toolSummaries: string[] = Array(usageTimeline.length).fill('')
+
+    if (usageTimeline.length > 0 && toolCalls.length > 0) {
+      const timelineTimestamps = usageTimeline.map(u => new Date(u.timestamp).getTime())
+
+      let toolIdx = 0
+      for (let i = 0; i < usageTimeline.length; i++) {
+        const currentTimestamp = timelineTimestamps[i]!
+        const prevTimestamp = i > 0 ? timelineTimestamps[i - 1]! : 0
+
+        const relevantTools: ToolCallPoint[] = []
+
+        while (toolIdx < toolCalls.length) {
+          const tool = toolCalls[toolIdx]!
+          if (tool.parsedTimestamp <= currentTimestamp) {
+            if (tool.parsedTimestamp > prevTimestamp) {
+              relevantTools.push(tool)
+            }
+            toolIdx++
+          } else {
+            break
+          }
+        }
+
+        if (relevantTools.length > 0) {
+          const counts = new Map<string, number>()
+          for (const tool of relevantTools) {
+            const name = tool.toolName || 'unknown'
+            counts.set(name, (counts.get(name) || 0) + 1)
+          }
+
+          const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+          const displayCount = Math.min(3, sorted.length)
+          const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
+            return count > 1 ? `${name} x${count}` : name
+          })
+
+          const remaining = sorted.length - displayCount
+          toolSummaries[i] = remaining > 0
+            ? `${displayItems.join(', ')} +${remaining} more`
+            : displayItems.join(', ')
+        }
+      }
+    }
+
     return usageTimeline.map((u, idx) => ({
       relativeTime: formatRelativeTime(u.timestamp, sessionStartedAt),
       input: u.inputTokens,
       output: u.outputTokens,
       cost: u.estimatedCostUsd,
       model: u.model,
-      toolSummary: getToolSummaryForIndex(idx, usageTimeline, toolCalls),
+      toolSummary: toolSummaries[idx] ?? '',
     }))
   }, [usageTimeline, sessionStartedAt, toolCalls])
 
