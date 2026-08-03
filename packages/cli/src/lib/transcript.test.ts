@@ -11,7 +11,7 @@ import {
 
 /** Write an array of objects as JSONL to a temp file and return the path. */
 function writeJsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = join(dir, 'transcript.jsonl') // nosemgrep
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
@@ -23,7 +23,7 @@ describe('readTranscriptLines', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-rtl-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-rtl-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -31,7 +31,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파일이 없으면 빈 배열을 반환한다', async () => {
-    const result = await readTranscriptLines(join(tempDir, 'nonexistent.jsonl'))
+    const result = await readTranscriptLines(join(tempDir, 'nonexistent.jsonl')) // nosemgrep
     expect(result).toEqual([])
   })
 
@@ -48,7 +48,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파싱 실패한 줄은 {} 로 반환한다', async () => {
-    const path = join(tempDir, 'bad.jsonl')
+    const path = join(tempDir, 'bad.jsonl') // nosemgrep
     writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
 
     const lines = await readTranscriptLines(path)
@@ -58,7 +58,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('빈 줄은 제거한다', async () => {
-    const path = join(tempDir, 'empty-lines.jsonl')
+    const path = join(tempDir, 'empty-lines.jsonl') // nosemgrep
     writeFileSync(
       path,
       '{"type":"human"}\n\n{"type":"assistant"}\n',
@@ -77,7 +77,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-usage-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-usage-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -191,7 +191,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-slash-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-slash-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -233,7 +233,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-msg-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-msg-')) // nosemgrep
   })
 
   afterEach(() => {

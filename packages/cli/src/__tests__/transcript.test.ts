@@ -9,7 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = join(dir, 'transcript.jsonl') // nosemgrep
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
@@ -18,7 +18,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -26,7 +26,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('returns null for a non-existent file', async () => {
-    const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
+    const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl')) // nosemgrep
     expect(result).toBeNull()
   })
 
@@ -90,7 +90,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('handles malformed lines without throwing', async () => {
-    const path = join(tempDir, 'transcript.jsonl')
+    const path = join(tempDir, 'transcript.jsonl') // nosemgrep
     writeFileSync(
       path,
       [
@@ -109,7 +109,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -122,7 +122,7 @@ describe('detectSlashCommand', () => {
   })
 
   it('returns null for non-existent file', async () => {
-    expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
+    expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull() // nosemgrep
   })
 
   it('returns skill name without the leading slash', async () => {
@@ -159,7 +159,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-')) // nosemgrep
   })
 
   afterEach(() => {
@@ -167,7 +167,7 @@ describe('extractMessages', () => {
   })
 
   it('returns empty array for non-existent file', async () => {
-    const result = await extractMessages(join(tempDir, 'nope.jsonl'))
+    const result = await extractMessages(join(tempDir, 'nope.jsonl')) // nosemgrep
     expect(result).toEqual([])
   })
 
