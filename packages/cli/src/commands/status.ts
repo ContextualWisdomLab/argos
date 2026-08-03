@@ -43,10 +43,10 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    // Advisory (.audit.) false positive: paths are the CLI's own working
-    // directory (deps.cwd()) joined with fixed literals — not attacker input.
-    const claudePath = join(deps.cwd(), '.claude', 'settings.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
-    const codexPath = join(deps.cwd(), '.codex', 'hooks.json') // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local config lookup.
+    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local config lookup.
+    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 
