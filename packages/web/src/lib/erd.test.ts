@@ -13,7 +13,7 @@ describe('ERDModel', () => {
       const table = model.addTable('users')
       expect(table.name).toBe('users')
       expect(model.getTables().length).toBe(1)
-      expect(model.getTable('users')).toBe(table)
+      expect(model.getTable('users')).toStrictEqual(table)
     })
 
     it('should throw when adding duplicate table', () => {
@@ -32,6 +32,17 @@ describe('ERDModel', () => {
 
     it('should return undefined for non-existent table', () => {
       expect(model.getTable('non_existent')).toBeUndefined()
+    })
+
+    it('should return deeply copied objects from getTable to prevent prototype pollution', () => {
+      model.addTable('users')
+      model.addColumn('users', { name: 'id', type: 'integer' })
+      const table = model.getTable('users')
+      if (table) {
+        table.columns[0].type = 'integer PRIMARY KEY; DROP TABLE users; --'
+      }
+      const unchangedTable = model.getTable('users')
+      expect(unchangedTable?.columns[0].type).toBe('integer')
     })
   })
 
@@ -73,6 +84,23 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'id', type: 'integer PRIMARY KEY); DROP TABLE users; --' })
       ).toThrowError('Statement terminators are not allowed to prevent SQL injection.')
+    })
+
+    it('should reject column types containing SQL comments', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer PRIMARY KEY -- injected comment' })
+      ).toThrowError('SQL comments are not allowed in column types.')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer /* comment */ PRIMARY KEY' })
+      ).toThrowError('SQL comments are not allowed in column types.')
+    })
+
+    it('should reject column types containing UNION attacks', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer UNION SELECT password FROM users' })
+      ).toThrowError('UNION statements are not allowed in column types.')
     })
   })
 

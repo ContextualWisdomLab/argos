@@ -25,9 +25,15 @@ function assertSnakeCaseIdentifier(kind: string, name: string): void {
   }
 }
 
-function assertNoStatementTerminator(value: string): void {
+function assertValidSqlType(value: string): void {
   if (value.includes(';')) {
     throw new Error('Statement terminators are not allowed to prevent SQL injection.')
+  }
+  if (value.includes('--') || value.includes('/*')) {
+    throw new Error('SQL comments are not allowed in column types.')
+  }
+  if (/UNION/i.test(value)) {
+    throw new Error('UNION statements are not allowed in column types.')
   }
 }
 
@@ -45,17 +51,18 @@ export class ERDModel {
   }
 
   getTable(name: string): Table | undefined {
-    return this.tables.get(name)
+    const table = this.tables.get(name)
+    return table ? JSON.parse(JSON.stringify(table)) : undefined
   }
 
   getTables(): Table[] {
-    return Array.from(this.tables.values())
+    return Array.from(this.tables.values()).map(table => JSON.parse(JSON.stringify(table)))
   }
 
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
-    assertNoStatementTerminator(column.type)
+    assertValidSqlType(column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
