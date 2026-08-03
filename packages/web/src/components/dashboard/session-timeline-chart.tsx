@@ -121,14 +121,15 @@ export function SessionTimelineChart({
         toolName: m.toolName ?? 'unknown',
         parsedTimestamp: new Date(m.timestamp).getTime(),
       }))
+      .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
   // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
   // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
   // 이로 인해 리렌더링 속도가 향상됨.
   const chartData: ChartDataItem[] = useMemo(() => {
-    // ⚡ Bolt: Optimize O(N*M) filter inside map into a single O(N+M) pass using a two-pointer approach.
-    // This reduces redundant iterations over toolCalls and prevents repeated date parsing inside inner loop.
+    // ⚡ Bolt: 중첩된 배열 필터링 O(N*M) 연산을 O(N+M) 투포인터 접근으로 변경하여
+    // 배열 반복을 최소화하고 불필요한 날짜(Date) 파싱의 오버헤드를 줄였습니다.
     const results: ChartDataItem[] = []
     let toolIndex = 0
 
