@@ -10,10 +10,10 @@
     "coverage": "pnpm install --frozen-lockfile && pnpm --filter @argos/web run coverage:erd"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.6",
-    "eslint": "^9.39.5",
-    "turbo": "^2.10.8",
-    "typescript-eslint": "^8.66.0"
+    "@eslint/eslintrc": "^3",
+    "eslint": "^9",
+    "turbo": "^2.9.16",
+    "typescript-eslint": "^8"
   },
   "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
   "pnpm": {
@@ -26,7 +26,7 @@
       "sharp": "^0.35.0",
       "postcss": "^8.5.18",
       "hono": "^4.12.27",
-      "brace-expansion": "5.0.8",
+      "brace-expansion": "5.0.9",
       "minimatch": "^10.0.0",
       "@hono/node-server": "^2.0.5",
       "body-parser": "^2.3.0"
