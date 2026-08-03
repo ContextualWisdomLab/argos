@@ -16,3 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
+
+## 2025-05-18 - [의존성 취약점 보안 패치]
+**Vulnerability:** CI 보안 스캔에서 `brace-expansion`, `fast-uri`, `hono`, `ip-address`, `undici` 패키지들에 대해 여러 취약점이 보고되었습니다.
+**Learning:** `pnpm-lock.yaml` 파일 내의 중첩된 서드파티 의존성 패키지들에서 발견된 보안 취약점들은 전체 애플리케이션의 보안에 심각한 위험을 초래할 수 있습니다.
+**Prevention:** 취약한 서드파티 의존성을 패치하기 위해선 `package.json` 파일의 `pnpm.overrides` 속성을 이용하여 취약한 버전들을 수정된 안전한 버전으로 강제로 업데이트해야 합니다.
