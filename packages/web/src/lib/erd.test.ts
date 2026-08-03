@@ -67,6 +67,13 @@ describe('ERDModel', () => {
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
+
+    it('should reject column types containing statement terminators', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'integer PRIMARY KEY); DROP TABLE users; --' })
+      ).toThrowError('Statement terminators are not allowed to prevent SQL injection.')
+    })
   })
 
   describe('Foreign Key Management', () => {
