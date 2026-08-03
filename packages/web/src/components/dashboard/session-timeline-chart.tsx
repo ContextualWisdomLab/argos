@@ -42,9 +42,10 @@ function getToolSummaryForIndex(
 ): string {
   if (toolCalls.length === 0) return ''
 
-  const currentTimestamp = new Date(usageTimeline[index]!.timestamp).getTime()
+  // ⚡ Bolt: 문자열 파싱에서 객체 할당 오버헤드를 방지하기 위해 Date.parse() 사용
+  const currentTimestamp = Date.parse(usageTimeline[index]!.timestamp)
   const prevTimestamp =
-    index > 0 ? new Date(usageTimeline[index - 1]!.timestamp).getTime() : 0
+    index > 0 ? Date.parse(usageTimeline[index - 1]!.timestamp) : 0
 
   // 현재 usageTimeline timestamp 이전이면서, 이전 usageTimeline timestamp 이후의 tool events 찾기
   // 첫 번째 bar(index=0)는 prevTimestamp가 0이므로 해당 bar 이전의 모든 이벤트를 포함
@@ -136,7 +137,8 @@ export function SessionTimelineChart({
       .map((m) => ({
         timestamp: m.timestamp,
         toolName: m.toolName ?? 'unknown',
-        parsedTimestamp: new Date(m.timestamp).getTime(),
+        // ⚡ Bolt: 날짜 파싱 오버헤드를 줄이기 위해 Date.parse() 사용
+        parsedTimestamp: Date.parse(m.timestamp),
       }))
   }, [messages])
 

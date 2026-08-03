@@ -40,8 +40,9 @@ type FlatRow =
 const ROW_HEIGHT = 36;
 
 function formatElapsed(timestamp: string, sessionStartedAt: string): string {
-  const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
+  // ⚡ Bolt: 날짜 문자열 파싱 시 불필요한 객체 생성을 막기 위해 new Date(...).getTime() 대신 Date.parse() 사용
+  const t = Date.parse(timestamp);
+  const start = Date.parse(sessionStartedAt);
   if (Number.isNaN(t) || Number.isNaN(start)) return "";
   const diffSec = Math.max(0, Math.floor((t - start) / 1000));
   const h = Math.floor(diffSec / 3600);

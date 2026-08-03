@@ -88,7 +88,8 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
  * 정확한 시각은 hover 등 title 속성에 별도로 넣어 보조한다.
  */
 export function formatLastUsed(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime()
+  // ⚡ Bolt: 날짜 파싱 오버헤드를 줄이기 위해 Date.parse() 사용
+  const diffMs = Date.now() - Date.parse(iso)
   if (diffMs < ONE_DAY_MS) {
     return formatRelativeTime(iso)
   }
@@ -102,8 +103,9 @@ export function formatDurationMs(ms: number): string {
 }
 
 export function formatDuration(startedAt: string, endedAt?: string | null): string {
-  const start = new Date(startedAt).getTime()
-  const end = endedAt ? new Date(endedAt).getTime() : Date.now()
+  // ⚡ Bolt: 날짜 파싱 오버헤드를 줄이기 위해 Date.parse() 사용
+  const start = Date.parse(startedAt)
+  const end = endedAt ? Date.parse(endedAt) : Date.now()
   const diffMs = Math.max(0, end - start)
 
   if (diffMs < 1000) return '0s'
