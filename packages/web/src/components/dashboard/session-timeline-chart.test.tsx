@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** @vitest-environment jsdom */
 import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
