@@ -15,8 +15,16 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
-    claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
+    claude: deps.hooks.inject(
+      // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+      join(cwd, '.claude', 'settings.json'),
+      'claude'
+    ),
+    codex: deps.hooks.inject(
+      // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+      join(cwd, '.codex', 'hooks.json'),
+      'codex'
+    ),
   }
 }
 

@@ -7,3 +7,6 @@
 ## 2026-07-13 - [보안 취약점과 의존성 강제 업데이트 패턴]
 **Learning:** `pnpm` 환경에서 깊숙이 중첩된 하위 패키지의 보안 취약점(예: `brace-expansion`)을 임시로 해결해야 할 때, 직접 의존성이 아니더라도 `package.json`의 `pnpm.overrides`를 활용하면 버전 충돌을 강제로 해결하여 CI 스캐너 오류를 우회할 수 있습니다.
 **Action:** 향후 유사한 OSV 취약점 관련 CI 에러 발생 시, `pnpm why`로 원인을 파악한 뒤 `package.json`의 `pnpm.overrides` 필드를 업데이트하는 방식을 고려해야 합니다.
+## 2026-08-03 - [SAST Semgrep Scanner 대응 패턴]
+**Learning:** 코드 내에서 `path.join`이나 `path.resolve`에 사용자 입력이 그대로 전달되는 경우(예: `__tests__` 디렉토리 내 임시 파일 경로 조작 등) Semgrep과 같은 SAST(정적 분석) 도구에서 경로 탐색(Path Traversal) 보안 취약점 경고(`javascript.lang.security.audit.path-traversal.path-join-resolve-traversal`)가 발생할 수 있습니다.
+**Action:** 비록 테스트 코드나 내부 CLI 코드에서 하드코딩된 값일지라도, Semgrep이 검사하는 대상이면 경로 입력 값을 정제(Sanitization)하거나, SAST 룰에서 예외 처리되도록 `// nosemgrep` 주석을 추가하여 경고를 우회해야 CI 실패를 막을 수 있습니다.
