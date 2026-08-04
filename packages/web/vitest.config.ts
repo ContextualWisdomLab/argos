@@ -1,6 +1,5 @@
 import path from 'node:path'
 import { defineConfig } from 'vitest/config'
-import react from "@vitejs/plugin-react"
 
 // Guard: DB-dependent tests must run against localhost only.
 // If DATABASE_URL points to a remote host, bail early to prevent writes
@@ -17,7 +16,6 @@ if (dbUrl && !/(localhost|127\.0\.0\.1)/.test(dbUrl)) {
 }
 
 export default defineConfig({
-  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -25,7 +23,6 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    setupFiles: ["./vitest.setup.ts"],
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     // Coverage is scoped to DB-free core library modules so the central
     // coverage-evidence gate can prove 100% coverage without a Postgres
