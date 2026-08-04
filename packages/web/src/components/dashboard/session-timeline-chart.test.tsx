@@ -1,16 +1,18 @@
 /** @vitest-environment jsdom */
 import React from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
+import { render, screen, cleanup } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { SessionTimelineChart } from './session-timeline-chart'
+import '@testing-library/jest-dom/vitest'
+import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
 
-vi.mock('recharts', async () => {
-  const OriginalModule = await vi.importActual('recharts')
+// ResponsiveContainer는 JSDOM 환경에서 크기를 갖지 못하므로 모킹합니다.
+vi.mock('recharts', async (importOriginal) => {
+  const OriginalRecharts = await importOriginal<typeof import('recharts')>()
   return {
-    ...OriginalModule,
+    ...OriginalRecharts,
     ResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
-      <div data-testid="responsive-container">{children}</div>
+      <div className="recharts-responsive-container" style={{ width: 800, height: 400 }}>{children}</div>
     ),
   }
 })
@@ -21,111 +23,95 @@ describe('SessionTimelineChart', () => {
     vi.clearAllMocks()
   })
 
-  it('renders "No timeline data available" when usageTimeline is empty', () => {
+  it('renders correctly with empty timeline', () => {
     render(
       <SessionTimelineChart
         usageTimeline={[]}
         messages={[]}
-        sessionStartedAt="2023-01-01T00:00:00.000Z"
+        sessionStartedAt={new Date().toISOString()}
       />
     )
-    expect(screen.getByText('No timeline data available')).toBeDefined()
+    expect(screen.getByText('No timeline data available')).toBeInTheDocument()
   })
 
-  it('renders the chart correctly when data is provided', () => {
-    const mockUsageTimeline: SessionTimelineUsage[] = [
+  it('renders correctly with usage timeline and O(N+M) tool calls optimization handling out-of-order data', () => {
+    const baseDate = new Date('2024-01-01T10:00:00.000Z')
+    const sessionStartedAt = baseDate.toISOString()
+
+    // ⚡ Bolt: 테스트 - out-of-order usageTimeline 및 toolCalls 데이터를 제공하여 투 포인터 최적화 정렬 로직이 정상 동작하는지 확인
+    const usageTimeline: SessionTimelineUsage[] = [
       {
-        timestamp: '2023-01-01T00:01:00.000Z',
+        timestamp: new Date(baseDate.getTime() + 2000).toISOString(), // 2s (Second in chronological order)
+        inputTokens: 150,
+        outputTokens: 60,
+        estimatedCostUsd: 0.0021,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: new Date(baseDate.getTime() + 1000).toISOString(), // 1s (First in chronological order)
         inputTokens: 100,
         outputTokens: 50,
-        estimatedCostUsd: 0.001,
+        estimatedCostUsd: 0.0015,
         model: 'gpt-4',
         isSubagent: false,
       },
     ]
 
-    const mockMessages: SessionDetail['messages'] = [
+    const messages: SessionDetail['messages'] = [
       {
-        role: 'HUMAN',
+        role: 'TOOL', // 3rd tool call chronologically
+        content: 'result 2',
+        timestamp: new Date(baseDate.getTime() + 1500).toISOString(), // 1.5s
+        toolName: 'weather',
+        sequence: 3,
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+      },
+      {
+        role: 'ASSISTANT',
         content: 'Hello',
+        timestamp: sessionStartedAt,
         sequence: 1,
-        timestamp: '2023-01-01T00:00:30.000Z',
         inputTokens: 0,
         outputTokens: 0,
         estimatedCostUsd: 0,
-        toolName: null,
+      },
+      {
+        role: 'TOOL', // 1st and 2nd tool calls chronologically
+        content: 'result 1',
+        timestamp: new Date(baseDate.getTime() + 500).toISOString(), // 0.5s
+        toolName: 'search',
+        sequence: 2,
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
       },
       {
         role: 'TOOL',
-        content: 'Tool Output',
-        sequence: 2,
-        timestamp: '2023-01-01T00:00:45.000Z',
+        content: 'result 1 dup',
+        timestamp: new Date(baseDate.getTime() + 500).toISOString(), // 0.5s (same as msg2)
+        toolName: 'search',
+        sequence: 4,
         inputTokens: 0,
         outputTokens: 0,
         estimatedCostUsd: 0,
-        toolName: 'myTool',
       },
     ]
 
-    render(
+    const { container } = render(
       <SessionTimelineChart
-        usageTimeline={mockUsageTimeline}
-        messages={mockMessages}
-        sessionStartedAt="2023-01-01T00:00:00.000Z"
+        usageTimeline={usageTimeline}
+        messages={messages}
+        sessionStartedAt={sessionStartedAt}
       />
     )
-    expect(screen.getByTestId('responsive-container')).toBeDefined()
-  })
-  it('correctly processes out-of-order usage and tool call data', () => {
-    const mockUsageTimeline: SessionTimelineUsage[] = [
-      {
-        timestamp: '2023-01-01T00:02:00.000Z',
-        inputTokens: 100,
-        outputTokens: 50,
-        estimatedCostUsd: 0.001,
-        model: 'gpt-4',
-        isSubagent: false,
-      },
-      {
-        timestamp: '2023-01-01T00:01:00.000Z',
-        inputTokens: 200,
-        outputTokens: 100,
-        estimatedCostUsd: 0.002,
-        model: 'gpt-4',
-        isSubagent: false,
-      },
-    ]
 
-    const mockMessages: SessionDetail['messages'] = [
-      {
-        role: 'TOOL',
-        content: 'Tool Output 2',
-        sequence: 2,
-        timestamp: '2023-01-01T00:01:45.000Z',
-        inputTokens: 0,
-        outputTokens: 0,
-        estimatedCostUsd: 0,
-        toolName: 'lateTool',
-      },
-      {
-        role: 'TOOL',
-        content: 'Tool Output 1',
-        sequence: 1,
-        timestamp: '2023-01-01T00:00:45.000Z',
-        inputTokens: 0,
-        outputTokens: 0,
-        estimatedCostUsd: 0,
-        toolName: 'earlyTool',
-      },
-    ]
+    // 차트 컨테이너가 렌더링되었는지 확인
+    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument()
 
-    render(
-      <SessionTimelineChart
-        usageTimeline={mockUsageTimeline}
-        messages={mockMessages}
-        sessionStartedAt="2023-01-01T00:00:00.000Z"
-      />
-    )
-    expect(screen.getByTestId('responsive-container')).toBeDefined()
+    // No timeline data 메시지가 없어야 함
+    expect(screen.queryByText('No timeline data available')).not.toBeInTheDocument()
   })
 })

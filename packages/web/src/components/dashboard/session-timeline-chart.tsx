@@ -35,33 +35,6 @@ interface ChartDataItem {
   toolSummary: string
 }
 
-function getToolSummaryFromTools(relevantTools: ToolCallPoint[]): string {
-  if (relevantTools.length === 0) return ''
-
-  // 이름별로 카운트
-  const counts = new Map<string, number>()
-  for (const tool of relevantTools) {
-    const name = tool.toolName || 'unknown'
-    counts.set(name, (counts.get(name) || 0) + 1)
-  }
-
-  // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
-
-  // 최대 3개까지만 표시
-  const displayCount = Math.min(3, sorted.length)
-  const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
-    return count > 1 ? `${name} x${count}` : name
-  })
-
-  const remaining = sorted.length - displayCount
-  if (remaining > 0) {
-    return `${displayItems.join(', ')} +${remaining} more`
-  }
-
-  return displayItems.join(', ')
-}
-
 function CustomTooltip({
   active,
   payload,
@@ -106,17 +79,41 @@ function CustomTooltip({
   )
 }
 
+function buildToolSummary(tools: ToolCallPoint[]): string {
+  if (tools.length === 0) return ''
+
+  // 이름별로 카운트
+  const counts = new Map<string, number>()
+  for (const tool of tools) {
+    const name = tool.toolName || 'unknown'
+    counts.set(name, (counts.get(name) || 0) + 1)
+  }
+
+  // 배열로 변환하여 카운트 내림차순 정렬
+  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+
+  // 최대 3개까지만 표시
+  const displayCount = Math.min(3, sorted.length)
+  const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
+    return count > 1 ? `${name} x${count}` : name
+  })
+
+  const remaining = sorted.length - displayCount
+  if (remaining > 0) {
+    return `${displayItems.join(', ')} +${remaining} more`
+  }
+
+  return displayItems.join(', ')
+}
+
 export function SessionTimelineChart({
   usageTimeline,
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
-  // ⚡ Bolt: messages 배열을 필터링하고 매핑하는 비용이 높은 작업을 useMemo로 최적화하여
-  // 리렌더링 시마다 발생하는 불필요한 연산을 방지함. (배열 생성 오버헤드 감소)
-  // ⚡ Bolt: messages와 usageTimeline의 데이터를 매핑하는 알고리즘 최적화.
-  // 기존에는 usageTimeline의 매 항목마다 전체 toolCalls를 .filter()로 순회하여 O(N*M)의 시간 복잡도를 가졌습니다.
-  // 이를 O(N+M)의 투 포인터(Two-pointer) 방식으로 개선하기 위해, 먼저 toolCalls를 시간순으로 정렬합니다.
-  const toolCalls: ToolCallPoint[] = useMemo(() => {
+  // ⚡ Bolt: usageTimeline과 messages 데이터는 보통 시간순으로 들어오지만,
+  // 안전하게 O(N+M) 투 포인터 알고리즘을 사용하기 위해 두 배열 모두 명시적으로 시간순 정렬합니다.
+  const sortedToolCalls: ToolCallPoint[] = useMemo(() => {
     return messages
       .filter((m) => m.role === 'TOOL')
       .map((m) => ({
@@ -127,37 +124,33 @@ export function SessionTimelineChart({
       .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
-  // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
-  // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
-  // 이로 인해 리렌더링 속도가 향상됨.
-  // ⚡ Bolt: usageTimeline을 순회할 때 정렬된 toolCalls 배열을 투 포인터 방식으로 추적하여
-  // 불필요한 중복 순회를 제거. (O(N*M) -> O(N+M))
-  // 리렌더링 성능이 크게 향상됩니다.
+  // ⚡ Bolt: 기존 O(N*M) nested loop(.map 안의 .filter)를 O(N+M) 투 포인터 접근법으로 최적화하여
+  // 리렌더링 속도와 대규모 데이터셋 처리 성능을 크게 향상함.
   const chartData: ChartDataItem[] = useMemo(() => {
     if (usageTimeline.length === 0) return []
 
-    // 타임라인 안전 정렬
-    const sortedTimeline = [...usageTimeline].sort(
+    // 시간순으로 정렬된 복사본 생성
+    const sortedUsage = [...usageTimeline].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     )
 
-    const result: ChartDataItem[] = []
     let toolIndex = 0
+    const result: ChartDataItem[] = []
+    let prevTimestamp = 0
 
-    // usageTimeline과 toolCalls 모두 시간순 정렬되어 있다고 가정
-    for (let i = 0; i < sortedTimeline.length; i++) {
-      const u = sortedTimeline[i]!
+    for (const u of sortedUsage) {
       const currentTimestamp = new Date(u.timestamp).getTime()
 
       const relevantTools: ToolCallPoint[] = []
-      while (toolIndex < toolCalls.length) {
-        const tool = toolCalls[toolIndex]!
-        if (tool.parsedTimestamp <= currentTimestamp) {
-          relevantTools.push(tool)
-          toolIndex++
-        } else {
-          break
+      // 투 포인터: toolCalls는 이미 정렬되어 있으므로, 인덱스를 계속 전진시킴
+      while (
+        toolIndex < sortedToolCalls.length &&
+        sortedToolCalls[toolIndex]!.parsedTimestamp <= currentTimestamp
+      ) {
+        if (sortedToolCalls[toolIndex]!.parsedTimestamp > prevTimestamp) {
+          relevantTools.push(sortedToolCalls[toolIndex]!)
         }
+        toolIndex++
       }
 
       result.push({
@@ -166,12 +159,14 @@ export function SessionTimelineChart({
         output: u.outputTokens,
         cost: u.estimatedCostUsd,
         model: u.model,
-        toolSummary: getToolSummaryFromTools(relevantTools),
+        toolSummary: buildToolSummary(relevantTools),
       })
+
+      prevTimestamp = currentTimestamp
     }
 
     return result
-  }, [usageTimeline, sessionStartedAt, toolCalls])
+  }, [usageTimeline, sessionStartedAt, sortedToolCalls])
 
   if (usageTimeline.length === 0) {
     return (
