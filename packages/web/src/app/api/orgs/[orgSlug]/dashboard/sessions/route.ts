@@ -196,9 +196,14 @@ export async function GET(
             include: sessionInclude,
           })
           const byId = new Map(rows.map((s) => [s.id, s]))
-          csvSessions = ids
-            .map((id) => byId.get(id))
-            .filter((s): s is SessionWithInclude => !!s)
+          // ⚡ Bolt: .map().filter() 체인을 단일 for 루프로 최적화하여 중간 배열 생성과 O(2N) 순회를 방지함.
+          csvSessions = []
+          for (const id of ids) {
+            const s = byId.get(id)
+            if (s) {
+              csvSessions.push(s)
+            }
+          }
         }
       } else {
         csvSessions = await db.claudeSession.findMany({
@@ -245,9 +250,14 @@ export async function GET(
           include: sessionInclude,
         })
         const byId = new Map(rows.map((s) => [s.id, s]))
-        sessions = ids
-          .map((id) => byId.get(id))
-          .filter((s): s is SessionWithInclude => !!s)
+        // ⚡ Bolt: .map().filter() 체인을 단일 for 루프로 최적화하여 중간 배열 생성과 O(2N) 순회를 방지함.
+        sessions = []
+        for (const id of ids) {
+          const s = byId.get(id)
+          if (s) {
+            sessions.push(s)
+          }
+        }
       }
     } else {
       const [rows, countResult] = await Promise.all([
