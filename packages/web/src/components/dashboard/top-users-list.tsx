@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useMemo } from 'react'
 import { formatTokens, formatCost } from '@/lib/format'
 import type { UserStat } from '@argos/shared'
 
@@ -8,6 +9,19 @@ interface TopUsersListProps {
 }
 
 export function TopUsersList({ users }: TopUsersListProps) {
+  // [Bolt: Performance Optimization] Memoize the maxTokens calculation to prevent
+  // recalculating the max value on every re-render when users array hasn't changed.
+  // Using a traditional for-loop is also faster than reduce() for this.
+  const maxTokens = useMemo(() => {
+    let max = 0
+    for (let i = 0; i < users.length; i++) {
+      const u = users[i]
+      const t = u.inputTokens + u.outputTokens
+      if (t > max) max = t
+    }
+    return max
+  }, [users])
+
   if (users.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-6 text-center">
@@ -15,11 +29,6 @@ export function TopUsersList({ users }: TopUsersListProps) {
       </p>
     )
   }
-
-  const maxTokens = users.reduce(
-    (m, u) => Math.max(m, u.inputTokens + u.outputTokens),
-    0,
-  )
 
   return (
     <ol className="space-y-2">
