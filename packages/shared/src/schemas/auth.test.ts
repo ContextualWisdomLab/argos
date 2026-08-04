@@ -40,3 +40,28 @@ describe('ExchangeRequestSchema', () => {
     expect(ExchangeRequestSchema.safeParse({ onboardToken: '' }).success).toBe(false)
   })
 })
+
+describe('LoginRequestSchema - Password Length Limits', () => {
+  it('비밀번호가 1024자를 초과하면 실패한다 (DoS 방지)', () => {
+    const longPassword = 'a'.repeat(1025)
+    expect(
+      LoginRequestSchema.safeParse({ email: 'a@b.com', password: longPassword }).success,
+    ).toBe(false)
+  })
+
+  it('비밀번호가 정확히 1024자면 통과한다', () => {
+    const maxPassword = 'a'.repeat(1024)
+    expect(
+      LoginRequestSchema.safeParse({ email: 'a@b.com', password: maxPassword }).success,
+    ).toBe(true)
+  })
+})
+
+describe('RegisterRequestSchema - Password Length Limits', () => {
+  it('비밀번호가 1024자를 초과하면 실패한다 (DoS 방지)', () => {
+    const longPassword = 'a'.repeat(1025)
+    expect(
+      RegisterRequestSchema.safeParse({ email: 'a@b.com', password: longPassword, name: 'k' }).success,
+    ).toBe(false)
+  })
+})
