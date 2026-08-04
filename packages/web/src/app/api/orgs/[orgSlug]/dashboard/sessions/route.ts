@@ -74,7 +74,8 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
 function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  const sanitized = /^[=+\-@|\t]/.test(text) ? `'${text}` : text
+  return /[",\r\n]/.test(sanitized) ? `"${sanitized.replaceAll('"', '""')}"` : sanitized
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
