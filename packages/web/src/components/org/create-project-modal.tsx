@@ -30,7 +30,6 @@ export function CreateProjectModal({
 
   useEffect(() => {
     if (!open) {
-      setName('')
       mutation.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,6 +37,9 @@ export function CreateProjectModal({
 
   const handleOpenChange = (next: boolean) => {
     if (!next && mutation.isPending) return
+    if (!next) {
+      setName('')
+    }
     onOpenChange(next)
   }
 

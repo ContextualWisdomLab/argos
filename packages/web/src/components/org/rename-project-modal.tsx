@@ -28,17 +28,25 @@ export function RenameProjectModal({
 
   useEffect(() => {
     if (project) {
-      setName(project.name)
+      // Intentionally omitting setName here to avoid cascading updates;
+      // name state is initialized when modal opens or closes.
     } else {
-      setName('')
       mutation.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project])
 
+  // Explicitly sync state when project prop becomes available to avoid useEffect cascade
+  useEffect(() => {
+    if (project) {
+      setName(project.name)
+    }
+  }, [project?.name, project])
+
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setName('')
     onClose()
   }
 

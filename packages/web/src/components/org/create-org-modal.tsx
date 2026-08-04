@@ -29,8 +29,8 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
 
   useEffect(() => {
     if (!open) {
-      setName('')
-      setErrorMessage(null)
+      // Intentionally avoiding state updates here to prevent cascading renders when unmounting.
+      // We will reset the state when the modal *opens* or *closes* within the handler instead.
       mutation.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,6 +38,10 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
 
   const handleOpenChange = (next: boolean) => {
     if (!next && mutation.isPending) return
+    if (!next) {
+      setName('')
+      setErrorMessage(null)
+    }
     onOpenChange(next)
   }
 

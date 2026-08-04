@@ -34,7 +34,6 @@ export function DeleteOrgModal({
 
   useEffect(() => {
     if (!open) {
-      setConfirmName('')
       mutation.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -42,6 +41,9 @@ export function DeleteOrgModal({
 
   const handleOpenChange = (next: boolean) => {
     if (!next && mutation.isPending) return
+    if (!next) {
+      setConfirmName('')
+    }
     onOpenChange(next)
   }
 

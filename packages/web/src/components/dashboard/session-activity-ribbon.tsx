@@ -160,14 +160,14 @@ export function SessionActivityRibbon({
 
   if (events.length === 0) return null
 
-  const trackMouse = (e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect()
+  const trackMouse = (e: React.MouseEvent, currentContainer: HTMLDivElement | null) => {
+    const rect = currentContainer?.getBoundingClientRect()
     if (!rect) return e.clientX
     return e.clientX - rect.left
   }
 
   const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
-    setHover({ kind: 'event', idx, x: trackMouse(e) })
+    setHover({ kind: 'event', idx, x: trackMouse(e, containerRef.current) })
   }
 
   const handleMergedHover = (
@@ -182,7 +182,7 @@ export function SessionActivityRibbon({
       toolName,
       count,
       firstEvent,
-      x: trackMouse(e),
+      x: trackMouse(e, containerRef.current),
     })
   }
 

@@ -10,3 +10,7 @@ packages:
 overrides:
   ip-address: 10.1.1
   qs: 6.15.2
+settings:
+  blockExoticSubdeps: true
+  minimumReleaseAge: 10080
+  trustPolicy: no-downgrade

@@ -30,7 +30,6 @@ export function DeleteProjectModal({
 
   useEffect(() => {
     if (!project) {
-      setConfirmName('')
       mutation.reset()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,6 +38,7 @@ export function DeleteProjectModal({
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setConfirmName('')
     onClose()
   }
 
