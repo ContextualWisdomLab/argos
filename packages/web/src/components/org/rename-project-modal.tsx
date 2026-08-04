@@ -26,8 +26,9 @@ export function RenameProjectModal({
   const [name, setName] = useState('')
   const mutation = useUpdateProject(project?.id ?? '')
 
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
     if (project) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(project.name)
     } else {
       setName('')

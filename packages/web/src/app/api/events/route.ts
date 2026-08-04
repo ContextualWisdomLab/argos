@@ -14,9 +14,18 @@ import { calculateCost } from '@/lib/server/cost'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+
+export const config = { api: { bodyParser: { sizeLimit: '1mb' } } };
+
 // POST /api/events
 export async function POST(req: Request) {
   try {
+    // 1. Request size limit
+    const contentLength = req.headers.get('content-length')
+    if (contentLength && parseInt(contentLength, 10) > 1024 * 1024) {
+      return NextResponse.json({ error: 'Payload too large' }, { status: 413 })
+    }
+
     const auth = await requireAuth(req)
     if (auth instanceof NextResponse) return auth
     const { userId } = auth
@@ -153,7 +162,7 @@ export async function POST(req: Request) {
                 estimatedCostUsd: calculateCost(u),
                 model: u.model ?? null,
                 isSubagent: eventType === 'SUBAGENT_STOP',
-                timestamp: new Date(u.timestamp),
+                timestamp: Math.abs(new Date().getTime() - new Date(u.timestamp).getTime()) > 5 * 60 * 1000 ? new Date() : new Date(u.timestamp),
               })),
             })
 
@@ -212,7 +221,7 @@ export async function POST(req: Request) {
                   role: m.role,
                   content: truncateMessageContent(m.content),
                   sequence: m.sequence,
-                  timestamp: new Date(m.timestamp),
+                  timestamp: Math.abs(new Date().getTime() - new Date(m.timestamp).getTime()) > 5 * 60 * 1000 ? new Date() : new Date(m.timestamp),
                   toolName: m.toolName ?? null,
                   toolInput: (m.toolInput as Prisma.InputJsonValue) ?? null,
                   toolUseId: m.toolUseId ?? null,
@@ -221,8 +230,8 @@ export async function POST(req: Request) {
               }),
             ])
           }
-        } catch {
-          // 에러 발생해도 무시 (fire-and-forget)
+        } catch (err) {
+          console.error('[Events API] Background processing error:', err)
         }
       })
     }
@@ -250,6 +259,7 @@ export async function POST(req: Request) {
  * - POST: row 있으면 content/durationMs 업데이트, 없으면 생성 (duration 계산 불가 → null)
  * Stop 때 transcript 기반으로 전체 교체되므로 best-effort만 한다.
  */
+
 async function upsertToolMessage(opts: {
   sessionId: string
   toolUseId: string
@@ -258,12 +268,11 @@ async function upsertToolMessage(opts: {
   toolResponse?: string
   isPost: boolean
 }): Promise<void> {
-  const existing = await db.message.findFirst({
-    where: { sessionId: opts.sessionId, toolUseId: opts.toolUseId },
-  })
-
-  if (existing) {
-    if (opts.isPost) {
+  if (opts.isPost) {
+    const existing = await db.message.findFirst({
+      where: { sessionId: opts.sessionId, toolUseId: opts.toolUseId },
+    })
+    if (existing) {
       const startMs = existing.timestamp.getTime()
       const endMs = Date.now()
       await db.message.update({
@@ -273,24 +282,38 @@ async function upsertToolMessage(opts: {
           durationMs: Math.max(0, endMs - startMs),
         },
       })
+      return
     }
-    return
   }
 
-  await db.message.create({
-    data: {
-      sessionId: opts.sessionId,
-      role: 'TOOL',
-      content: truncateMessageContent(opts.toolResponse ?? ''),
-      sequence: 0, // Stop 때 transcript 기준으로 재할당
-      timestamp: new Date(),
-      toolName: opts.toolName,
-      toolInput: (opts.toolInput as Prisma.InputJsonValue) ?? null,
-      toolUseId: opts.toolUseId,
-      durationMs: null,
-    },
-  })
+  try {
+    await db.message.upsert({
+      where: {
+        sessionId_toolUseId: {
+          sessionId: opts.sessionId,
+          toolUseId: opts.toolUseId,
+        }
+      },
+      create: {
+        sessionId: opts.sessionId,
+        role: 'TOOL',
+        content: truncateMessageContent(opts.toolResponse ?? ''),
+        sequence: 0,
+        timestamp: new Date(),
+        toolName: opts.toolName,
+        toolInput: (opts.toolInput as Prisma.InputJsonValue) ?? null,
+        toolUseId: opts.toolUseId,
+        durationMs: null,
+      },
+      update: {}
+    })
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code !== 'P2002') {
+      throw err
+    }
+  }
 }
+
 
 // hookEventName → EventType 매핑
 function mapHookEventNameToEventType(hookEventName: string): EventType {

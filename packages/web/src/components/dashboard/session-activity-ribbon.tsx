@@ -167,7 +167,7 @@ export function SessionActivityRibbon({
   }
 
   const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
-    setHover({ kind: 'event', idx, x: trackMouse(e) })
+    setHover({ kind: 'event', idx, x: e.clientX })
   }
 
   const handleMergedHover = (
@@ -182,7 +182,7 @@ export function SessionActivityRibbon({
       toolName,
       count,
       firstEvent,
-      x: trackMouse(e),
+      x: e.clientX,
     })
   }
 

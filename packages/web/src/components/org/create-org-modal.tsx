@@ -27,8 +27,9 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mutation = useCreateOrg()
 
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('')
       setErrorMessage(null)
       mutation.reset()

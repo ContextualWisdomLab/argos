@@ -28,8 +28,9 @@ export function CreateProjectModal({
   const [name, setName] = useState('')
   const mutation = useCreateProject(orgSlug)
 
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('')
       mutation.reset()
     }
