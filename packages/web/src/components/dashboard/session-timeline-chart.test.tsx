@@ -76,7 +76,6 @@ describe('SessionTimelineChart', () => {
     )
     expect(screen.getByTestId('responsive-container')).toBeDefined()
   })
-
   it('correctly processes out-of-order usage and tool call data', () => {
     const mockUsageTimeline: SessionTimelineUsage[] = [
       {

@@ -111,6 +111,8 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  // ⚡ Bolt: messages 배열을 필터링하고 매핑하는 비용이 높은 작업을 useMemo로 최적화하여
+  // 리렌더링 시마다 발생하는 불필요한 연산을 방지함. (배열 생성 오버헤드 감소)
   // ⚡ Bolt: messages와 usageTimeline의 데이터를 매핑하는 알고리즘 최적화.
   // 기존에는 usageTimeline의 매 항목마다 전체 toolCalls를 .filter()로 순회하여 O(N*M)의 시간 복잡도를 가졌습니다.
   // 이를 O(N+M)의 투 포인터(Two-pointer) 방식으로 개선하기 위해, 먼저 toolCalls를 시간순으로 정렬합니다.
@@ -125,6 +127,9 @@ export function SessionTimelineChart({
       .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   }, [messages])
 
+  // ⚡ Bolt: usageTimeline 배열을 순회하며 차트 데이터를 생성하는 비용이 높은 작업을
+  // useMemo로 최적화하여 데이터 변경이 없을 때 캐시된 결과를 재사용함.
+  // 이로 인해 리렌더링 속도가 향상됨.
   // ⚡ Bolt: usageTimeline을 순회할 때 정렬된 toolCalls 배열을 투 포인터 방식으로 추적하여
   // 불필요한 중복 순회를 제거. (O(N*M) -> O(N+M))
   // 리렌더링 성능이 크게 향상됩니다.
