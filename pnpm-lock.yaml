@@ -62,6 +62,9 @@ importers:
       '@types/node':
         specifier: ^20
         version: 20.19.39
+      brace-expansion:
+        specifier: 5.0.9
+        version: 5.0.9
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -78,6 +81,9 @@ importers:
         specifier: ^3
         version: 3.25.76
     devDependencies:
+      brace-expansion:
+        specifier: 5.0.9
+        version: 5.0.9
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -187,6 +193,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 3.2.6
         version: 3.2.6(vitest@3.2.6(@types/debug@4.1.13)(@types/node@20.19.39)(jiti@2.6.1)(jsdom@29.1.1(@noble/hashes@1.8.0))(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.39)(typescript@5.9.3)))
+      brace-expansion:
+        specifier: 5.0.9
+        version: 5.0.9
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -1961,6 +1970,10 @@ packages:
 
   brace-expansion@5.0.8:
     resolution: {integrity: sha512-JZyDyq3D4AUifKTPOB7DELf6XsB3WdPuNxCtob1vFXPsSXhdAiHBWJ/tJ8HAc9aH84BK+5JFZLNkJKx3G9kzQg==}
+    engines: {node: 20 || >=22}
+
+  brace-expansion@5.0.9:
+    resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
     engines: {node: 20 || >=22}
 
   braces@3.0.3:
@@ -6380,6 +6393,10 @@ snapshots:
       - supports-color
 
   brace-expansion@5.0.8:
+    dependencies:
+      balanced-match: 4.0.4
+
+  brace-expansion@5.0.9:
     dependencies:
       balanced-match: 4.0.4
 
