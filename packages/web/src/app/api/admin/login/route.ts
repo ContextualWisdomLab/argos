@@ -1,3 +1,4 @@
+import { MAX_PASSWORD_LENGTH } from '@argos/shared'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -14,7 +15,7 @@ export const dynamic = 'force-dynamic'
 
 const AdminLoginSchema = z.object({
   username: z.string().min(1),
-  password: z.string().min(1),
+  password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
 })
 
 export async function POST(req: Request) {
