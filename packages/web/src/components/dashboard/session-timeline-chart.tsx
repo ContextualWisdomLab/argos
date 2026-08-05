@@ -15,8 +15,8 @@ import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
 import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
 
 interface SessionTimelineChartProps {
-  usageTimeline: SessionTimelineUsage[]
-  messages: SessionDetail['messages']
+  usageTimeline: readonly SessionTimelineUsage[]
+  messages: readonly SessionDetail['messages'][number][]
   sessionStartedAt: string
 }
 
@@ -89,8 +89,13 @@ function buildToolSummary(tools: ToolCallPoint[]): string {
     counts.set(name, (counts.get(name) || 0) + 1)
   }
 
-  // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])
+  // 배열로 변환하여 1. 카운트 내림차순 2. 이름 알파벳 오름차순 정렬
+  const sorted = Array.from(counts.entries()).sort((a, b) => {
+    if (b[1] !== a[1]) {
+        return b[1] - a[1]
+    }
+    return a[0].localeCompare(b[0])
+  })
 
   // 최대 3개까지만 표시
   const displayCount = Math.min(3, sorted.length)
@@ -129,7 +134,7 @@ export function SessionTimelineChart({
   const chartData: ChartDataItem[] = useMemo(() => {
     if (usageTimeline.length === 0) return []
 
-    // 시간순으로 정렬된 복사본 생성
+    // 시간순으로 정렬된 복사본 생성 (입력 배열 불변성 유지)
     const sortedUsage = [...usageTimeline].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     )
