@@ -53,10 +53,15 @@ export function canAccessSession(
  * 역할 거부 시 403 응답을 생성. 라우트에서 early return에 사용.
  */
 export function forbiddenByRole(role: OrgRole, need: string): NextResponse {
+  // 문서화된 에러 shape { error: { code, message } } 을 사용한다(직접 { error: 'string' }
+  // 금지). string 형태였을 때 클라이언트(api-client)가 읽는 data.error?.code /
+  // data.error?.message 가 모두 undefined 가 되어 역할 거부 메시지가 유실됐다.
   return NextResponse.json(
     {
-      error: 'forbidden',
-      message: `현재 역할(${role})에서는 이 리소스에 접근할 수 없습니다. 필요: ${need}`,
+      error: {
+        code: 'FORBIDDEN',
+        message: `현재 역할(${role})에서는 이 리소스에 접근할 수 없습니다. 필요: ${need}`,
+      },
     },
     { status: 403 }
   )
