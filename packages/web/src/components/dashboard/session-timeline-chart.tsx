@@ -21,7 +21,6 @@ interface SessionTimelineChartProps {
 }
 
 interface ToolCallPoint {
-  timestamp: string
   toolName: string
   parsedTimestamp: number
 }
@@ -54,6 +53,54 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
   }
 
   return displayItems.join(', ')
+}
+
+/**
+ * Merge chronologically sorted usage and tool events into cumulative chart rows.
+ *
+ * Local copies are sorted in O(N log N + M log M). The forward cursor then
+ * consumes every tool event once instead of filtering all M events for every
+ * one of the N usage rows.
+ */
+function buildChartData(
+  usageTimeline: SessionTimelineUsage[],
+  toolCalls: ToolCallPoint[],
+  sessionStartedAt: string
+): ChartDataItem[] {
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  )
+  const sortedTools = [...toolCalls].sort(
+    (a, b) => a.parsedTimestamp - b.parsedTimestamp
+  )
+
+  let toolIndex = 0
+  const cumulativeToolCounts = new Map<string, number>()
+
+  return sortedUsage.map((usage) => {
+    const currentTimestamp = new Date(usage.timestamp).getTime()
+
+    while (
+      toolIndex < sortedTools.length &&
+      sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
+    ) {
+      const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
+      cumulativeToolCounts.set(
+        toolName,
+        (cumulativeToolCounts.get(toolName) ?? 0) + 1
+      )
+      toolIndex += 1
+    }
+
+    return {
+      relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
+      input: usage.inputTokens,
+      output: usage.outputTokens,
+      cost: usage.estimatedCostUsd,
+      model: usage.model,
+      toolSummary: buildToolSummary(cumulativeToolCounts),
+    }
+  })
 }
 
 function CustomTooltip({
@@ -109,53 +156,17 @@ export function SessionTimelineChart({
   // Cache the normalized tool events until the underlying messages change.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
     return messages
-      .filter((m) => m.role === 'TOOL')
-      .map((m) => ({
-        timestamp: m.timestamp,
-        toolName: m.toolName ?? 'unknown',
-        parsedTimestamp: new Date(m.timestamp).getTime(),
+      .filter((message) => message.role === 'TOOL')
+      .map((message) => ({
+        toolName: message.toolName ?? 'unknown',
+        parsedTimestamp: new Date(message.timestamp).getTime(),
       }))
   }, [messages])
 
-  // Each recalculation sorts local copies in
-  // O(N log N + M log M). The subsequent forward cursor consumes every tool
-  // event once instead of filtering all M events for each of the N bars.
-  const chartData: ChartDataItem[] = useMemo(() => {
-    const sortedUsage = [...usageTimeline].sort(
-      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    )
-    const sortedTools = [...toolCalls].sort(
-      (a, b) => a.parsedTimestamp - b.parsedTimestamp
-    )
-
-    let toolIndex = 0
-    const cumulativeToolCounts = new Map<string, number>()
-
-    return sortedUsage.map((usage) => {
-      const currentTimestamp = new Date(usage.timestamp).getTime()
-
-      while (
-        toolIndex < sortedTools.length &&
-        sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
-      ) {
-        const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
-        cumulativeToolCounts.set(
-          toolName,
-          (cumulativeToolCounts.get(toolName) ?? 0) + 1
-        )
-        toolIndex += 1
-      }
-
-      return {
-        relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
-        input: usage.inputTokens,
-        output: usage.outputTokens,
-        cost: usage.estimatedCostUsd,
-        model: usage.model,
-        toolSummary: buildToolSummary(cumulativeToolCounts),
-      }
-    })
-  }, [usageTimeline, sessionStartedAt, toolCalls])
+  const chartData = useMemo(
+    () => buildChartData(usageTimeline, toolCalls, sessionStartedAt),
+    [usageTimeline, sessionStartedAt, toolCalls]
+  )
 
   if (usageTimeline.length === 0) {
     return (
