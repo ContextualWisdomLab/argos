@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { LoginRequestSchema, RegisterRequestSchema, ExchangeRequestSchema } from './auth.js'
+import {
+  ExchangeRequestSchema,
+  LoginRequestSchema,
+  MAX_PASSWORD_LENGTH,
+  RegisterRequestSchema,
+} from './auth.js'
 
 describe('LoginRequestSchema', () => {
   it('유효한 이메일과 8자 이상 비밀번호는 통과한다', () => {
@@ -19,6 +24,21 @@ describe('LoginRequestSchema', () => {
       LoginRequestSchema.safeParse({ email: 'a@b.com', password: '1234567' }).success,
     ).toBe(false)
   })
+
+  it('비밀번호 최대 길이 경계에서 1024자는 통과하고 1025자는 실패한다', () => {
+    expect(
+      LoginRequestSchema.safeParse({
+        email: 'a@b.com',
+        password: 'a'.repeat(MAX_PASSWORD_LENGTH),
+      }).success,
+    ).toBe(true)
+    expect(
+      LoginRequestSchema.safeParse({
+        email: 'a@b.com',
+        password: 'a'.repeat(MAX_PASSWORD_LENGTH + 1),
+      }).success,
+    ).toBe(false)
+  })
 })
 
 describe('RegisterRequestSchema', () => {
@@ -32,6 +52,23 @@ describe('RegisterRequestSchema', () => {
     expect(
       RegisterRequestSchema.safeParse({ email: 'a@b.com', password: '12345678', name: 'k' }).success,
     ).toBe(true)
+  })
+
+  it('비밀번호 최대 길이 경계에서 1024자는 통과하고 1025자는 실패한다', () => {
+    expect(
+      RegisterRequestSchema.safeParse({
+        email: 'a@b.com',
+        password: 'a'.repeat(MAX_PASSWORD_LENGTH),
+        name: 'k',
+      }).success,
+    ).toBe(true)
+    expect(
+      RegisterRequestSchema.safeParse({
+        email: 'a@b.com',
+        password: 'a'.repeat(MAX_PASSWORD_LENGTH + 1),
+        name: 'k',
+      }).success,
+    ).toBe(false)
   })
 })
 
