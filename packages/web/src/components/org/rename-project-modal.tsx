@@ -27,18 +27,18 @@ export function RenameProjectModal({
   const mutation = useUpdateProject(project?.id ?? '')
 
   useEffect(() => {
-    if (project) {
-      setName(project.name)
-    } else {
-      setName('')
-      mutation.reset()
+    if (project && project.name !== name) {
+      // Use setTimeout to defer state update out of the synchronous render/effect cycle
+      const timer = setTimeout(() => setName(project.name), 0)
+      return () => clearTimeout(timer)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project])
+  }, [project, name])
 
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setName('')
+    mutation.reset()
     onClose()
   }
 
