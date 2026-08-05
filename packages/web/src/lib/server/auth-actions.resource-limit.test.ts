@@ -4,13 +4,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   comparePassword: vi.fn(),
   findUser: vi.fn(),
+  hashPassword: vi.fn(),
 }))
 
 vi.mock('server-only', () => ({}))
 vi.mock('bcryptjs', () => ({
   default: {
     compare: mocks.comparePassword,
-    hash: vi.fn(),
+    hash: mocks.hashPassword,
   },
 }))
 vi.mock('./db', () => ({
@@ -21,14 +22,14 @@ vi.mock('./db', () => ({
 }))
 vi.mock('./jwt', () => ({ signJwt: vi.fn() }))
 
-import { loginUser } from './auth-actions.js'
+import { loginUser, registerUser } from './auth-actions.js'
 
-describe('loginUser password resource boundary', () => {
+describe('authentication password resource boundaries', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('rejects a bcrypt-truncated password before database lookup or hash work', async () => {
+  it('rejects a bcrypt-truncated login password before database lookup or hash work', async () => {
     await expect(
       loginUser({
         email: 'attacker@example.com',
@@ -40,7 +41,7 @@ describe('loginUser password resource boundary', () => {
     expect(mocks.comparePassword).not.toHaveBeenCalled()
   })
 
-  it('measures multilingual passwords in UTF-8 bytes before database lookup', async () => {
+  it('measures multilingual login passwords in UTF-8 bytes before database lookup', async () => {
     await expect(
       loginUser({
         email: 'attacker@example.com',
@@ -50,5 +51,18 @@ describe('loginUser password resource boundary', () => {
 
     expect(mocks.findUser).not.toHaveBeenCalled()
     expect(mocks.comparePassword).not.toHaveBeenCalled()
+  })
+
+  it('rejects a bcrypt-truncated registration password before database or hash work', async () => {
+    await expect(
+      registerUser({
+        email: 'attacker@example.com',
+        password: 'x'.repeat(BCRYPT_MAX_PASSWORD_BYTES + 1),
+        name: 'Attacker',
+      }),
+    ).rejects.toMatchObject({ name: 'ZodError' })
+
+    expect(mocks.findUser).not.toHaveBeenCalled()
+    expect(mocks.hashPassword).not.toHaveBeenCalled()
   })
 })
