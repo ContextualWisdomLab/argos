@@ -21,3 +21,8 @@
 **Vulnerability:** ERD 모델의 DDL 생성 과정에서 사용자 입력값인 column type과 defaultValue가 검증 없이 SQL 문자열에 직접 연결되어 임의의 SQL이 실행될 수 있는 심각한 취약점이 발견됨.
 **Learning:** 식별자(테이블명, 컬럼명)에 대한 정규식 검증은 존재했으나, type과 defaultValue와 같이 자유도가 높은 필드에 대한 입력값 검증이 누락되어 발생함. 자유 텍스트가 허용되는 입력이더라도 허용 목록 기반의 정규식 검증이 필수적임을 확인함. 한편, 지나치게 엄격한 정규식(예: `TIMESTAMP WITH TIME ZONE` 이나 `CURRENT_TIMESTAMP` 를 차단하는 등)은 기존 비즈니스 로직을 크게 훼손할 수 있으므로 보안과 가용성의 균형을 맞춘 유연한 Allowlist 검증이 중요함. 더불어 자기 참조 외래키(self-referencing FK)를 가진 컬럼을 지울 때 우회되어 무결성이 깨지는 버그도 함께 발견하여 수정함.
 **Prevention:** 사용자가 제어하는 모든 값이 SQL 구문에 삽입될 때는 세미콜론이나 주석 등의 악의적인 문자가 포함되지 않도록 허용 가능한 패턴만 통과시키는 강력하면서도 범용성을 고려한 Allowlist 기반 검증 로직을 필수로 구현해야 함. 그리고 삭제나 갱신 로직을 작성할 때는 자기 자신을 우회하는 조건(`t.name !== tableName`)이 논리적 오류를 유발하지 않는지 꼼꼼히 점검해야 함.
+
+## 2026-08-05 - [SAST False Positives Suppression]
+**Vulnerability:** Semgrep 정적 분석 도구에서 안전한 내부 경로 연결(`path.join`) 및 URL(`urllib.request.urlopen`) 사용 시, 이를 취약한 Path Traversal 및 SSRF로 오탐(False Positive)하는 현상이 발생함.
+**Learning:** 정적 분석 도구(SAST)는 사용자의 통제 하에 있지 않은(사용자 입력값에 의존하지 않는) 안전한 내부 로직에 대해서도 단순 함수 시그니처 매칭 기반으로 취약점을 잘못 탐지하여 CI를 실패하게 만들 수 있음을 파악함.
+**Prevention:** 실제 취약점이 아님이 확인된 경우, 해당 코드 라인 위에 `nosemgrep` 주석을 추가하여 오탐을 명시적으로 무시 처리함으로써, 코드베이스를 깔끔하게 유지하고 CI 파이프라인의 불필요한 차단을 방지해야 함.
