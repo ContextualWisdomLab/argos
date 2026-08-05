@@ -26,3 +26,7 @@
 **Vulnerability:** Semgrep 정적 분석 도구에서 안전한 내부 경로 연결(`path.join`) 및 URL(`urllib.request.urlopen`) 사용 시, 이를 취약한 Path Traversal 및 SSRF로 오탐(False Positive)하는 현상이 발생함.
 **Learning:** 정적 분석 도구(SAST)는 사용자의 통제 하에 있지 않은(사용자 입력값에 의존하지 않는) 안전한 내부 로직에 대해서도 단순 함수 시그니처 매칭 기반으로 취약점을 잘못 탐지하여 CI를 실패하게 만들 수 있음을 파악함.
 **Prevention:** 실제 취약점이 아님이 확인된 경우, 해당 코드 라인 위에 `nosemgrep` 주석을 추가하여 오탐을 명시적으로 무시 처리함으로써, 코드베이스를 깔끔하게 유지하고 CI 파이프라인의 불필요한 차단을 방지해야 함.
+## 2026-08-05 - [취약한 패키지 의존성 및 React Hook Lint 오류 수정]
+**Vulnerability:** 오래된 패키지 의존성(hono, js-yaml, next-auth, postcss, sharp)에서 여러 High/Critical 보안 취약점이 발견되어 CI가 실패함. 추가적으로 `react-hooks/refs` 및 `react-hooks/set-state-in-effect` 린트 오류가 발생함.
+**Learning:** CI 환경에서 Trivy와 OSV-scanner가 공급망 보안을 엄격히 강제하므로 의존성 업데이트를 소홀히 하면 취약점에 노출됨. 또한 렌더링 중 Ref에 접근하거나 `useEffect` 내부에서 `setState`를 동기적으로 호출하면 React Hook 원칙을 위배하여 UI 지연, 프레임 드롭 또는 무한 루프를 유발할 수 있음을 파악함.
+**Prevention:** 주기적으로 `pnpm update`를 실행하여 핵심 패키지에 대한 최신 보안 패치를 유지해야 함. React에서는 `containerRef.current`와 같은 참조값이 렌더링 흐름 밖에서(이벤트 발생 시점)만 접근되도록 해야 하며, 모달과 같은 UI의 상태 변경에 따른 정리는 `useEffect` 대신 `handleOpenChange`와 같은 이벤트 핸들러를 사용하여 부작용(Side-effect)을 방지해야 함.
