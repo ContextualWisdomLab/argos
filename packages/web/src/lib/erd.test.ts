@@ -128,6 +128,49 @@ describe('ERDModel', () => {
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
 
+    it('should allow valid advanced SQL types for valid cases', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'created_at', type: 'TIMESTAMP WITH TIME ZONE' })
+      ).not.toThrow()
+      expect(() =>
+        model.addColumn('users', { name: 'price', type: 'DECIMAL(10, 2)' })
+      ).not.toThrow()
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'INT UNSIGNED' })
+      ).not.toThrow()
+    })
+
+    it('should reject invalid SQL types for prevention of SQL injection', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id2', type: 'VARCHAR(255); DROP TABLE users; --' })
+      ).toThrowError("Invalid SQL type 'VARCHAR(255); DROP TABLE users; --'")
+      expect(() =>
+        model.addColumn('users', { name: 'id3', type: 'INT(10' })
+      ).toThrowError("Invalid SQL type 'INT(10'")
+    })
+
+    it('should allow valid function-based default values', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'updated_at', type: 'TIMESTAMP', defaultValue: 'CURRENT_TIMESTAMP' })
+      ).not.toThrow()
+      expect(() =>
+        model.addColumn('users', { name: 'last_login', type: 'TIMESTAMP', defaultValue: 'NOW()' })
+      ).not.toThrow()
+    })
+
+    it('should reject invalid default values for prevention of SQL injection', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'status', type: 'VARCHAR(50)', defaultValue: '0; DELETE FROM users;' })
+      ).toThrowError("Invalid SQL default value '0; DELETE FROM users;'")
+      expect(() =>
+        model.addColumn('users', { name: 'status2', type: 'VARCHAR(50)', defaultValue: '"active"' })
+      ).toThrowError("Invalid SQL default value '\"active\"'")
+    })
+
     it('should remove a column from an existing table', () => {
       model.addTable('users')
       model.addColumn('users', { name: 'id', type: 'integer' })
@@ -177,7 +220,7 @@ describe('ERDModel', () => {
       expect(model.getTable('posts')?.foreignKeys.length).toBe(0)
     })
 
-    it('should correctly bypass self-referencing check for column removal (for coverage)', () => {
+    it('should reject column removal when it is referenced by a self-referencing foreign key', () => {
       model.addTable('users')
       model.addColumn('users', { name: 'id', type: 'integer' })
       model.addColumn('users', { name: 'manager_id', type: 'integer' })
@@ -186,8 +229,9 @@ describe('ERDModel', () => {
         referenceTable: 'users',
         referenceColumn: 'id',
       })
-      model.removeColumn('users', 'id')
-      expect(model.getTable('users')?.columns.length).toBe(1)
+      expect(() => model.removeColumn('users', 'id')).toThrowError(
+        "Cannot remove column 'id' because table 'users' references it."
+      )
     })
 
     it('should continue loop safely if foreign keys reference other columns (for coverage)', () => {

@@ -20,10 +20,24 @@ export interface Table {
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
+const SAFE_SQL_TYPE = /^[A-Za-z]+(?:\s+[A-Za-z]+)*(?:\([0-9]+(?:\s*,\s*[0-9]+)?\))?(?:\s+[A-Za-z]+)*$/i
+const SAFE_SQL_DEFAULT_VALUE = /^(?:'[^']*'|-?[0-9]+(?:\.[0-9]+)?|true|false|TRUE|FALSE|NULL|[A-Za-z_][A-Za-z0-9_]*(?:\(\))?)$/i
 
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`)
+  }
+}
+
+function assertSafeSQLType(type: string): void {
+  if (!SAFE_SQL_TYPE.test(type)) {
+    throw new Error(`Invalid SQL type '${type}'. Only alphanumeric characters and optional size/precision parentheses are allowed.`)
+  }
+}
+
+function assertSafeDefaultValue(defaultValue: string | undefined): void {
+  if (defaultValue !== undefined && !SAFE_SQL_DEFAULT_VALUE.test(defaultValue)) {
+    throw new Error(`Invalid SQL default value '${defaultValue}'. Only simple literals (string, number, boolean, NULL) are allowed.`)
   }
 }
 
@@ -68,6 +82,8 @@ export class ERDModel {
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertSafeSQLType(column.type)
+    assertSafeDefaultValue(column.defaultValue)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -90,11 +106,9 @@ export class ERDModel {
 
     // 다른 테이블에서 이 컬럼을 참조하고 있는지 확인
     for (const t of this.tables.values()) {
-      if (t.name !== tableName) {
-        for (const fk of t.foreignKeys) {
-          if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
-            throw new Error(`Cannot remove column '${columnName}' because table '${t.name}' references it.`)
-          }
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
+          throw new Error(`Cannot remove column '${columnName}' because table '${t.name}' references it.`)
         }
       }
     }

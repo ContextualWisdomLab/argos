@@ -16,7 +16,8 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
-## 2025-02-18 - Missing Max Password Length (bcrypt DoS)
-**Vulnerability:** The standard user authentication routes (login, register, and reset-password) did not have a maximum length constraint on passwords. This allows an attacker to supply extremely long strings, which `bcrypt` will try to hash, causing CPU exhaustion and creating a Denial of Service (DoS) vulnerability.
-**Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
-**Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
+
+## 2026-08-05 - [CRITICAL] ERD DDL 생성 시 SQL Injection 취약점
+**Vulnerability:** ERD 모델의 DDL 생성 과정에서 사용자 입력값인 column type과 defaultValue가 검증 없이 SQL 문자열에 직접 연결되어 임의의 SQL이 실행될 수 있는 심각한 취약점이 발견됨.
+**Learning:** 식별자(테이블명, 컬럼명)에 대한 정규식 검증은 존재했으나, type과 defaultValue와 같이 자유도가 높은 필드에 대한 입력값 검증이 누락되어 발생함. 자유 텍스트가 허용되는 입력이더라도 허용 목록 기반의 정규식 검증이 필수적임을 확인함. 한편, 지나치게 엄격한 정규식(예: `TIMESTAMP WITH TIME ZONE` 이나 `CURRENT_TIMESTAMP` 를 차단하는 등)은 기존 비즈니스 로직을 크게 훼손할 수 있으므로 보안과 가용성의 균형을 맞춘 유연한 Allowlist 검증이 중요함. 더불어 자기 참조 외래키(self-referencing FK)를 가진 컬럼을 지울 때 우회되어 무결성이 깨지는 버그도 함께 발견하여 수정함.
+**Prevention:** 사용자가 제어하는 모든 값이 SQL 구문에 삽입될 때는 세미콜론이나 주석 등의 악의적인 문자가 포함되지 않도록 허용 가능한 패턴만 통과시키는 강력하면서도 범용성을 고려한 Allowlist 기반 검증 로직을 필수로 구현해야 함. 그리고 삭제나 갱신 로직을 작성할 때는 자기 자신을 우회하는 조건(`t.name !== tableName`)이 논리적 오류를 유발하지 않는지 꼼꼼히 점검해야 함.
