@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useId } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { formatTokens, formatCost } from '@/lib/format'
 
@@ -56,8 +56,6 @@ export function OverviewStats({
   rangeSelector,
 }: OverviewStatsProps) {
   const [expanded, setExpanded] = useState(false)
-  const buttonId = useId()
-  const contentId = useId()
 
   return (
     <div className="rounded-xl bg-card ring-1 ring-foreground/10 p-4 sm:p-5">
@@ -87,9 +85,9 @@ export function OverviewStats({
       <button
         type="button"
         onClick={() => setExpanded(v => !v)}
-        id={buttonId}
+        id="overview-stats-explanation-toggle"
         aria-expanded={expanded}
-        aria-controls={contentId}
+        aria-controls="overview-stats-explanation"
         className="mt-4 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors rounded-sm"
       >
         <span
@@ -103,9 +101,7 @@ export function OverviewStats({
       </button>
 
       <div
-        id={contentId}
-        role="region"
-        aria-labelledby={buttonId}
+        id="overview-stats-explanation"
         hidden={!expanded}
         className="mt-3 text-xs text-muted-foreground space-y-2 leading-relaxed"
       >
