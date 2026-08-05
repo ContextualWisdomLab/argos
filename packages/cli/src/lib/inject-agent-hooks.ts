@@ -13,10 +13,13 @@ export interface AgentHookResult {
  * Claude Code(.claude/settings.json) 와 Codex(.codex/hooks.json) hook 을 모두 주입한다.
  * 두 에이전트 중 무엇을 쓰든 argos 가 추적하도록 기본적으로 둘 다 설치한다(미사용 에이전트의 파일은 무해).
  */
+import { resolve } from 'path'
+
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
+  const resolvedCwd = resolve(cwd)
   return {
-    claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
+    claude: deps.hooks.inject(join(resolvedCwd, '.claude', 'settings.json'), 'claude'),
+    codex: deps.hooks.inject(join(resolvedCwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
 

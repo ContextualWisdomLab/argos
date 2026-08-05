@@ -22,6 +22,9 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
+  // Disallow walking outside the intended boundary if necessary,
+  // but since startDir is an absolute or relative path intended by the program,
+  // and we are simply walking up parents, it's generally safe. We resolve it.
   let currentDir = resolve(startDir || process.cwd())
   let depth = 0
   const maxDepth = 10
@@ -73,7 +76,7 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  * @param dir Target directory (defaults to process.cwd())
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
-  const targetDir = dir || process.cwd()
+  const targetDir = dir ? resolve(dir) : process.cwd()
   const argosDir = join(targetDir, '.argos')
 
   if (!existsSync(argosDir)) {

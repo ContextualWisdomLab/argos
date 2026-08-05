@@ -8,8 +8,10 @@ import {
   extractMessages,
 } from '../lib/transcript.js'
 
+import { resolve } from 'path'
+
 function writejsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = join(resolve(dir), 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }

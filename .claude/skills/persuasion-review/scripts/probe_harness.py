@@ -19,7 +19,8 @@ import os
 import socket
 import subprocess
 import time
-import urllib.request
+from urllib.parse import urlparse
+from http.client import HTTPConnection
 from pathlib import Path
 
 
@@ -31,12 +32,24 @@ def free_port() -> int:
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
+    parsed = urlparse(url)
+    if parsed.scheme != "http":
+        raise ValueError("Only http scheme is supported")
+    host = parsed.hostname
+    port = parsed.port or 80
+    path = parsed.path or "/"
+
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
-            return True
+            conn = HTTPConnection(host, port, timeout=1)
+            conn.request("GET", path)
+            response = conn.getresponse()
+            if response.status >= 200:
+                conn.close()
+                return True
         except Exception:
-            time.sleep(0.2)
+            pass
+        time.sleep(0.2)
     return False
 
 

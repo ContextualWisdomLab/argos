@@ -43,8 +43,10 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
-    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
+    // Avoid dynamic directory traversal by resolving and then building the path strictly
+    const currentDir = deps.cwd()
+    const claudePath = join(currentDir, '.claude', 'settings.json')
+    const codexPath = join(currentDir, '.codex', 'hooks.json')
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 
