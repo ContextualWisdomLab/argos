@@ -1,4 +1,4 @@
-import { MAX_PASSWORD_LENGTH } from '@argos/shared'
+import { BCRYPT_MAX_PASSWORD_BYTES } from '@argos/shared'
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -35,8 +35,8 @@ describe('POST /api/password-reset/[token] password boundary', () => {
     vi.restoreAllMocks()
   })
 
-  it('accepts the exact maximum into password reset processing', async () => {
-    const password = 'x'.repeat(MAX_PASSWORD_LENGTH)
+  it('accepts the exact bcrypt byte maximum into password reset processing', async () => {
+    const password = 'x'.repeat(BCRYPT_MAX_PASSWORD_BYTES)
     const response = await POST(resetRequest(password), routeContext)
 
     expect(response.status).toBe(200)
@@ -47,9 +47,9 @@ describe('POST /api/password-reset/[token] password boundary', () => {
     })
   })
 
-  it('rejects a password above the maximum before bcrypt-backed processing', async () => {
+  it('rejects a password bcrypt would truncate before hash processing', async () => {
     const response = await POST(
-      resetRequest('x'.repeat(MAX_PASSWORD_LENGTH + 1)),
+      resetRequest('x'.repeat(BCRYPT_MAX_PASSWORD_BYTES + 1)),
       routeContext,
     )
 
