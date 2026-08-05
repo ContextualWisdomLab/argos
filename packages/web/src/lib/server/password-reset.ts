@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { BcryptPasswordSchema } from '@argos/shared'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 
@@ -82,10 +83,18 @@ export async function getPasswordResetStatus(token: string): Promise<PasswordRes
   }
 }
 
+/**
+ * Consume a reset token and replace the user's password hash.
+ *
+ * Direct module callers are validated before token lookup so inputs that
+ * legacy bcrypt would truncate never reach the database or hashing layer.
+ */
 export async function resetPasswordWithToken(input: {
   token: string
   password: string
 }): Promise<'success' | 'not_found' | 'expired' | 'used'> {
+  BcryptPasswordSchema.parse(input.password)
+
   const tokenHash = hashResetToken(input.token)
   const record = await db.passwordResetToken.findUnique({
     where: { tokenHash },
