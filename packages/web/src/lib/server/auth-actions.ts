@@ -3,7 +3,10 @@ import 'server-only'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenSource } from '@prisma/client'
-import { MAX_PASSWORD_LENGTH } from '@argos/shared'
+import {
+  BcryptPasswordSchema,
+  isPasswordWithinBcryptByteLimit,
+} from '@argos/shared'
 import { db } from './db'
 import { signJwt } from './jwt'
 
@@ -58,10 +61,10 @@ export async function issueUserAuthResult(
  * 자격 증명이 유효하면 새 JWT를 발급하고 CliToken을 생성한 뒤 반환한다.
  * 실패 시 null 반환 (호출 측에서 401 등으로 매핑).
  *
- * The password resource limit is enforced here, rather than only in HTTP
+ * The bcrypt byte boundary is enforced here, rather than only in HTTP
  * schemas, because NextAuth and future module consumers call this service
- * directly. Overlength attacker input is rejected before database or bcrypt
- * work begins.
+ * directly. Inputs that bcrypt would truncate are rejected before database or
+ * password-hash work begins.
  */
 export async function loginUser(
   input: { email: string; password: string },
@@ -69,7 +72,7 @@ export async function loginUser(
 ): Promise<AuthResult | null> {
   const { email, password } = input
 
-  if (password.length > MAX_PASSWORD_LENGTH) return null
+  if (!isPasswordWithinBcryptByteLimit(password)) return null
 
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return null
@@ -131,6 +134,7 @@ export async function exchangeOnboardToken(
  * 회원가입 비즈니스 로직.
  * 이메일 중복 시 'EMAIL_IN_USE' 반환, 그 외에는 AuthResult.
  * user 생성과 cliToken 생성을 트랜잭션으로 묶어 orphan user를 방지한다.
+ * Invalid direct callers receive a ZodError before database or bcrypt work.
  */
 export async function registerUser(input: {
   email: string
@@ -138,6 +142,8 @@ export async function registerUser(input: {
   name: string
 }): Promise<AuthResult | 'EMAIL_IN_USE'> {
   const { email, password, name } = input
+
+  BcryptPasswordSchema.parse(password)
 
   const existingUser = await db.user.findUnique({ where: { email } })
   if (existingUser) return 'EMAIL_IN_USE'
