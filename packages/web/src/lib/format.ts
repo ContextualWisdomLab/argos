@@ -81,6 +81,23 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
   return `+${hours}h ${minutes}m`
 }
 
+/**
+ * Format an event timestamp as a non-negative `hours:mm:ss` session offset.
+ *
+ * The caller supplies the already-parsed session anchor so a virtualized list
+ * can reuse one primitive value across every visible row.
+ */
+export function formatElapsedHms(timestamp: string, sessionStartedAtMs: number): string {
+  const timestampMs = Date.parse(timestamp)
+  if (Number.isNaN(timestampMs) || Number.isNaN(sessionStartedAtMs)) return ''
+
+  const diffSeconds = Math.max(0, Math.floor((timestampMs - sessionStartedAtMs) / 1000))
+  const hours = Math.floor(diffSeconds / 3600)
+  const minutes = Math.floor((diffSeconds % 3600) / 60)
+  const seconds = diffSeconds % 60
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 /**
