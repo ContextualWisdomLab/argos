@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
+import { formatElapsedHms } from "@/lib/format";
 import {
   formatSlashCommandText,
   type TimelineEvent,
@@ -38,17 +39,6 @@ type FlatRow =
     };
 
 const ROW_HEIGHT = 36;
-
-function formatElapsed(timestamp: string, sessionStartedAt: string): string {
-  const t = new Date(timestamp).getTime();
-  const start = new Date(sessionStartedAt).getTime();
-  if (Number.isNaN(t) || Number.isNaN(start)) return "";
-  const diffSec = Math.max(0, Math.floor((t - start) / 1000));
-  const h = Math.floor(diffSec / 3600);
-  const m = Math.floor((diffSec % 3600) / 60);
-  const s = diffSec % 60;
-  return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
 
 function buildFlatRows(
   groups: TimelineGroup[],
@@ -207,7 +197,7 @@ function RowView({
 type RowProps = {
   rows: FlatRow[];
   selectedIdx: number;
-  sessionStartedAt: string;
+  sessionStartedAtMs: number;
   onSelect: (idx: number) => void;
   onToggleGroup: (firstIdx: number) => void;
 };
@@ -217,7 +207,7 @@ function Row({
   style,
   rows,
   selectedIdx,
-  sessionStartedAt,
+  sessionStartedAtMs,
   onSelect,
   onToggleGroup,
 }: RowComponentProps<RowProps>) {
@@ -230,7 +220,7 @@ function Row({
         <RowView
           label="Tool"
           preview={`${row.toolName} x${row.count}`}
-          time={formatElapsed(row.firstEvent.timestamp, sessionStartedAt)}
+          time={formatElapsedHms(row.firstEvent.timestamp, sessionStartedAtMs)}
           icon={getIcon(row.firstEvent)}
           isSelected={false}
           onClick={() => onToggleGroup(row.groupFirstIdx)}
@@ -252,7 +242,7 @@ function Row({
       <RowView
         label={label}
         preview={preview}
-        time={formatElapsed(row.event.timestamp, sessionStartedAt)}
+        time={formatElapsedHms(row.event.timestamp, sessionStartedAtMs)}
         icon={getIcon(row.event)}
         isSelected={row.idx === selectedIdx}
         onClick={() => onSelect(row.idx)}
@@ -271,6 +261,13 @@ export function EventList({
   expandedGroups,
   onToggleGroup,
 }: EventListProps) {
+  // The session anchor is stable across visible rows, so parse it only when the
+  // source prop changes and pass the primitive number through react-window.
+  const sessionStartedAtMs = useMemo(
+    () => Date.parse(sessionStartedAt),
+    [sessionStartedAt],
+  );
+
   const rows = useMemo(
     () => buildFlatRows(groups, expandedGroups, selectedIdx),
     [groups, expandedGroups, selectedIdx],
@@ -292,7 +289,7 @@ export function EventList({
       rowProps={{
         rows,
         selectedIdx,
-        sessionStartedAt,
+        sessionStartedAtMs,
         onSelect,
         onToggleGroup,
       }}
