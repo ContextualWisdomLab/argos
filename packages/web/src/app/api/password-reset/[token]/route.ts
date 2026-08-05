@@ -1,3 +1,4 @@
+import { MAX_PASSWORD_LENGTH } from '@argos/shared'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -12,8 +13,8 @@ export const dynamic = 'force-dynamic'
 
 const ResetPasswordSchema = z
   .object({
-    password: z.string().min(8),
-    passwordConfirmation: z.string().min(8),
+    password: z.string().min(8).max(MAX_PASSWORD_LENGTH),
+    passwordConfirmation: z.string().min(8).max(MAX_PASSWORD_LENGTH),
   })
   .refine((value) => value.password === value.passwordConfirmation, {
     path: ['passwordConfirmation'],
