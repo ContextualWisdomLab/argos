@@ -21,4 +21,5 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
+- `OverviewStats` 설명 disclosure가 React `useId`에서 파생된 고유 toggle/content ID를 사용하도록 변경했습니다. 같은 화면에 여러 인스턴스가 있어도 `aria-controls`와 `aria-labelledby`가 서로 충돌하지 않으며, 실제 두 인스턴스의 독립적인 확장 상태와 연결 관계를 DOM 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
