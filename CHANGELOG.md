@@ -6,6 +6,10 @@
 
 - 로그인, 회원가입, 비밀번호 재설정이 하나의 공유 비밀번호 계약을 사용하도록 통합했습니다. 입력 처리량을 1,024자로 먼저 제한하고, 현재 `bcryptjs`가 완전하게 검증할 수 있는 72 UTF-8 바이트를 초과하는 값은 조용히 잘라내지 않고 거부합니다. ASCII와 다중 바이트 Unicode 경계 회귀 테스트 및 운영·표준 근거 문서를 함께 추가했습니다.
 
+### ⚡ 성능 (Performance)
+
+- 가상화 이벤트 목록에서 모든 visible row가 동일한 세션 시작 시각 문자열을 반복 파싱하던 경로를 제거했습니다. 세션 anchor는 prop이 바뀔 때만 `Date.parse`로 계산하고 숫자 값을 행에 전달하며, elapsed-time 동작은 순수 formatter와 invalid/negative 시간 회귀 테스트로 고정했습니다.
+
 ### ✨ 추가 기능 (Feature)
 
 - ERD (Entity-Relationship Diagram) 엔진의 코어 모델 클래스(`ERDModel`)를 신규 구현했습니다.
