@@ -20,3 +20,8 @@
 **Vulnerability:** The standard user authentication routes (login, register, and reset-password) did not have a maximum length constraint on passwords. This allows an attacker to supply extremely long strings, which `bcrypt` will try to hash, causing CPU exhaustion and creating a Denial of Service (DoS) vulnerability.
 **Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
 **Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
+
+## 2026-08-05 - [CSV Injection Vulnerability]
+**Vulnerability:** 사용자 입력 데이터가 검증이나 이스케이프 없이 CSV로 출력되어 CSV 인젝션 (CSV Injection) 취약점 발생 가능.
+**Learning:** 특정 기호(=, +, -, @)로 시작하는 문자열이 엑셀 등의 프로그램에서 수식으로 해석될 수 있으며, 이로 인해 악성 코드 실행 등의 위협이 있음.
+**Prevention:** CSV로 데이터를 내보낼 때, 값의 시작이 =, +, -, @ 일 경우 앞에 작은 따옴표(')를 추가하여 일반 텍스트로 처리되도록 해야 함.
