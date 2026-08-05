@@ -3,6 +3,7 @@ import 'server-only'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenSource } from '@prisma/client'
+import { MAX_PASSWORD_LENGTH } from '@argos/shared'
 import { db } from './db'
 import { signJwt } from './jwt'
 
@@ -56,12 +57,19 @@ export async function issueUserAuthResult(
  * 로그인 비즈니스 로직.
  * 자격 증명이 유효하면 새 JWT를 발급하고 CliToken을 생성한 뒤 반환한다.
  * 실패 시 null 반환 (호출 측에서 401 등으로 매핑).
+ *
+ * The password resource limit is enforced here, rather than only in HTTP
+ * schemas, because NextAuth and future module consumers call this service
+ * directly. Overlength attacker input is rejected before database or bcrypt
+ * work begins.
  */
 export async function loginUser(
   input: { email: string; password: string },
   source: TokenSource = 'WEB',
 ): Promise<AuthResult | null> {
   const { email, password } = input
+
+  if (password.length > MAX_PASSWORD_LENGTH) return null
 
   const user = await db.user.findUnique({ where: { email } })
   if (!user) return null
