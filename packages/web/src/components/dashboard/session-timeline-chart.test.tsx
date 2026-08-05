@@ -18,6 +18,15 @@ vi.mock('recharts', async () => {
   }
 })
 
+function readChartData(): Array<{
+  input: number
+  toolSummary: string
+}> {
+  return JSON.parse(
+    screen.getByTestId('composed-chart-data').textContent ?? '[]'
+  ) as Array<{ input: number; toolSummary: string }>
+}
+
 describe('SessionTimelineChart', () => {
   afterEach(() => {
     cleanup()
@@ -130,12 +139,140 @@ describe('SessionTimelineChart', () => {
       />
     )
 
-    const chartData = JSON.parse(
-      screen.getByTestId('composed-chart-data').textContent ?? '[]'
-    ) as Array<{ toolSummary: string }>
-    expect(chartData.map(({ toolSummary }) => toolSummary)).toEqual([
+    expect(readChartData().map(({ toolSummary }) => toolSummary)).toEqual([
       'alpha',
       'alpha, beta',
     ])
+  })
+
+  it('keeps an empty cumulative summary when no tool event exists', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: null,
+        isSubagent: false,
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(readChartData()).toEqual([
+      expect.objectContaining({ input: 100, toolSummary: '' }),
+    ])
+  })
+
+  it('sorts local copies and bounds repeated and distinct tool summaries', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 200,
+        outputTokens: 75,
+        estimatedCostUsd: 0.002,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+    const messages: SessionDetail['messages'] = [
+      {
+        role: 'TOOL',
+        content: 'Empty-name output',
+        sequence: 6,
+        timestamp: '2023-01-01T00:01:30.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: '',
+      },
+      {
+        role: 'TOOL',
+        content: 'Delta output',
+        sequence: 5,
+        timestamp: '2023-01-01T00:00:50.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'delta',
+      },
+      {
+        role: 'TOOL',
+        content: 'Alpha output 2',
+        sequence: 2,
+        timestamp: '2023-01-01T00:00:20.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'alpha',
+      },
+      {
+        role: 'TOOL',
+        content: 'Gamma output',
+        sequence: 4,
+        timestamp: '2023-01-01T00:00:40.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'gamma',
+      },
+      {
+        role: 'TOOL',
+        content: 'Alpha output 1',
+        sequence: 1,
+        timestamp: '2023-01-01T00:00:10.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'alpha',
+      },
+      {
+        role: 'TOOL',
+        content: 'Beta output',
+        sequence: 3,
+        timestamp: '2023-01-01T00:00:30.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'beta',
+      },
+    ]
+    const originalUsageOrder = usageTimeline.map(({ timestamp }) => timestamp)
+    const originalMessageOrder = messages.map(({ timestamp }) => timestamp)
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={messages}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(readChartData()).toEqual([
+      expect.objectContaining({
+        input: 100,
+        toolSummary: 'alpha x2, beta, gamma +1 more',
+      }),
+      expect.objectContaining({
+        input: 200,
+        toolSummary: 'alpha x2, beta, gamma +2 more',
+      }),
+    ])
+    expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
+    expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
 })
