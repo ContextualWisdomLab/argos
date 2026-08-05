@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useMemo } from 'react'
 import { formatTokens, formatCost } from '@/lib/format'
 import type { UserStat } from '@argos/shared'
 
@@ -8,6 +9,18 @@ interface TopUsersListProps {
 }
 
 export function TopUsersList({ users }: TopUsersListProps) {
+  // ⚡ Bolt Optimization:
+  // Array.prototype.reduce 대신 useMemo와 전통적인 for 루프를 사용하여
+  // 매 렌더링마다 계산되는 것을 방지하고 GC 오버헤드를 줄입니다.
+  const maxTokens = useMemo(() => {
+    let max = 0
+    for (let i = 0; i < users.length; i++) {
+      const total = users[i]!.inputTokens + users[i]!.outputTokens
+      if (total > max) max = total
+    }
+    return max
+  }, [users])
+
   if (users.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-6 text-center">
@@ -15,11 +28,6 @@ export function TopUsersList({ users }: TopUsersListProps) {
       </p>
     )
   }
-
-  const maxTokens = users.reduce(
-    (m, u) => Math.max(m, u.inputTokens + u.outputTokens),
-    0,
-  )
 
   return (
     <ol className="space-y-2">

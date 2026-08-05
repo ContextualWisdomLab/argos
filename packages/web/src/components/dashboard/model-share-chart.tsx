@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, TooltipProps } from 'recharts'
 import { formatTokens } from '@/lib/format'
 import type { ModelShare } from '@argos/shared'
@@ -17,7 +17,7 @@ const CHART_VARS = [
   'var(--color-chart-4)',
 ]
 
-function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
+export function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload || payload.length === 0) return null
   const p = payload[0]?.payload as { model: string; totalTokens: number; pct: number } | undefined
   if (!p) return null
@@ -32,9 +32,26 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
   )
 }
 
+export function formatLegend(value: string) {
+  const truncated = value.length > 30 ? value.slice(0, 30) + '…' : value
+  return <span className="text-muted-foreground">{truncated}</span>
+}
+
+export function renderLabel(entry: { pct?: number }) {
+  return entry.pct !== undefined && entry.pct >= 8 ? `${entry.pct.toFixed(0)}%` : ''
+}
+
 export function ModelShareChart({ data }: ModelShareChartProps) {
-  // Optimize chart data preparation by memoizing it to prevent Recharts from re-rendering unnecessarilly
-  const total = useMemo(() => data.reduce((s, d) => s + d.totalTokens, 0), [data])
+  // ⚡ Bolt Optimization:
+  // Array.prototype.reduce 대신 전통적인 for 루프를 사용하여
+  // 배열 집계 연산 중의 GC 오버헤드를 줄이고 성능을 향상시킵니다.
+  const total = useMemo(() => {
+    let sum = 0
+    for (let i = 0; i < data.length; i++) {
+      sum += data[i]!.totalTokens
+    }
+    return sum
+  }, [data])
 
   // Optimize chart data preparation by memoizing it to prevent Recharts from re-rendering unnecessarilly
   const chartData = useMemo(() => {
@@ -65,9 +82,7 @@ export function ModelShareChart({ data }: ModelShareChartProps) {
           paddingAngle={2}
           stroke="var(--color-card)"
           strokeWidth={2}
-          label={(entry: { pct?: number }) =>
-            entry.pct !== undefined && entry.pct >= 8 ? `${entry.pct.toFixed(0)}%` : ''
-          }
+          label={renderLabel}
           labelLine={false}
         >
           {chartData.map((_, i) => (
@@ -79,10 +94,7 @@ export function ModelShareChart({ data }: ModelShareChartProps) {
           verticalAlign="bottom"
           iconType="square"
           wrapperStyle={{ fontSize: '11px' }}
-          formatter={(value: string) => {
-            const truncated = value.length > 30 ? value.slice(0, 30) + '…' : value
-            return <span className="text-muted-foreground">{truncated}</span>
-          }}
+          formatter={formatLegend}
         />
       </PieChart>
     </ResponsiveContainer>
