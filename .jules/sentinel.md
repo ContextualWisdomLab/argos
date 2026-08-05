@@ -20,3 +20,8 @@
 **Vulnerability:** The standard user authentication routes (login, register, and reset-password) did not have a maximum length constraint on passwords. This allows an attacker to supply extremely long strings, which `bcrypt` will try to hash, causing CPU exhaustion and creating a Denial of Service (DoS) vulnerability.
 **Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
 **Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
+
+## 2025-02-18 - [ERD 모델의 SQL 인젝션 및 상태 변이 우회 취약점 수정]
+**Vulnerability:** `ERDModel` 클래스에서 컬럼 타입 및 기본값에 대한 정규식 검증이 누락되어 악의적인 SQL 문법이 삽입될 수 있었으며, 내부 상태 객체(테이블)가 직접 반환되어 검증 로직을 우회하여 상태 변이가 발생할 수 있었습니다.
+**Learning:** DDL 생성 시 자유 텍스트나 타입 입력이 포함될 때는 반드시 허용 목록(Allowlist) 기반 정규식을 사용해야 하며, 객체 상태를 반환할 때는 캡슐화를 보장하기 위해 깊은 복사(Deep Copy)를 수행해야 검증 우회를 방지할 수 있습니다.
+**Prevention:** 정규식(예: `SAFE_SQL_TYPE`, `SAFE_SQL_DEFAULT_VALUE`)을 도입하여 타입과 기본값을 검증하고, 객체를 반환할 때 `JSON.parse(JSON.stringify(table))`를 사용하여 원본 참조를 숨깁니다.
