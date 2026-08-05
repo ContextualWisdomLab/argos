@@ -7,7 +7,6 @@ import {
   formatDuration,
   formatDateTime,
   formatDateTimeFull,
-  formatElapsedHms,
 } from './format'
 
 // formatDate/formatDateTime 등의 "유효 입력" 렌더링은 로컬 타임존 의존(브라우저 표시용)이라
@@ -112,30 +111,6 @@ describe('formatRelativeTime (baseTimestamp 오프셋 모드)', () => {
     expect(
       formatRelativeTime('2026-06-01T00:00:00Z', '2026-06-01T00:00:30Z'),
     ).toBe('+-1m')
-  })
-})
-
-describe('formatElapsedHms', () => {
-  const sessionStartedAtMs = Date.parse('2026-06-01T00:00:00Z')
-
-  it('세션 기준 시각과 같은 이벤트는 0으로 표시한다', () => {
-    expect(formatElapsedHms('2026-06-01T00:00:00Z', sessionStartedAtMs)).toBe('0:00:00')
-  })
-
-  it('시간, 분, 초를 고정 너비 세션 오프셋으로 표시한다', () => {
-    expect(formatElapsedHms('2026-06-01T01:02:03Z', sessionStartedAtMs)).toBe('1:02:03')
-  })
-
-  it('세션 시작 전 이벤트는 음수가 아니라 0으로 고정한다', () => {
-    expect(formatElapsedHms('2026-05-31T23:59:59Z', sessionStartedAtMs)).toBe('0:00:00')
-  })
-
-  it('이벤트 timestamp가 유효하지 않으면 빈 문자열을 반환한다', () => {
-    expect(formatElapsedHms('not-a-date', sessionStartedAtMs)).toBe('')
-  })
-
-  it('세션 기준 시각이 유효하지 않으면 빈 문자열을 반환한다', () => {
-    expect(formatElapsedHms('2026-06-01T00:00:00Z', Number.NaN)).toBe('')
   })
 })
 
