@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,65 +8,65 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useUpdateProject } from '@/hooks/use-update-project'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUpdateProject } from "@/hooks/use-update-project";
 
 interface RenameProjectModalProps {
-  project: { id: string; name: string } | null
-  onClose: () => void
+  project: { id: string; name: string } | null;
+  onClose: () => void;
 }
 
 export function RenameProjectModal({
   project,
   onClose,
 }: RenameProjectModalProps) {
-  const [name, setName] = useState('')
-  const mutation = useUpdateProject(project?.id ?? '')
+  const [name, setName] = useState("");
+  const mutation = useUpdateProject(project?.id ?? "");
 
   useEffect(() => {
     if (project && project.name !== name) {
       // Use setTimeout to defer state update out of the synchronous render/effect cycle
-      const timer = setTimeout(() => setName(project.name), 0)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setName(project.name), 0);
+      return () => clearTimeout(timer);
     }
-  }, [project, name])
+  }, [project, name]);
 
   const handleOpenChange = (next: boolean) => {
-    if (next) return
-    if (mutation.isPending) return
-    setName('')
-    mutation.reset()
-    onClose()
-  }
+    if (next) return;
+    if (mutation.isPending) return;
+    setName("");
+    mutation.reset();
+    onClose();
+  };
 
-  const trimmed = name.trim()
+  const trimmed = name.trim();
   const canSubmit =
     !!project &&
     trimmed.length > 0 &&
     trimmed !== project.name &&
-    !mutation.isPending
+    !mutation.isPending;
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!project || !canSubmit) return
+    e.preventDefault();
+    if (!project || !canSubmit) return;
     mutation.mutate(
       { name: trimmed },
       {
         onSuccess: () => {
-          onClose()
+          onClose();
         },
-      }
-    )
-  }
+      },
+    );
+  };
 
   const errorMessage = mutation.isError
     ? mutation.error instanceof Error && mutation.error.message
       ? mutation.error.message
-      : '프로젝트 이름을 변경하지 못했습니다. 잠시 후 다시 시도해주세요.'
-    : null
+      : "프로젝트 이름을 변경하지 못했습니다. 잠시 후 다시 시도해주세요."
+    : null;
 
   return (
     <AlertDialog open={project !== null} onOpenChange={handleOpenChange}>
@@ -75,7 +75,8 @@ export function RenameProjectModal({
           <AlertDialogHeader>
             <AlertDialogTitle>프로젝트 이름 변경</AlertDialogTitle>
             <AlertDialogDescription>
-              프로젝트의 새 이름을 입력해주세요. slug (URL) 은 변경되지 않습니다.
+              프로젝트의 새 이름을 입력해주세요. slug (URL) 은 변경되지
+              않습니다.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -85,15 +86,23 @@ export function RenameProjectModal({
               id="rename-project-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder={project?.name ?? ''}
+              placeholder={project?.name ?? ""}
               autoFocus
               disabled={mutation.isPending}
               autoComplete="off"
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "rename-project-error" : undefined}
+              aria-describedby={
+                errorMessage ? "rename-project-error" : undefined
+              }
             />
             {errorMessage && (
-              <p id="rename-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p
+                id="rename-project-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errorMessage}
+              </p>
             )}
           </div>
 
@@ -108,11 +117,11 @@ export function RenameProjectModal({
               취소
             </Button>
             <Button type="submit" size="sm" disabled={!canSubmit}>
-              {mutation.isPending ? '변경 중…' : '변경'}
+              {mutation.isPending ? "변경 중…" : "변경"}
             </Button>
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

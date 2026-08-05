@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,16 +8,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useCreateProject } from '@/hooks/use-create-project'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useCreateProject } from "@/hooks/use-create-project";
 
 interface CreateProjectModalProps {
-  orgSlug: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  orgSlug: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function CreateProjectModal({
@@ -25,37 +25,37 @@ export function CreateProjectModal({
   open,
   onOpenChange,
 }: CreateProjectModalProps) {
-  const [name, setName] = useState('')
-  const mutation = useCreateProject(orgSlug)
+  const [name, setName] = useState("");
+  const mutation = useCreateProject(orgSlug);
 
   const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
+    if (!next && mutation.isPending) return;
     if (!next) {
-      setName('')
-      mutation.reset()
+      setName("");
+      mutation.reset();
     }
-    onOpenChange(next)
-  }
+    onOpenChange(next);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = name.trim()
-    if (!trimmed || mutation.isPending) return
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed || mutation.isPending) return;
     mutation.mutate(
       { name: trimmed },
       {
         onSuccess: () => {
-          onOpenChange(false)
+          onOpenChange(false);
         },
-      }
-    )
-  }
+      },
+    );
+  };
 
   const errorMessage = mutation.isError
     ? mutation.error instanceof Error && mutation.error.message
       ? mutation.error.message
-      : '프로젝트를 생성하지 못했습니다. 잠시 후 다시 시도해주세요.'
-    : null
+      : "프로젝트를 생성하지 못했습니다. 잠시 후 다시 시도해주세요."
+    : null;
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
@@ -79,10 +79,18 @@ export function CreateProjectModal({
               autoFocus
               disabled={mutation.isPending}
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "create-project-error" : undefined}
+              aria-describedby={
+                errorMessage ? "create-project-error" : undefined
+              }
             />
             {errorMessage && (
-              <p id="create-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p
+                id="create-project-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errorMessage}
+              </p>
             )}
           </div>
 
@@ -101,11 +109,11 @@ export function CreateProjectModal({
               size="sm"
               disabled={!name.trim() || mutation.isPending}
             >
-              {mutation.isPending ? '생성 중…' : '생성'}
+              {mutation.isPending ? "생성 중…" : "생성"}
             </Button>
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

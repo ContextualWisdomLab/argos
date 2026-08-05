@@ -1,20 +1,24 @@
-'use client'
+"use client";
 
-import React, { useState, useId, type ReactNode } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { useState, useId, type ReactNode } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ContextSectionProps {
-  title: string
-  children: ReactNode
-  defaultOpen?: boolean
+  title: string;
+  children: ReactNode;
+  defaultOpen?: boolean;
 }
 
-export function ContextSection({ title, children, defaultOpen = false }: ContextSectionProps) {
-  const [open, setOpen] = useState(defaultOpen)
-  const id = useId()
-  const buttonId = `context-section-btn-${id}`
-  const contentId = `context-section-content-${id}`
+export function ContextSection({
+  title,
+  children,
+  defaultOpen = false,
+}: ContextSectionProps) {
+  const [open, setOpen] = useState(defaultOpen);
+  const id = useId();
+  const buttonId = `context-section-btn-${id}`;
+  const contentId = `context-section-content-${id}`;
 
   return (
     <div className="rounded-xl bg-card ring-1 ring-foreground/10 overflow-hidden">
@@ -23,8 +27,8 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         id={buttonId}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'w-full flex items-center justify-between px-4 py-3 text-left',
-          'hover:bg-card-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          "w-full flex items-center justify-between px-4 py-3 text-left",
+          "hover:bg-card-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
         aria-expanded={open}
         aria-controls={contentId}
@@ -47,5 +51,5 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         </div>
       )}
     </div>
-  )
+  );
 }

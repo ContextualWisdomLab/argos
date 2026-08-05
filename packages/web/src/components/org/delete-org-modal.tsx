@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -9,17 +9,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useDeleteOrg } from '@/hooks/use-delete-org'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useDeleteOrg } from "@/hooks/use-delete-org";
 
 interface DeleteOrgModalProps {
-  open: boolean
-  orgSlug: string
-  orgName: string
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  orgSlug: string;
+  orgName: string;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function DeleteOrgModal({
@@ -28,36 +28,36 @@ export function DeleteOrgModal({
   orgName,
   onOpenChange,
 }: DeleteOrgModalProps) {
-  const router = useRouter()
-  const [confirmName, setConfirmName] = useState('')
-  const mutation = useDeleteOrg()
+  const router = useRouter();
+  const [confirmName, setConfirmName] = useState("");
+  const mutation = useDeleteOrg();
 
   const handleOpenChange = (next: boolean) => {
-    if (!next && mutation.isPending) return
+    if (!next && mutation.isPending) return;
     if (!next) {
-      setConfirmName('')
-      mutation.reset()
+      setConfirmName("");
+      mutation.reset();
     }
-    onOpenChange(next)
-  }
+    onOpenChange(next);
+  };
 
-  const canDelete = confirmName === orgName && !mutation.isPending
+  const canDelete = confirmName === orgName && !mutation.isPending;
 
   const handleDelete = () => {
-    if (!canDelete) return
+    if (!canDelete) return;
     mutation.mutate(orgSlug, {
       onSuccess: () => {
-        onOpenChange(false)
-        router.replace('/dashboard')
+        onOpenChange(false);
+        router.replace("/dashboard");
       },
-    })
-  }
+    });
+  };
 
   const errorMessage = mutation.isError
     ? mutation.error instanceof Error && mutation.error.message
       ? mutation.error.message
-      : '조직을 삭제하지 못했습니다. 잠시 후 다시 시도해주세요.'
-    : null
+      : "조직을 삭제하지 못했습니다. 잠시 후 다시 시도해주세요."
+    : null;
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
@@ -73,7 +73,7 @@ export function DeleteOrgModal({
 
         <div className="mt-4 space-y-1.5">
           <Label htmlFor="delete-org-confirm">
-            확인을 위해 조직 이름{' '}
+            확인을 위해 조직 이름{" "}
             <span className="font-mono text-foreground">{orgName}</span>을(를)
             입력해주세요.
           </Label>
@@ -88,7 +88,13 @@ export function DeleteOrgModal({
             aria-describedby={errorMessage ? "delete-org-error" : undefined}
           />
           {errorMessage && (
-            <p id="delete-org-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+            <p
+              id="delete-org-error"
+              role="alert"
+              className="text-xs text-destructive"
+            >
+              {errorMessage}
+            </p>
           )}
         </div>
 
@@ -109,10 +115,10 @@ export function DeleteOrgModal({
             disabled={!canDelete}
             onClick={handleDelete}
           >
-            {mutation.isPending ? '삭제 중…' : '삭제'}
+            {mutation.isPending ? "삭제 중…" : "삭제"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

@@ -23,9 +23,7 @@ function ToolEventBody({ event }: { event: ToolEvent }) {
         <dt className="text-muted-foreground">Tool</dt>
         <dd className="font-medium">{event.toolName}</dd>
         <dt className="text-muted-foreground">Duration</dt>
-        <dd className="tabular-nums">
-          {formatDurationMs(event.durationMs)}
-        </dd>
+        <dd className="tabular-nums">{formatDurationMs(event.durationMs)}</dd>
       </dl>
 
       {(event.isSkillCall || event.isAgentCall) && (
@@ -95,7 +93,8 @@ function getHeaderLabel(event: TimelineEvent): string {
 function getHeaderSubLabel(event: TimelineEvent): string | null {
   if (event.kind !== "tool") return null;
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return null;
 }
 
@@ -126,7 +125,9 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
           <div className="min-w-0">
             <div className="text-sm font-medium truncate">{label}</div>
             {subLabel && (
-              <div className="text-xs text-muted-foreground truncate">{subLabel}</div>
+              <div className="text-xs text-muted-foreground truncate">
+                {subLabel}
+              </div>
             )}
           </div>
         </div>

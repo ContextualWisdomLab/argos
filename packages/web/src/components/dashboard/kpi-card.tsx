@@ -1,6 +1,6 @@
 interface KpiCardProps {
-  label: string
-  value: string
+  label: string;
+  value: string;
 }
 
 export function KpiCard({ label, value }: KpiCardProps) {
@@ -11,5 +11,5 @@ export function KpiCard({ label, value }: KpiCardProps) {
       </div>
       <div className="text-3xl font-semibold tabular-nums">{value}</div>
     </div>
-  )
+  );
 }

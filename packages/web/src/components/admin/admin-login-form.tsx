@@ -1,43 +1,49 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Lock } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useState } from "react";
+import { Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function AdminLoginForm() {
-  const router = useRouter()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
+    event.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
       if (!res.ok) {
-        setError('Invalid username or password')
-        return
+        setError("Invalid username or password");
+        return;
       }
 
-      router.refresh()
+      router.refresh();
     } catch {
-      setError('An error occurred. Please try again.')
+      setError("An error occurred. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -49,7 +55,9 @@ export function AdminLoginForm() {
             <Lock className="size-4" aria-hidden="true" />
           </div>
           <CardTitle>Admin</CardTitle>
-          <CardDescription>Sign in to manage password reset links</CardDescription>
+          <CardDescription>
+            Sign in to manage password reset links
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,11 +84,11 @@ export function AdminLoginForm() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

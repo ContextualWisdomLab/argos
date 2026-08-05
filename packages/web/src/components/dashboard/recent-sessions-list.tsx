@@ -1,28 +1,31 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import { formatTokens, formatRelativeTime } from '@/lib/format'
-import { AgentBadge } from './agent-badge'
-import type { SessionItem } from '@argos/shared'
+import Link from "next/link";
+import { formatTokens, formatRelativeTime } from "@/lib/format";
+import { AgentBadge } from "./agent-badge";
+import type { SessionItem } from "@argos/shared";
 
 interface RecentSessionsListProps {
-  sessions: SessionItem[]
-  orgSlug: string
+  sessions: SessionItem[];
+  orgSlug: string;
 }
 
-export function RecentSessionsList({ sessions, orgSlug }: RecentSessionsListProps) {
+export function RecentSessionsList({
+  sessions,
+  orgSlug,
+}: RecentSessionsListProps) {
   if (sessions.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-6 text-center">
         최근 세션이 없습니다
       </p>
-    )
+    );
   }
 
   return (
     <ul className="space-y-1.5">
-      {sessions.map(s => {
-        const totalTokens = s.inputTokens + s.outputTokens
+      {sessions.map((s) => {
+        const totalTokens = s.inputTokens + s.outputTokens;
         return (
           <li key={s.id}>
             <Link
@@ -31,7 +34,7 @@ export function RecentSessionsList({ sessions, orgSlug }: RecentSessionsListProp
             >
               <div className="flex items-baseline justify-between gap-3 mb-0.5">
                 <span className="text-sm font-medium truncate">
-                  {s.title || '(untitled session)'}
+                  {s.title || "(untitled session)"}
                 </span>
                 <span className="text-[11px] shrink-0 text-muted-foreground tabular-nums">
                   {formatRelativeTime(s.startedAt)}
@@ -43,12 +46,14 @@ export function RecentSessionsList({ sessions, orgSlug }: RecentSessionsListProp
                 <span>{formatTokens(totalTokens)} tokens</span>
                 <span>·</span>
                 <span>{s.eventCount} events</span>
-                {s.agent === 'CODEX' && <AgentBadge agent={s.agent} className="ml-auto" />}
+                {s.agent === "CODEX" && (
+                  <AgentBadge agent={s.agent} className="ml-auto" />
+                )}
               </div>
             </Link>
           </li>
-        )
+        );
       })}
     </ul>
-  )
+  );
 }

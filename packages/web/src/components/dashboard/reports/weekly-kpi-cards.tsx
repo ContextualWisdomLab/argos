@@ -1,14 +1,17 @@
-import { formatTokens } from '@/lib/format'
-import { MetricCard, MetricBar } from '@/components/dashboard/metric-card'
-import type { WeeklyKpis } from '@/types/reports'
+import { formatTokens } from "@/lib/format";
+import { MetricCard, MetricBar } from "@/components/dashboard/metric-card";
+import type { WeeklyKpis } from "@/types/reports";
 
 interface WeeklyKpiCardsProps {
-  kpis: WeeklyKpis
+  kpis: WeeklyKpis;
   /** 첫 주(비교 불가) 또는 지난 주 데이터가 없을 때 delta 숨김 */
-  hideDelta?: boolean
+  hideDelta?: boolean;
 }
 
-export function WeeklyKpiCards({ kpis, hideDelta = false }: WeeklyKpiCardsProps) {
+export function WeeklyKpiCards({
+  kpis,
+  hideDelta = false,
+}: WeeklyKpiCardsProps) {
   return (
     <MetricBar>
       <MetricCard
@@ -32,5 +35,5 @@ export function WeeklyKpiCards({ kpis, hideDelta = false }: WeeklyKpiCardsProps)
         change={hideDelta ? undefined : kpis.wow.tokens}
       />
     </MetricBar>
-  )
+  );
 }

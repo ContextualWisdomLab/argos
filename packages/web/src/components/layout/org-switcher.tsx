@@ -1,48 +1,54 @@
-'use client'
+"use client";
 
-import { useParams, useRouter } from 'next/navigation'
-import { PlusIcon } from 'lucide-react'
-import { useOrgs } from '@/hooks/use-orgs'
-import { Skeleton } from '@/components/ui/skeleton'
+import { useParams, useRouter } from "next/navigation";
+import { PlusIcon } from "lucide-react";
+import { useOrgs } from "@/hooks/use-orgs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
-} from '@/components/ui/select'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
-const AVATAR_TONES = ['chart-1', 'chart-2', 'chart-3', 'chart-4', 'chart-5'] as const
+const AVATAR_TONES = [
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
+] as const;
 
 function toneFor(id: string) {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
-  return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length]
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(h) % AVATAR_TONES.length];
 }
 
 function OrgAvatar({
   name,
   id,
-  size = 'sm',
+  size = "sm",
 }: {
-  name: string
-  id: string
-  size?: 'sm' | 'md'
+  name: string;
+  id: string;
+  size?: "sm" | "md";
 }) {
-  const tone = toneFor(id)
+  const tone = toneFor(id);
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-md font-semibold text-background',
-        size === 'sm' ? 'size-6 text-[11px]' : 'size-8 text-xs'
+        "flex shrink-0 items-center justify-center rounded-md font-semibold text-background",
+        size === "sm" ? "size-6 text-[11px]" : "size-8 text-xs",
       )}
       style={{ backgroundColor: `var(--color-${tone})` }}
       aria-hidden
     >
       {name.charAt(0).toUpperCase()}
     </div>
-  )
+  );
 }
 
 function SwitcherSkeleton() {
@@ -54,37 +60,33 @@ function SwitcherSkeleton() {
         <Skeleton className="h-2.5 w-16" />
       </div>
     </div>
-  )
+  );
 }
 
-const CREATE_ORG_VALUE = '__create_org__'
+const CREATE_ORG_VALUE = "__create_org__";
 
-export function OrgSwitcher({
-  onCreateClick,
-}: {
-  onCreateClick?: () => void
-}) {
-  const params = useParams()
-  const router = useRouter()
-  const orgSlug = params.orgSlug as string | undefined
-  const { data, isLoading } = useOrgs()
+export function OrgSwitcher({ onCreateClick }: { onCreateClick?: () => void }) {
+  const params = useParams();
+  const router = useRouter();
+  const orgSlug = params.orgSlug as string | undefined;
+  const { data, isLoading } = useOrgs();
 
-  if (isLoading) return <SwitcherSkeleton />
+  if (isLoading) return <SwitcherSkeleton />;
 
-  const orgs = data?.orgs ?? []
-  const current = orgs.find((o) => o.slug === orgSlug)
+  const orgs = data?.orgs ?? [];
+  const current = orgs.find((o) => o.slug === orgSlug);
 
   const handleChange = (value: string | null) => {
-    if (!value) return
+    if (!value) return;
     if (value === CREATE_ORG_VALUE) {
-      onCreateClick?.()
-      return
+      onCreateClick?.();
+      return;
     }
-    if (value !== orgSlug) router.push(`/dashboard/${value}`)
-  }
+    if (value !== orgSlug) router.push(`/dashboard/${value}`);
+  };
 
   return (
-    <Select value={orgSlug ?? ''} onValueChange={handleChange}>
+    <Select value={orgSlug ?? ""} onValueChange={handleChange}>
       <SelectTrigger className="flex !h-auto w-full items-center gap-2.5 rounded-lg border-0 bg-card px-2.5 py-2 text-left ring-1 ring-foreground/10 transition-colors hover:bg-card-elevated dark:bg-card dark:hover:bg-card-elevated">
         {current ? (
           <>
@@ -104,7 +106,11 @@ export function OrgSwitcher({
           </span>
         )}
       </SelectTrigger>
-      <SelectContent alignItemWithTrigger={false} sideOffset={6} className="p-1">
+      <SelectContent
+        alignItemWithTrigger={false}
+        sideOffset={6}
+        className="p-1"
+      >
         <SelectGroup className="p-0">
           {orgs.map((o) => (
             <SelectItem
@@ -119,8 +125,8 @@ export function OrgSwitcher({
         </SelectGroup>
         <SelectGroup
           className={cn(
-            'p-0',
-            orgs.length > 0 && 'mt-1 border-t border-border pt-1'
+            "p-0",
+            orgs.length > 0 && "mt-1 border-t border-border pt-1",
           )}
         >
           <SelectItem
@@ -135,5 +141,5 @@ export function OrgSwitcher({
         </SelectGroup>
       </SelectContent>
     </Select>
-  )
+  );
 }

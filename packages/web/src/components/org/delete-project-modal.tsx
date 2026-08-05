@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,16 +8,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useDeleteProject } from '@/hooks/use-delete-project'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useDeleteProject } from "@/hooks/use-delete-project";
 
 interface DeleteProjectModalProps {
-  orgSlug: string
-  project: { id: string; name: string } | null
-  onClose: () => void
+  orgSlug: string;
+  project: { id: string; name: string } | null;
+  onClose: () => void;
 }
 
 export function DeleteProjectModal({
@@ -25,37 +25,37 @@ export function DeleteProjectModal({
   project,
   onClose,
 }: DeleteProjectModalProps) {
-  const [confirmName, setConfirmName] = useState('')
-  const mutation = useDeleteProject()
+  const [confirmName, setConfirmName] = useState("");
+  const mutation = useDeleteProject();
 
   const handleOpenChange = (next: boolean) => {
-    if (next) return
-    if (mutation.isPending) return
-    setConfirmName('')
-    mutation.reset()
-    onClose()
-  }
+    if (next) return;
+    if (mutation.isPending) return;
+    setConfirmName("");
+    mutation.reset();
+    onClose();
+  };
 
   const canDelete =
-    !!project && confirmName === project.name && !mutation.isPending
+    !!project && confirmName === project.name && !mutation.isPending;
 
   const handleDelete = () => {
-    if (!project || !canDelete) return
+    if (!project || !canDelete) return;
     mutation.mutate(
       { projectId: project.id, orgSlug },
       {
         onSuccess: () => {
-          onClose()
+          onClose();
         },
-      }
-    )
-  }
+      },
+    );
+  };
 
   const errorMessage = mutation.isError
     ? mutation.error instanceof Error && mutation.error.message
       ? mutation.error.message
-      : '프로젝트를 삭제하지 못했습니다. 잠시 후 다시 시도해주세요.'
-    : null
+      : "프로젝트를 삭제하지 못했습니다. 잠시 후 다시 시도해주세요."
+    : null;
 
   return (
     <AlertDialog open={project !== null} onOpenChange={handleOpenChange}>
@@ -63,7 +63,7 @@ export function DeleteProjectModal({
         <AlertDialogHeader>
           <AlertDialogTitle>프로젝트를 삭제하시겠습니까?</AlertDialogTitle>
           <AlertDialogDescription>
-            <strong className="text-foreground">{project?.name}</strong>{' '}
+            <strong className="text-foreground">{project?.name}</strong>{" "}
             프로젝트에 속한 모든 세션, 사용량, 이벤트가 영구적으로 삭제됩니다.
             이 작업은 되돌릴 수 없습니다.
           </AlertDialogDescription>
@@ -71,7 +71,7 @@ export function DeleteProjectModal({
 
         <div className="mt-4 space-y-1.5">
           <Label htmlFor="delete-project-confirm">
-            확인을 위해 프로젝트 이름{' '}
+            확인을 위해 프로젝트 이름{" "}
             <span className="font-mono text-foreground">{project?.name}</span>
             을(를) 입력해주세요.
           </Label>
@@ -79,14 +79,20 @@ export function DeleteProjectModal({
             id="delete-project-confirm"
             value={confirmName}
             onChange={(e) => setConfirmName(e.target.value)}
-            placeholder={project?.name ?? ''}
+            placeholder={project?.name ?? ""}
             disabled={mutation.isPending}
             autoComplete="off"
             aria-invalid={!!errorMessage || undefined}
             aria-describedby={errorMessage ? "delete-project-error" : undefined}
           />
           {errorMessage && (
-            <p id="delete-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+            <p
+              id="delete-project-error"
+              role="alert"
+              className="text-xs text-destructive"
+            >
+              {errorMessage}
+            </p>
           )}
         </div>
 
@@ -107,10 +113,10 @@ export function DeleteProjectModal({
             disabled={!canDelete}
             onClick={handleDelete}
           >
-            {mutation.isPending ? '삭제 중…' : '삭제'}
+            {mutation.isPending ? "삭제 중…" : "삭제"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

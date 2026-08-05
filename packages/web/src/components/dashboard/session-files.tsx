@@ -1,16 +1,19 @@
-import { Eye, Pencil, FileText } from 'lucide-react'
-import type { FileEntry, SessionFiles } from '@/lib/session-files'
+import { Eye, Pencil, FileText } from "lucide-react";
+import type { FileEntry, SessionFiles } from "@/lib/session-files";
 
 type FilesSummaryProps = {
-  files: SessionFiles
-  onOpenFilesTab: () => void
-}
+  files: SessionFiles;
+  onOpenFilesTab: () => void;
+};
 
-export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps) {
-  const modifiedCount = files.modified.length
-  const readCount = files.read.length
+export function SessionFilesSummary({
+  files,
+  onOpenFilesTab,
+}: FilesSummaryProps) {
+  const modifiedCount = files.modified.length;
+  const readCount = files.read.length;
 
-  if (modifiedCount === 0 && readCount === 0) return null
+  if (modifiedCount === 0 && readCount === 0) return null;
 
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -22,7 +25,9 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{modifiedCount}</span>
-          <span>{modifiedCount === 1 ? 'file modified' : 'files modified'}</span>
+          <span>
+            {modifiedCount === 1 ? "file modified" : "files modified"}
+          </span>
         </button>
       )}
       {readCount > 0 && (
@@ -33,36 +38,36 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         >
           <Eye className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{readCount}</span>
-          <span>{readCount === 1 ? 'file read' : 'files read'}</span>
+          <span>{readCount === 1 ? "file read" : "files read"}</span>
         </button>
       )}
     </div>
-  )
+  );
 }
 
 function splitPath(path: string): { dir: string; base: string } {
-  const idx = path.lastIndexOf('/')
-  if (idx === -1) return { dir: '', base: path }
-  return { dir: path.slice(0, idx + 1), base: path.slice(idx + 1) }
+  const idx = path.lastIndexOf("/");
+  if (idx === -1) return { dir: "", base: path };
+  return { dir: path.slice(0, idx + 1), base: path.slice(idx + 1) };
 }
 
 type FileRowProps = {
-  entry: FileEntry
-  unit: 'edit' | 'read'
-  onJump: (idx: number) => void
-  tone: 'modified' | 'read'
-}
+  entry: FileEntry;
+  unit: "edit" | "read";
+  onJump: (idx: number) => void;
+  tone: "modified" | "read";
+};
 
 function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
-  const { dir, base } = splitPath(entry.path)
+  const { dir, base } = splitPath(entry.path);
   const unitLabel =
-    entry.count === 1 ? unit : unit === 'edit' ? 'edits' : 'reads'
+    entry.count === 1 ? unit : unit === "edit" ? "edits" : "reads";
   const iconTone =
-    tone === 'modified' ? 'text-success' : 'text-muted-foreground'
+    tone === "modified" ? "text-success" : "text-muted-foreground";
   const countTone =
-    tone === 'modified'
-      ? 'bg-success/15 text-success'
-      : 'bg-muted text-muted-foreground'
+    tone === "modified"
+      ? "bg-success/15 text-success"
+      : "bg-muted text-muted-foreground";
 
   return (
     <button
@@ -78,9 +83,7 @@ function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
             {dir}
           </span>
         )}
-        <span className="text-sm font-medium truncate">
-          {base}
-        </span>
+        <span className="text-sm font-medium truncate">{base}</span>
       </span>
       <span
         className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs tabular-nums ${countTone}`}
@@ -89,23 +92,23 @@ function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
         <span>{unitLabel}</span>
       </span>
     </button>
-  )
+  );
 }
 
 type FilesTabProps = {
-  files: SessionFiles
-  onJump: (idx: number) => void
-}
+  files: SessionFiles;
+  onJump: (idx: number) => void;
+};
 
 export function SessionFilesTab({ files, onJump }: FilesTabProps) {
-  const { modified, read } = files
+  const { modified, read } = files;
 
   if (modified.length === 0 && read.length === 0) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">
         No file reads or edits in this session.
       </div>
-    )
+    );
   }
 
   return (
@@ -170,5 +173,5 @@ export function SessionFilesTab({ files, onJump }: FilesTabProps) {
         )}
       </section>
     </div>
-  )
+  );
 }

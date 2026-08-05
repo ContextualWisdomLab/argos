@@ -123,7 +123,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -241,11 +242,12 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">

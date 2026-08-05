@@ -1,15 +1,15 @@
-import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
-import type { LeaderEntry } from '@/types/reports'
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import type { LeaderEntry } from "@/types/reports";
 
 interface TopUserCardProps {
-  icon: ReactNode
-  label: string
-  description?: string
-  leader: LeaderEntry | null
-  formatValue: (n: number) => string
-  emptyMessage?: string
-  tone?: 'learn' | 'scale'
+  icon: ReactNode;
+  label: string;
+  description?: string;
+  leader: LeaderEntry | null;
+  formatValue: (n: number) => string;
+  emptyMessage?: string;
+  tone?: "learn" | "scale";
 }
 
 export function TopUserCard({
@@ -18,22 +18,24 @@ export function TopUserCard({
   description,
   leader,
   formatValue,
-  emptyMessage = '대상 없음',
-  tone = 'learn',
+  emptyMessage = "대상 없음",
+  tone = "learn",
 }: TopUserCardProps) {
-  const hasLeader = leader !== null
+  const hasLeader = leader !== null;
   const runnerUpDiff =
     hasLeader && leader.runnerUpValue !== null
       ? leader.value - leader.runnerUpValue
-      : null
+      : null;
 
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-card ring-1 ring-foreground/10 p-4">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span className={cn(
-          'shrink-0',
-          tone === 'learn' ? 'text-brand' : 'text-brand-2',
-        )}>
+        <span
+          className={cn(
+            "shrink-0",
+            tone === "learn" ? "text-brand" : "text-brand-2",
+          )}
+        >
           {icon}
         </span>
         <span className="metric-label">{label}</span>
@@ -65,5 +67,5 @@ export function TopUserCard({
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,57 +1,68 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState } from "react";
+import Link from "next/link";
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type ResetPasswordFormProps = {
-  token: string
-  email: string
-}
+  token: string;
+  email: string;
+};
 
 export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
-  const [password, setPassword] = useState('')
-  const [passwordConfirmation, setPasswordConfirmation] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-    setError('')
-    setLoading(true)
+    event.preventDefault();
+    setError("");
+    setLoading(true);
 
     if (password !== passwordConfirmation) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     try {
-      const res = await fetch(`/api/password-reset/${encodeURIComponent(token)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, passwordConfirmation }),
-      })
+      const res = await fetch(
+        `/api/password-reset/${encodeURIComponent(token)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password, passwordConfirmation }),
+        },
+      );
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null
-        setError(data?.error ?? 'Unable to reset password')
-        return
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setError(data?.error ?? "Unable to reset password");
+        return;
       }
 
-      setSuccess(true)
-      setPassword('')
-      setPasswordConfirmation('')
+      setSuccess(true);
+      setPassword("");
+      setPasswordConfirmation("");
     } catch {
-      setError('Unable to reset password')
+      setError("Unable to reset password");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -63,12 +74,15 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
           <CardDescription>Your password has been updated.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href="/login" className={buttonVariants({ className: 'w-full' })}>
+          <Link
+            href="/login"
+            className={buttonVariants({ className: "w-full" })}
+          >
             Go to sign in
           </Link>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -92,7 +106,9 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-password-confirmation">Confirm new password</Label>
+            <Label htmlFor="new-password-confirmation">
+              Confirm new password
+            </Label>
             <Input
               id="new-password-confirmation"
               type="password"
@@ -110,10 +126,10 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             </Alert>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Updating...' : 'Update password'}
+            {loading ? "Updating..." : "Update password"}
           </Button>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,35 +1,36 @@
-import type { ReactNode } from 'react'
-import { cn } from '@/lib/utils'
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface StatListRowProps {
-  icon?: ReactNode
-  label: ReactNode
-  value: ReactNode
-  percent?: number
-  tone?: 'brand' | 'brand-2' | 'muted'
-  className?: string
+  icon?: ReactNode;
+  label: ReactNode;
+  value: ReactNode;
+  percent?: number;
+  tone?: "brand" | "brand-2" | "muted";
+  className?: string;
 }
 
-const toneStyles: Record<NonNullable<StatListRowProps['tone']>, string> = {
-  'brand': 'bg-brand-subtle',
-  'brand-2': 'bg-brand-2-subtle',
-  muted: 'bg-muted',
-}
+const toneStyles: Record<NonNullable<StatListRowProps["tone"]>, string> = {
+  brand: "bg-brand-subtle",
+  "brand-2": "bg-brand-2-subtle",
+  muted: "bg-muted",
+};
 
 export function StatListRow({
   icon,
   label,
   value,
   percent,
-  tone = 'brand',
+  tone = "brand",
   className,
 }: StatListRowProps) {
-  const clamped = percent !== undefined ? Math.max(0, Math.min(100, percent)) : undefined
+  const clamped =
+    percent !== undefined ? Math.max(0, Math.min(100, percent)) : undefined;
 
   return (
     <div
       className={cn(
-        'group relative flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm',
+        "group relative flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm",
         className,
       )}
     >
@@ -37,7 +38,7 @@ export function StatListRow({
         <span
           aria-hidden
           className={cn(
-            'absolute inset-y-1 left-1 rounded-sm transition-[width]',
+            "absolute inset-y-1 left-1 rounded-sm transition-[width]",
             toneStyles[tone],
           )}
           style={{ width: `calc(${clamped}% - 0.5rem)` }}
@@ -51,15 +52,15 @@ export function StatListRow({
         {value}
       </span>
     </div>
-  )
+  );
 }
 
 export function StatList({
   children,
   className,
 }: {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }) {
-  return <div className={cn('flex flex-col gap-1', className)}>{children}</div>
+  return <div className={cn("flex flex-col gap-1", className)}>{children}</div>;
 }

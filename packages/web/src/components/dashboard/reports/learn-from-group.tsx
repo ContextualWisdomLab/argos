@@ -1,13 +1,13 @@
-import { Trophy, Layers, Wand2, MessageSquare } from 'lucide-react'
-import { TopUserCard } from './top-user-card'
-import type { WeeklyTopUsers } from '@/types/reports'
+import { Trophy, Layers, Wand2, MessageSquare } from "lucide-react";
+import { TopUserCard } from "./top-user-card";
+import type { WeeklyTopUsers } from "@/types/reports";
 
 interface LearnFromGroupProps {
-  topUsers: WeeklyTopUsers
+  topUsers: WeeklyTopUsers;
 }
 
 export function LearnFromGroup({ topUsers }: LearnFromGroupProps) {
-  const { learnFrom, eligibleUserCount } = topUsers
+  const { learnFrom, eligibleUserCount } = topUsers;
 
   if (eligibleUserCount < 1) {
     return (
@@ -20,7 +20,7 @@ export function LearnFromGroup({ topUsers }: LearnFromGroupProps) {
           랭킹 대상 사용자가 부족합니다 (주간 세션 3+ 필요).
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -61,5 +61,5 @@ export function LearnFromGroup({ topUsers }: LearnFromGroupProps) {
         />
       </div>
     </div>
-  )
+  );
 }

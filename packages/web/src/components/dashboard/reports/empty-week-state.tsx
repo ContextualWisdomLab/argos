@@ -1,11 +1,11 @@
 interface EmptyWeekStateProps {
-  title?: string
-  message: string
-  action?: React.ReactNode
+  title?: string;
+  message: string;
+  action?: React.ReactNode;
 }
 
 export function EmptyWeekState({
-  title = '데이터 없음',
+  title = "데이터 없음",
   message,
   action,
 }: EmptyWeekStateProps) {
@@ -15,5 +15,5 @@ export function EmptyWeekState({
       <p className="text-sm text-muted-foreground mb-4">{message}</p>
       {action}
     </div>
-  )
+  );
 }

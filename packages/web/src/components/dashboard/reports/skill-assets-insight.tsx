@@ -1,9 +1,9 @@
-import { Sparkles } from 'lucide-react'
-import { ChartCard } from '@/components/dashboard/chart-card'
-import type { WeeklyInsights } from '@/types/reports'
+import { Sparkles } from "lucide-react";
+import { ChartCard } from "@/components/dashboard/chart-card";
+import type { WeeklyInsights } from "@/types/reports";
 
 interface SkillAssetsInsightProps {
-  insight: WeeklyInsights['skillAssets']
+  insight: WeeklyInsights["skillAssets"];
 }
 
 export function SkillAssetsInsight({ insight }: SkillAssetsInsightProps) {
@@ -44,5 +44,5 @@ export function SkillAssetsInsight({ insight }: SkillAssetsInsightProps) {
         </div>
       </div>
     </ChartCard>
-  )
+  );
 }

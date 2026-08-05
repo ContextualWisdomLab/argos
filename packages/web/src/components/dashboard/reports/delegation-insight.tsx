@@ -1,15 +1,18 @@
-import Link from 'next/link'
-import { Wand2, ArrowUpRight } from 'lucide-react'
-import { ChartCard } from '@/components/dashboard/chart-card'
-import { StatList, StatListRow } from '@/components/dashboard/stat-list'
-import type { WeeklyInsights } from '@/types/reports'
+import Link from "next/link";
+import { Wand2, ArrowUpRight } from "lucide-react";
+import { ChartCard } from "@/components/dashboard/chart-card";
+import { StatList, StatListRow } from "@/components/dashboard/stat-list";
+import type { WeeklyInsights } from "@/types/reports";
 
 interface DelegationInsightProps {
-  insight: WeeklyInsights['delegation']
-  orgSlug: string
+  insight: WeeklyInsights["delegation"];
+  orgSlug: string;
 }
 
-export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) {
+export function DelegationInsight({
+  insight,
+  orgSlug,
+}: DelegationInsightProps) {
   if (insight.taskCount === 0) {
     return (
       <ChartCard
@@ -25,10 +28,10 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
           이번 주 위임 활용 없음
         </p>
       </ChartCard>
-    )
+    );
   }
 
-  const maxCount = Math.max(1, ...insight.topAgents.map((a) => a.callCount))
+  const maxCount = Math.max(1, ...insight.topAgents.map((a) => a.callCount));
 
   return (
     <ChartCard
@@ -56,7 +59,9 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
         )}
         {insight.sampleSessionIds.length > 0 && (
           <div className="pt-2 border-t border-border">
-            <div className="text-xs text-muted-foreground mb-2">효과적 위임 사례</div>
+            <div className="text-xs text-muted-foreground mb-2">
+              효과적 위임 사례
+            </div>
             <div className="flex flex-wrap gap-2">
               {insight.sampleSessionIds.map((sid) => (
                 <Link
@@ -73,5 +78,5 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
         )}
       </div>
     </ChartCard>
-  )
+  );
 }

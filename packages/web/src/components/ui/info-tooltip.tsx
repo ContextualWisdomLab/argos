@@ -1,16 +1,22 @@
-'use client'
+"use client";
 
-import type { ReactNode } from 'react'
-import { Tooltip } from '@base-ui/react/tooltip'
-import { Info } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import type { ReactNode } from "react";
+import { Tooltip } from "@base-ui/react/tooltip";
+import { Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function InfoTooltip({ content, className }: { content: ReactNode; className?: string }) {
+export function InfoTooltip({
+  content,
+  className,
+}: {
+  content: ReactNode;
+  className?: string;
+}) {
   return (
     <Tooltip.Root>
       <Tooltip.Trigger
         aria-label="더 보기"
-        className={cn('inline-flex cursor-default items-center', className)}
+        className={cn("inline-flex cursor-default items-center", className)}
       >
         <Info size={12} className="text-muted-foreground/70" />
       </Tooltip.Trigger>
@@ -25,5 +31,5 @@ export function InfoTooltip({ content, className }: { content: ReactNode; classN
         </Tooltip.Positioner>
       </Tooltip.Portal>
     </Tooltip.Root>
-  )
+  );
 }

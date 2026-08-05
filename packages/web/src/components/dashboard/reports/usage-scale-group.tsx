@@ -1,16 +1,16 @@
-import { BarChart3, Activity, Coins } from 'lucide-react'
-import { TopUserCard } from './top-user-card'
-import { formatTokens } from '@/lib/format'
-import type { WeeklyTopUsers } from '@/types/reports'
+import { BarChart3, Activity, Coins } from "lucide-react";
+import { TopUserCard } from "./top-user-card";
+import { formatTokens } from "@/lib/format";
+import type { WeeklyTopUsers } from "@/types/reports";
 
 interface UsageScaleGroupProps {
-  topUsers: WeeklyTopUsers
+  topUsers: WeeklyTopUsers;
 }
 
 export function UsageScaleGroup({ topUsers }: UsageScaleGroupProps) {
-  const { usageScale, eligibleUserCount } = topUsers
+  const { usageScale, eligibleUserCount } = topUsers;
 
-  if (eligibleUserCount < 1) return null
+  if (eligibleUserCount < 1) return null;
 
   return (
     <div>
@@ -35,5 +35,5 @@ export function UsageScaleGroup({ topUsers }: UsageScaleGroupProps) {
         />
       </div>
     </div>
-  )
+  );
 }
