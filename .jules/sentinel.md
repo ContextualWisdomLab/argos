@@ -20,3 +20,8 @@
 **Vulnerability:** The standard user authentication routes (login, register, and reset-password) did not have a maximum length constraint on passwords. This allows an attacker to supply extremely long strings, which `bcrypt` will try to hash, causing CPU exhaustion and creating a Denial of Service (DoS) vulnerability.
 **Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
 **Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
+
+## 2025-05-18 - [ERD Tool SQL Injection and Object Mutation]
+**Vulnerability:** ERD Engineering Tool에서 사용자 입력을 바탕으로 DDL을 생성할 때, 데이터 타입(type)에 대한 허용 목록(allowlist) 검증이 누락되어 SQL 인젝션 공격이 가능했습니다. 또한, 테이블의 내부 상태 객체(Table)가 깊은 복사 없이 외부로 노출되어, 직접 참조를 통해 속성이 변조되는(state mutation) 취약점이 발견되었습니다.
+**Learning:** 객체의 상태가 외부로 유출될 경우, 의도치 않은 변조를 통해 시스템의 무결성이 훼손될 수 있습니다. 특히 SQL과 같은 쿼리 언어의 입력값은 강력한 샌드박싱과 검증이 필요하며, allowlist를 사용하는 것이 안전합니다.
+**Prevention:** `SAFE_SQL_TYPE` 허용 목록 정규식을 도입하여 입력값을 검증하고(`assertSafeSQLType`), `getTable`, `getTables`와 같은 상태 접근 메서드에서는 객체의 깊은 복사본(`structuredClone`)을 반환하도록 하며, `addTable`, `addColumn`에서도 객체 참조를 안전하게 복제하여 원본 객체의 불변성을 유지해야 합니다.

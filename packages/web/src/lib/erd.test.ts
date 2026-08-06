@@ -13,7 +13,7 @@ describe('ERDModel', () => {
       const table = model.addTable('users')
       expect(table.name).toBe('users')
       expect(model.getTables().length).toBe(1)
-      expect(model.getTable('users')).toBe(table)
+      expect(model.getTable('users')).toStrictEqual(table)
     })
 
     it('should throw when adding duplicate table', () => {
@@ -44,6 +44,15 @@ describe('ERDModel', () => {
       expect(table?.columns[0].name).toBe('id')
     })
 
+    it('should prevent mutating internal state after adding a column', () => {
+      model.addTable('users')
+      const column = { name: 'id', type: 'integer' }
+      model.addColumn('users', column)
+      column.type = 'DROP TABLE users;' // Should not affect the model
+      const table = model.getTable('users')
+      expect(table?.columns[0].type).toBe('integer')
+    })
+
     it('should throw when adding a column to a non-existent table', () => {
       expect(() =>
         model.addColumn('non_existent', { name: 'id', type: 'integer' })
@@ -66,6 +75,13 @@ describe('ERDModel', () => {
       expect(() =>
         model.addColumn('users', { name: 'created__at', type: 'timestamp' })
       ).toThrowError("Column 'created__at' must be snake_case.")
+    })
+
+    it('should reject invalid SQL types', () => {
+      model.addTable('users')
+      expect(() =>
+        model.addColumn('users', { name: 'id', type: 'DROP TABLE users;' })
+      ).toThrowError("Invalid SQL type: DROP TABLE users;")
     })
   })
 

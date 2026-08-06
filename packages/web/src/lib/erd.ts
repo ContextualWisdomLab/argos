@@ -18,10 +18,17 @@ export interface Table {
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
+const SAFE_SQL_TYPE = /^[A-Za-z0-9_]+(?:\s+[A-Za-z0-9_]+)*(?:\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s+[A-Za-z0-9_]+)*$/i
 
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`)
+  }
+}
+
+function assertSafeSQLType(type: string): void {
+  if (!SAFE_SQL_TYPE.test(type)) {
+    throw new Error(`Invalid SQL type: ${type}`)
   }
 }
 
@@ -35,20 +42,22 @@ export class ERDModel {
     }
     const table: Table = { name, columns: [], foreignKeys: [] }
     this.tables.set(name, table)
-    return table
+    return structuredClone(table)
   }
 
   getTable(name: string): Table | undefined {
-    return this.tables.get(name)
+    const table = this.tables.get(name)
+    return table ? structuredClone(table) : undefined
   }
 
   getTables(): Table[] {
-    return Array.from(this.tables.values())
+    return Array.from(this.tables.values()).map(table => structuredClone(table))
   }
 
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier('Table', tableName)
     assertSnakeCaseIdentifier('Column', column.name)
+    assertSafeSQLType(column.type)
     const table = this.tables.get(tableName)
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`)
@@ -56,7 +65,7 @@ export class ERDModel {
     if (table.columns.some((c) => c.name === column.name)) {
       throw new Error(`Column '${column.name}' already exists in table '${tableName}'.`)
     }
-    table.columns.push(column)
+    table.columns.push(structuredClone(column))
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
