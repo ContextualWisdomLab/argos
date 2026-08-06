@@ -17,12 +17,7 @@
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
 
-## 2026-07-24 - [Semgrep 오탐지 수정]
-**Vulnerability:** Semgrep에서 `path.join()` 및 `urllib.request.urlopen()`을 포함하는 여러 경로를 잠재적 경로 탐색 및 동적 URL 사용 취약성으로 잘못 보고(오탐지)하였습니다 (Medium/High 심각도).
-**Learning:** 사용자 입력이 이러한 함수에 직접 전달되지 않는 통제된 내부 스크립트 및 CLI 환경(예: 하드코딩된 테스트 디렉토리 또는 통제된 문자열 연결)에서는 이러한 경고가 오탐지입니다. 하지만 CI 파이프라인을 차단합니다.
-**Prevention:** 깨끗하고 차단되지 않은 CI 빌드를 보장하려면 줄 앞에 `// nosemgrep: <rule-name>` (JS/TS의 경우) 또는 `# nosemgrep: <rule-name>` (Python의 경우)을 추가하여 항상 Semgrep SAST 결과의 오탐지를 억제하십시오.
-
-## 2026-07-24 - [취약한 의존성(brace-expansion, @hono/node-server) 재정의]
-**Vulnerability:** `brace-expansion` < 5.0.8 및 `@hono/node-server` < 2.0.10 의 높은 심각도 취약점(GHSA-mh99-v99m-4gvg, GHSA-9mqv-5hh9-4cgg)으로 인해 GitHub Actions에서 Trivy 파일 시스템 스캔이 실패했습니다.
-**Learning:** Trivy는 전이적으로(예: eslint 등에 의해) 가져온 여러 버전의 `brace-expansion` 및 `@hono/node-server`를 정확하게 지적했습니다. pnpm 모노레포에서 (다른 항목을 손상시킬 수 있는) 부모 의존성의 주 버전을 업데이트하지 않고 이 문제를 해결하려면 루트 `package.json`의 `pnpm.overrides` 필드를 사용해야 합니다.
-**Prevention:** Trivy/Dependabot 경고를 면밀히 모니터링하고, 직접 업데이트가 불가능한 경우 `package.json#pnpm.overrides`를 통해 높음/위험 단계의 전이적 의존성을 패치하십시오. 재정의 변경 사항을 올바르게 적용하려면 `pnpm install`을 실행하기 전에 항상 node_modules를 지우십시오.
+## 2026-07-24 - [취약한 의존성 및 Semgrep 오탐지 해결]
+**Vulnerability:** `brace-expansion` < 5.0.8 및 `@hono/node-server` < 2.0.10 의 취약점(GHSA-mh99-v99m-4gvg, GHSA-9mqv-5hh9-4cgg)으로 인해 Trivy 스캔이 실패했으며, Semgrep은 내부 스크립트의 안전한 `path.join` 및 동적 URL 호출을 경로 탐색 취약성으로 잘못 보고(오탐지)하여 CI를 차단했습니다.
+**Learning:** Trivy가 전이적 의존성의 취약점을 지적할 때 모노레포의 다른 항목을 손상시키지 않고 해결하려면 루트 `package.json`의 `pnpm.overrides` 필드를 사용하여 패치 버전을 강제해야 합니다. 또한, 테스트나 내부 CLI처럼 통제된 환경에서의 동적 변수 처리는 종종 Semgrep에 의해 오탐지로 처리됩니다.
+**Prevention:** Dependabot/Trivy 경고를 모니터링하여 직접 패치가 어려운 전이적 의존성을 `package.json#pnpm.overrides`로 해결하고, `pnpm install` 전에 node_modules를 지우십시오. CI 빌드 차단을 방지하기 위해 오탐지로 확인된 Semgrep 결과는 항상 `// nosemgrep: <rule-name>` (또는 `# nosemgrep`) 코멘트로 억제하십시오.
