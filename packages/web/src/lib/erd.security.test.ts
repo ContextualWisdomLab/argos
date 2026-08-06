@@ -71,4 +71,35 @@ describe("ERDModel SQL grammar boundaries", () => {
 
     expect(model.getTable("audit_events")?.columns).toHaveLength(3);
   });
+
+  it("copies validated column input before storing it", () => {
+    const model = new ERDModel();
+    model.addTable("account_records");
+    const column = { name: "account_id", type: "INTEGER" };
+
+    model.addColumn("account_records", column);
+    column.type = "INTEGER PRIMARY KEY";
+
+    expect(model.getTable("account_records")?.columns[0].type).toBe("INTEGER");
+  });
+
+  it("copies validated foreign-key input before storing it", () => {
+    const model = new ERDModel();
+    model.addTable("account_records");
+    model.addColumn("account_records", { name: "account_id", type: "INTEGER" });
+    model.addTable("audit_events");
+    model.addColumn("audit_events", { name: "account_id", type: "INTEGER" });
+    const foreignKey = {
+      columnName: "account_id",
+      referenceTable: "account_records",
+      referenceColumn: "account_id",
+    };
+
+    model.addForeignKey("audit_events", foreignKey);
+    foreignKey.referenceTable = "mutated_target";
+
+    expect(model.getTable("audit_events")?.foreignKeys[0].referenceTable).toBe(
+      "account_records",
+    );
+  });
 });
