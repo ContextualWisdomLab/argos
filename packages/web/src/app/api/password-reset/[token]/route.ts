@@ -1,5 +1,5 @@
+import { ResetPasswordSchema } from '@argos/shared'
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 
 import { handleRouteError } from '@/lib/server/error-helper'
 import {
@@ -9,16 +9,6 @@ import {
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const ResetPasswordSchema = z
-  .object({
-    password: z.string().min(8),
-    passwordConfirmation: z.string().min(8),
-  })
-  .refine((value) => value.password === value.passwordConfirmation, {
-    path: ['passwordConfirmation'],
-    message: 'Passwords do not match',
-  })
 
 function statusToResponse(status: 'not_found' | 'expired' | 'used') {
   if (status === 'not_found') {
