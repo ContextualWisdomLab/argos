@@ -183,17 +183,16 @@ export async function POST(req: Request) {
               new Date().getUTCMonth(),
               new Date().getUTCDate(),
             )
-            const pastDates = [
-              ...new Set(
-                payload.usagePerTurn
-                  .map((u) => {
-                    const d = new Date(u.timestamp)
-                    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-                  })
-                  .filter((ms) => ms < todayMs)
-                  .map((ms) => new Date(ms).toISOString()),
-              ),
-            ]
+            // ⚡ Bolt: Combine filter and map passes into a single loop to reduce O(N*M) allocations
+            const pastDatesSet = new Set<string>()
+            for (const u of payload.usagePerTurn) {
+              const d = new Date(u.timestamp)
+              const ms = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+              if (ms < todayMs) {
+                pastDatesSet.add(new Date(ms).toISOString())
+              }
+            }
+            const pastDates = Array.from(pastDatesSet)
             if (pastDates.length > 0) {
               await db.dailyProjectStat.deleteMany({
                 where: {

@@ -67,8 +67,14 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  // ⚡ Bolt: Parse dates once before sorting to avoid O(N log N) Date allocations in the comparator
+  const usageWithParsedTime = usageTimeline.map(usage => ({
+    ...usage,
+    parsedTimestamp: new Date(usage.timestamp).getTime()
+  }))
+
+  const sortedUsage = usageWithParsedTime.sort(
+    (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
@@ -78,7 +84,7 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map((usage) => {
-    const currentTimestamp = new Date(usage.timestamp).getTime()
+    const currentTimestamp = usage.parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
@@ -155,12 +161,17 @@ export function SessionTimelineChart({
 }: SessionTimelineChartProps) {
   // Cache the normalized tool events until the underlying messages change.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
-    return messages
-      .filter((message) => message.role === 'TOOL')
-      .map((message) => ({
-        toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: new Date(message.timestamp).getTime(),
-      }))
+    // ⚡ Bolt: Combine filter and map into a single loop to avoid multiple O(N) passes and reduce allocations
+    const points: ToolCallPoint[] = []
+    for (const message of messages) {
+      if (message.role === 'TOOL') {
+        points.push({
+          toolName: message.toolName ?? 'unknown',
+          parsedTimestamp: new Date(message.timestamp).getTime(),
+        })
+      }
+    }
+    return points
   }, [messages])
 
   const chartData = useMemo(
