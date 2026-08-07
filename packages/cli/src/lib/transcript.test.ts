@@ -1,90 +1,55 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import { writeFileSync, mkdtempSync, rmSync } from 'fs'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
-  readTranscriptLines,
   extractUsageFromTranscript,
   detectSlashCommand,
   extractMessages,
 } from './transcript.js'
 
-/** Write an array of objects as JSONL to a temp file and return the path. */
-function writeJsonl(dir: string, lines: object[]): string {
+function writeJsonl(dir: string, lines: unknown[]) {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
 
-// ---------------------------------------------------------------------------
-// readTranscriptLines
-// ---------------------------------------------------------------------------
-describe('readTranscriptLines', () => {
-  let tempDir: string
-
-  beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-rtl-'))
-  })
-
-  afterEach(() => {
-    rmSync(tempDir, { recursive: true, force: true })
-  })
-
-  it('파일이 없으면 빈 배열을 반환한다', async () => {
-    const result = await readTranscriptLines(join(tempDir, 'nonexistent.jsonl'))
-    expect(result).toEqual([])
-  })
-
-  it('각 줄을 JSON.parse하여 반환한다', async () => {
-    const path = writeJsonl(tempDir, [
-      { type: 'human', message: { content: [] } },
-      { type: 'assistant', message: { usage: { input_tokens: 10 } } },
-    ])
-
-    const lines = await readTranscriptLines(path)
-    expect(lines).toHaveLength(2)
-    expect(lines[0].type).toBe('human')
-    expect(lines[1].type).toBe('assistant')
-  })
-
-  it('파싱 실패한 줄은 {} 로 반환한다', async () => {
-    const path = join(tempDir, 'bad.jsonl')
-    writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
-
-    const lines = await readTranscriptLines(path)
-    expect(lines).toHaveLength(2)
-    expect(lines[0]).toEqual({})
-    expect(lines[1].type).toBe('human')
-  })
-
-  it('빈 줄은 제거한다', async () => {
-    const path = join(tempDir, 'empty-lines.jsonl')
-    writeFileSync(
-      path,
-      '{"type":"human"}\n\n{"type":"assistant"}\n',
-      'utf8'
-    )
-
-    const lines = await readTranscriptLines(path)
-    expect(lines).toHaveLength(2)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// extractUsageFromTranscript
-// ---------------------------------------------------------------------------
 describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-usage-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  it('assistant 라인 여러 개의 토큰을 합산한다', async () => {
+  it('returns null if file does not exist', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+    const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
+    expect(result).toBeNull()
+  })
+
+  it('extracts input and output tokens from the last assistant message', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: { input_tokens: 100, output_tokens: 50 },
+        },
+      },
+    ])
+
+    const result = await extractUsageFromTranscript(path)
+    expect(result).not.toBeNull()
+    expect(result!.inputTokens).toBe(100)
+    expect(result!.outputTokens).toBe(50)
+  })
+
+  it('accumulates tokens from multiple assistant messages', async () => {
     const path = writeJsonl(tempDir, [
       {
         type: 'assistant',

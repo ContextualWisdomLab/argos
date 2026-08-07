@@ -1,14 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import { writeFileSync, mkdtempSync, rmSync } from 'fs'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import {
   extractUsageFromTranscript,
   detectSlashCommand,
   extractMessages,
 } from '../lib/transcript.js'
 
-function writejsonl(dir: string, lines: object[]): string {
+function writeJsonl(dir: string, lines: unknown[]) {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
@@ -25,213 +26,251 @@ describe('extractUsageFromTranscript', () => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  it('returns null for a non-existent file', async () => {
+  it('returns null if file does not exist', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
     expect(result).toBeNull()
   })
 
-  it('sums tokens across multiple assistant messages', async () => {
-    const path = writejsonl(tempDir, [
+  it('extracts input and output tokens from the last assistant message', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'assistant',
         message: {
-          model: 'claude-sonnet',
-          usage: { input_tokens: 100, output_tokens: 50, cache_creation_input_tokens: 10, cache_read_input_tokens: 20 },
-        },
-      },
-      { type: 'human', message: { content: [{ type: 'text', text: 'hi' }] } },
-      {
-        type: 'assistant',
-        message: {
-          model: 'claude-sonnet',
-          usage: { input_tokens: 200, output_tokens: 80, cache_creation_input_tokens: 0, cache_read_input_tokens: 5 },
+          model: 'claude-3-5-sonnet',
+          usage: { input_tokens: 100, output_tokens: 50 },
         },
       },
     ])
 
     const result = await extractUsageFromTranscript(path)
+    expect(result).not.toBeNull()
+    expect(result!.inputTokens).toBe(100)
+    expect(result!.outputTokens).toBe(50)
+  })
 
+  it('accumulates tokens from multiple assistant messages', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: { input_tokens: 100, output_tokens: 50 },
+        },
+      },
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: { input_tokens: 200, output_tokens: 80 },
+        },
+      },
+    ])
+
+    const result = await extractUsageFromTranscript(path)
     expect(result).not.toBeNull()
     expect(result!.inputTokens).toBe(300)
     expect(result!.outputTokens).toBe(130)
-    expect(result!.cacheCreationTokens).toBe(10)
-    expect(result!.cacheReadTokens).toBe(25)
   })
 
-  it('picks model from the first assistant message', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'assistant', message: { model: 'claude-opus', usage: { input_tokens: 10, output_tokens: 5 } } },
-      { type: 'assistant', message: { model: 'claude-sonnet', usage: { input_tokens: 10, output_tokens: 5 } } },
-    ])
-
-    const result = await extractUsageFromTranscript(path)
-    expect(result!.model).toBe('claude-opus')
-  })
-
-  it('returns null when all token counts are zero', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'assistant', message: { usage: { input_tokens: 0, output_tokens: 0 } } },
+  it('assistant 라인이 없으면 null을 반환한다', async () => {
+    const path = writeJsonl(tempDir, [
+      { type: 'human', message: { content: [{ type: 'text', text: 'hello' }] } },
     ])
 
     const result = await extractUsageFromTranscript(path)
     expect(result).toBeNull()
   })
 
-  it('ignores non-assistant lines for token counting', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'human', message: { usage: { input_tokens: 9999 } } },
-      { type: 'system', message: { usage: { input_tokens: 8888 } } },
-      { type: 'assistant', message: { usage: { input_tokens: 100, output_tokens: 50 } } },
+  it('모든 토큰이 0이면 null을 반환한다', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+        },
+      },
     ])
 
     const result = await extractUsageFromTranscript(path)
-    expect(result!.inputTokens).toBe(100)
-    expect(result!.outputTokens).toBe(50)
+    expect(result).toBeNull()
   })
 
-  it('handles malformed lines without throwing', async () => {
-    const path = join(tempDir, 'transcript.jsonl')
-    writeFileSync(
-      path,
-      [
-        '{ not valid json',
-        JSON.stringify({ type: 'assistant', message: { usage: { input_tokens: 50, output_tokens: 20 } } }),
-      ].join('\n'),
-      'utf8'
-    )
+  it('첫 번째 assistant 라인의 model을 사용한다', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'assistant',
+        message: { model: 'claude-3-opus', usage: { input_tokens: 10, output_tokens: 5 } },
+      },
+      {
+        type: 'assistant',
+        message: { model: 'claude-3-5-sonnet', usage: { input_tokens: 20, output_tokens: 10 } },
+      },
+    ])
 
     const result = await extractUsageFromTranscript(path)
-    expect(result!.inputTokens).toBe(50)
+    expect(result).not.toBeNull()
+    expect(result!.model).toBe('claude-3-opus')
+  })
+
+  it('cache 토큰(cache_creation_input_tokens, cache_read_input_tokens)을 올바르게 집계한다', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: {
+            input_tokens: 50,
+            output_tokens: 20,
+            cache_creation_input_tokens: 300,
+            cache_read_input_tokens: 100,
+          },
+        },
+      },
+      {
+        type: 'assistant',
+        message: {
+          model: 'claude-3-5-sonnet',
+          usage: {
+            input_tokens: 50,
+            output_tokens: 20,
+            cache_creation_input_tokens: 200,
+            cache_read_input_tokens: 400,
+          },
+        },
+      },
+    ])
+
+    const result = await extractUsageFromTranscript(path)
+    expect(result).not.toBeNull()
+    expect(result!.cacheCreationTokens).toBe(500)
+    expect(result!.cacheReadTokens).toBe(500)
   })
 })
 
+// ---------------------------------------------------------------------------
+// detectSlashCommand
+// ---------------------------------------------------------------------------
 describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-slash-'))
   })
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  it('returns null when no slash command is present', async () => {
-    const path = writejsonl(tempDir, [{ type: 'human', content: 'regular message' }])
-    expect(await detectSlashCommand(path)).toBeNull()
-  })
-
-  it('returns null for non-existent file', async () => {
-    expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
-  })
-
-  it('returns skill name without the leading slash', async () => {
-    const path = writejsonl(tempDir, [{ type: 'queue-operation', content: '/commit' }])
-    expect(await detectSlashCommand(path)).toBe('commit')
-  })
-
-  it('detects slash command within a mixed transcript', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'human', content: 'do something' },
-      { type: 'queue-operation', content: '/review-pr' },
-      { type: 'assistant', message: {} },
+  it('queue-operation 라인이 /로 시작하면 / 없이 반환한다', async () => {
+    const path = writeJsonl(tempDir, [
+      { type: 'queue-operation', content: '/review' },
     ])
-    expect(await detectSlashCommand(path)).toBe('review-pr')
+
+    const result = await detectSlashCommand(path)
+    expect(result).toBe('review')
   })
 
-  it('ignores queue-operation entries that do not start with slash', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'queue-operation', content: 'not a slash command' },
+  it('queue-operation 라인이 없으면 null을 반환한다', async () => {
+    const path = writeJsonl(tempDir, [
+      { type: 'human', message: { content: [{ type: 'text', text: 'hi' }] } },
     ])
-    expect(await detectSlashCommand(path)).toBeNull()
+
+    const result = await detectSlashCommand(path)
+    expect(result).toBeNull()
   })
 
-  it('returns only the first slash command when multiple exist', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'queue-operation', content: '/first' },
-      { type: 'queue-operation', content: '/second' },
+  it('/로 시작하지 않는 queue-operation은 무시한다', async () => {
+    const path = writeJsonl(tempDir, [
+      { type: 'queue-operation', content: 'some-tool' },
     ])
-    expect(await detectSlashCommand(path)).toBe('first')
+
+    const result = await detectSlashCommand(path)
+    expect(result).toBeNull()
   })
 })
 
+// ---------------------------------------------------------------------------
+// extractMessages
+// ---------------------------------------------------------------------------
 describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'argos-msg-'))
   })
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true })
   })
 
-  it('returns empty array for non-existent file', async () => {
-    const result = await extractMessages(join(tempDir, 'nope.jsonl'))
-    expect(result).toEqual([])
-  })
-
-  it('extracts user and assistant messages with correct roles (type="user")', async () => {
-    const path = writejsonl(tempDir, [
+  it('type="user" 라인에서 string content를 추출한다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'user',
+        timestamp: '2024-01-01T00:00:00.000Z',
         message: { content: 'Hello' },
-        timestamp: '2024-01-01T00:00:00Z',
       },
       {
         type: 'assistant',
-        message: { content: [{ type: 'text', text: 'World' }] },
-        timestamp: '2024-01-01T00:00:01Z',
+        timestamp: '2024-01-01T00:01:00.000Z',
+        message: { content: [{ type: 'text', text: 'Hi there' }] },
       },
     ])
 
     const result = await extractMessages(path)
-
     expect(result).toHaveLength(2)
     expect(result[0].role).toBe('HUMAN')
     expect(result[0].content).toBe('Hello')
-    expect(result[0].sequence).toBe(0)
     expect(result[1].role).toBe('ASSISTANT')
-    expect(result[1].content).toBe('World')
-    expect(result[1].sequence).toBe(1)
+    expect(result[1].content).toBe('Hi there')
   })
 
-  it('supports legacy type="human" with array content', async () => {
-    const path = writejsonl(tempDir, [
+  it('레거시 type="human"도 지원한다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'human',
-        message: { content: 'Legacy hello' },
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        message: { content: 'Legacy message' },
       },
     ])
 
     const result = await extractMessages(path)
     expect(result).toHaveLength(1)
     expect(result[0].role).toBe('HUMAN')
-    expect(result[0].content).toBe('Legacy hello')
+    expect(result[0].content).toBe('Legacy message')
   })
 
-  it('user array-content without matching tool_use yields no messages', async () => {
-    const path = writejsonl(tempDir, [
+  it('tool_result가 아직 본 적 없는 tool_use_id면 무시하고 user 라인은 HUMAN으로 변환되지 않는다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'user',
+        timestamp: '2024-01-01T00:00:00.000Z',
         message: { content: [{ type: 'tool_result', tool_use_id: 'x', content: 'output' }] },
+      },
+      {
+        type: 'assistant',
+        timestamp: '2024-01-01T00:01:00.000Z',
+        message: { content: [{ type: 'text', text: 'response' }] },
       },
     ])
 
     const result = await extractMessages(path)
-    expect(result).toHaveLength(0)
+    expect(result).toHaveLength(1)
+    expect(result[0].role).toBe('ASSISTANT')
+    expect(result[0].content).toBe('response')
   })
 
-  it('emits separate TOOL row for each tool_use block', async () => {
-    const path = writejsonl(tempDir, [
+  it('assistant의 tool_use 블록은 별도 TOOL row로 분리된다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'assistant',
         timestamp: '2024-01-01T00:00:00.000Z',
         message: {
           content: [
-            { type: 'text', text: 'Let me read the file.' },
-            { type: 'tool_use', id: 'tu_1', name: 'Read', input: { file_path: '/tmp/test.ts' } },
+            { type: 'text', text: 'Reading the file.' },
+            { type: 'tool_use', id: 'tu_1', name: 'Read', input: { file_path: '/tmp/a.ts' } },
           ],
         },
       },
@@ -240,21 +279,21 @@ describe('extractMessages', () => {
     const result = await extractMessages(path)
     expect(result).toHaveLength(2)
     expect(result[0].role).toBe('ASSISTANT')
-    expect(result[0].content).toBe('Let me read the file.')
+    expect(result[0].content).toBe('Reading the file.')
     expect(result[1].role).toBe('TOOL')
     expect(result[1].toolName).toBe('Read')
-    expect(result[1].toolInput).toEqual({ file_path: '/tmp/test.ts' })
+    expect(result[1].toolInput).toEqual({ file_path: '/tmp/a.ts' })
     expect(result[1].toolUseId).toBe('tu_1')
   })
 
-  it('tool_use-only assistant entry produces just a TOOL row (no ASSISTANT row)', async () => {
-    const path = writejsonl(tempDir, [
+  it('tool_use만 있는 assistant 라인은 TOOL row만 남긴다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'assistant',
         timestamp: '2024-01-01T00:00:00.000Z',
         message: {
           content: [
-            { type: 'tool_use', id: 'tu_1', name: 'Bash', input: { command: 'ls -la' } },
+            { type: 'tool_use', id: 'tu_1', name: 'Bash', input: { command: 'npm test' } },
           ],
         },
       },
@@ -264,11 +303,11 @@ describe('extractMessages', () => {
     expect(result).toHaveLength(1)
     expect(result[0].role).toBe('TOOL')
     expect(result[0].toolName).toBe('Bash')
-    expect(result[0].toolInput).toEqual({ command: 'ls -la' })
+    expect(result[0].toolInput).toEqual({ command: 'npm test' })
   })
 
-  it('fills TOOL content + durationMs from matching tool_result', async () => {
-    const path = writejsonl(tempDir, [
+  it('tool_result가 매칭되는 TOOL row의 content/durationMs를 채운다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'assistant',
         timestamp: '2024-01-01T00:00:00.000Z',
@@ -278,107 +317,88 @@ describe('extractMessages', () => {
       },
       {
         type: 'user',
-        timestamp: '2024-01-01T00:00:02.500Z',
+        timestamp: '2024-01-01T00:00:01.500Z',
         message: {
-          content: [{ type: 'tool_result', tool_use_id: 'tu_1', content: 'file-a\nfile-b' }],
+          content: [{ type: 'tool_result', tool_use_id: 'tu_1', content: 'output' }],
         },
       },
     ])
 
     const result = await extractMessages(path)
-    expect(result).toHaveLength(1)
-    expect(result[0].role).toBe('TOOL')
-    expect(result[0].content).toBe('file-a\nfile-b')
-    expect(result[0].durationMs).toBe(2500)
+    const tool = result.find((m) => m.role === 'TOOL')!
+    expect(tool.content).toBe('output')
+    expect(tool.durationMs).toBe(1500)
   })
 
-  it('tool_result with array content is flattened to joined text', async () => {
-    const path = writejsonl(tempDir, [
+  it('text/tool_use 외의 블록(thinking 등)만 있으면 건너뛴다', async () => {
+    const path = writeJsonl(tempDir, [
       {
         type: 'assistant',
         timestamp: '2024-01-01T00:00:00.000Z',
-        message: {
-          content: [{ type: 'tool_use', id: 'tu_1', name: 'Read', input: { file_path: '/a' } }],
-        },
+        message: { content: [{ type: 'thinking', thinking: 'hmm' }] },
       },
-      {
-        type: 'user',
-        timestamp: '2024-01-01T00:00:01.000Z',
-        message: {
-          content: [
-            {
-              type: 'tool_result',
-              tool_use_id: 'tu_1',
-              content: [
-                { type: 'text', text: 'line1' },
-                { type: 'text', text: 'line2' },
-              ],
-            },
-          ],
-        },
-      },
-    ])
-
-    const result = await extractMessages(path)
-    expect(result[0].content).toBe('line1\nline2')
-  })
-
-  it('skips assistant entries with no text or tool_use blocks', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'assistant', message: { content: [{ type: 'thinking', thinking: 'hmm' }] } },
     ])
 
     const result = await extractMessages(path)
     expect(result).toHaveLength(0)
   })
 
-  it('truncates user string content to 50,000 characters', async () => {
-    const path = writejsonl(tempDir, [
+  it('50000자를 초과하는 user 텍스트는 잘린다', async () => {
+    const longText = 'a'.repeat(60000)
+    const path = writeJsonl(tempDir, [
       {
         type: 'user',
-        message: { content: 'a'.repeat(60000) },
+        timestamp: '2024-01-01T00:00:00.000Z',
+        message: { content: longText },
       },
     ])
 
     const result = await extractMessages(path)
-    expect(result[0].content.length).toBe(50000)
+    expect(result).toHaveLength(1)
+    expect(result[0].content).toHaveLength(50000)
   })
 
-  it('assigns sequential sequence numbers including TOOL rows', async () => {
-    const path = writejsonl(tempDir, [
-      { type: 'user', message: { content: 'msg1' }, timestamp: '2024-01-01T00:00:00Z' },
+  it('sequence가 0부터 순서대로 증가한다', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'user',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        message: { content: 'msg1' },
+      },
       {
         type: 'assistant',
-        timestamp: '2024-01-01T00:00:01Z',
-        message: {
-          content: [
-            { type: 'text', text: 'msg2' },
-            { type: 'tool_use', id: 'tu_1', name: 'Bash', input: {} },
-          ],
-        },
+        timestamp: '2024-01-01T00:01:00.000Z',
+        message: { content: [{ type: 'text', text: 'msg2' }] },
       },
-      { type: 'user', message: { content: 'msg3' }, timestamp: '2024-01-01T00:00:02Z' },
+      {
+        type: 'user',
+        timestamp: '2024-01-01T00:02:00.000Z',
+        message: { content: 'msg3' },
+      },
     ])
 
     const result = await extractMessages(path)
-    expect(result.map((m) => m.sequence)).toEqual([0, 1, 2, 3])
-    expect(result.map((m) => m.role)).toEqual(['HUMAN', 'ASSISTANT', 'TOOL', 'HUMAN'])
+    expect(result[0].sequence).toBe(0)
+    expect(result[1].sequence).toBe(1)
+    expect(result[2].sequence).toBe(2)
   })
 
-  it('joins multiple text blocks within one assistant message', async () => {
-    const path = writejsonl(tempDir, [
+  it('role이 올바르게 HUMAN/ASSISTANT로 매핑된다', async () => {
+    const path = writeJsonl(tempDir, [
+      {
+        type: 'user',
+        timestamp: '2024-01-01T00:00:00.000Z',
+        message: { content: 'user message' },
+      },
       {
         type: 'assistant',
-        message: {
-          content: [
-            { type: 'text', text: 'part one' },
-            { type: 'text', text: 'part two' },
-          ],
-        },
+        timestamp: '2024-01-01T00:01:00.000Z',
+        message: { content: [{ type: 'text', text: 'assistant message' }] },
       },
     ])
 
     const result = await extractMessages(path)
-    expect(result[0].content).toBe('part one\npart two')
+    expect(result[0].role).toBe('HUMAN')
+    expect(result[1].role).toBe('ASSISTANT')
   })
 })

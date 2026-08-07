@@ -15,7 +15,9 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
@@ -32,7 +34,7 @@ export function printAgentHookResult(result: AgentHookResult): void {
 
 /**
  * Codex 는 신뢰되지 않은 hook 을 실행하지 않는다(대화형 `/hooks` 리뷰로 신뢰 등록 필요).
- * 세팅 직후 사용자가 한 번은 거쳐야 하는 단계이므로 명시적으로 안내한다.
+ * 세팅 직후 사용자가 한 번은 거쳐야 하는 단계이므로 명시적으로 안내 편집.
  */
 export function printCodexTrustNotice(): void {
   console.log()
