@@ -17,7 +17,7 @@
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
 
-## 2025-08-01 - [ERD DDL Injection 방지]
-**Vulnerability:** ERDModel을 통해 DDL(Data Definition Language)을 생성할 때 컬럼 타입 필드(`column.type`)에 대한 유효성 검사가 누락되어 SQL Injection(예: 타입 정의에 세미콜론을 삽입하여 추가적인 SQL 구문 실행)이 발생할 수 있는 위험이 있었습니다.
-**Learning:** 사용자 입력 또는 외부 소스에서 정의된 데이터(타입 이름 포함)를 기반으로 직접 쿼리(또는 DDL 문자열)를 조합할 경우, 파라미터화된 쿼리를 사용할 수 없으므로 엄격한 입력 검증이 필수적입니다. 세미콜론(;)과 같은 문장이 종료되는 문자가 포함되는 것은 심각한 보안 결함을 일으킬 수 있습니다.
-**Prevention:** `assertNoStatementTerminator`와 같은 방어 함수를 만들어 생성기(여기서는 `addColumn`의 `column.type` 등)로 전달되는 식별자 및 문자열에 대해 세미콜론 포함 여부를 엄격하게 확인하고 차단해야 합니다.
+## 2025-02-15 - [ERD 모델 DDL 인젝션 취약점 수정]
+**Vulnerability:** ERD Engineering Tool의 `ERDModel` 클래스에서 컬럼 타입을 정의할 때 사용자의 입력을 그대로 DDL 쿼리문에 추가하는 문제가 있었습니다 (예: `type: 'VARCHAR(255); DROP TABLE users;'`). 이로 인해 SQL 구문 종료 기호(`;`)를 통한 DDL SQL 인젝션 공격이 가능했습니다.
+**Learning:** 데이터베이스 스키마 생성(DDL) 시에는 매개변수화된 쿼리(Parameterized Query)를 사용할 수 없으므로, 사용자 입력에 구문 종료 기호(`;`)와 같은 위험한 문자가 포함되어 있는지 엄격하게 검증(Validate)하는 것이 필수적입니다.
+**Prevention:** DDL과 같은 문자열 기반 쿼리를 생성할 때는 반드시 `assertNoStatementTerminator` 와 같이 `value.includes(';')`를 검증하여 악의적인 다중 쿼리 실행을 방지해야 합니다.
