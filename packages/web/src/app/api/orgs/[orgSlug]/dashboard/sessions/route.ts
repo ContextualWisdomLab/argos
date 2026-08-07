@@ -166,7 +166,17 @@ export async function GET(
       startedAt: { gte: from, lte: to },
     }
 
+    const CSV_EXPORT_LIMIT = 10000;
+
     if (wantsCsv) {
+      const totalCount = await db.claudeSession.count({ where })
+      if (totalCount > CSV_EXPORT_LIMIT) {
+        return new NextResponse(
+          `CSV 내보내기는 한 번에 최대 ${CSV_EXPORT_LIMIT}건까지만 지원됩니다. 날짜 범위나 프로젝트를 필터링하여 결과를 줄여주세요.`,
+          { status: 400 }
+        )
+      }
+
       let csvSessions: SessionWithInclude[]
 
       if (sortBy === 'cost') {
