@@ -11,7 +11,7 @@ afterEach(() => {
 })
 
 describe('findProjectConfigWithPath', () => {
-  it('resolves relative startDir segments before walking parent directories', () => {
+  it('joins relative startDir segments before walking parent directories', () => {
     const tmpRoot = mkdtempSync(join(tmpdir(), 'argos-project-test-'))
 
     try {
@@ -30,7 +30,7 @@ describe('findProjectConfigWithPath', () => {
       const result = findProjectConfigWithPath('packages/../packages/cli')
 
       expect(result?.config.projectId).toBe('project-1')
-      expect(result?.configPath).toBe(realpathSync(resolve(repoRoot, '.argos', 'project.json')))
+      expect(result?.configPath).toBe(realpathSync(join(repoRoot, '.argos', 'project.json')))
     } finally {
       process.chdir(originalCwd)
       rmSync(tmpRoot, { recursive: true, force: true })
