@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -149,14 +149,6 @@ export function AdminDashboard() {
     setCopied(true)
   }
 
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    if (copied) {
-      timer = setTimeout(() => setCopied(false), 2000)
-    }
-    return () => clearTimeout(timer)
-  }, [copied])
-
   return (
     <main className="min-h-screen bg-muted/30">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -287,11 +279,7 @@ export function AdminDashboard() {
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
                       <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        {copied ? (
-                          <Check className="size-4" aria-hidden="true" />
-                        ) : (
-                          <Copy className="size-4" aria-hidden="true" />
-                        )}
+                        <Copy className="size-4" aria-hidden="true" />
                         {copied ? 'Copied' : 'Copy link'}
                       </Button>
                       <p className="text-xs text-muted-foreground">

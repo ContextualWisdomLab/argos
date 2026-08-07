@@ -23,6 +23,8 @@
     "zod": "^3"
   },
   "devDependencies": {
+    "@eslint/config-array": "^0.23.5",
+    "minimatch": "^10.2.6",
     "typescript": "^5",
     "vitest": "^3.2.6"
   }

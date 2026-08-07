@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,18 +25,11 @@ export function CopyPromptButton({
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       // clipboard API unavailable or blocked; fail silently
     }
   }
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    if (copied) {
-      timer = setTimeout(() => setCopied(false), 2000);
-    }
-    return () => clearTimeout(timer);
-  }, [copied]);
 
   return (
     <Button
@@ -46,11 +39,7 @@ export function CopyPromptButton({
       onClick={handleCopy}
       className={cn("gap-1.5", className)}
     >
-      {copied ? (
-        <Check className="size-4" aria-hidden="true" />
-      ) : (
-        <Copy className="size-4" aria-hidden="true" />
-      )}
+      {copied ? <Check /> : <Copy />}
       {copied ? copiedLabel : label}
     </Button>
   );
