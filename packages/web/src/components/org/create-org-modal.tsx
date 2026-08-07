@@ -33,7 +33,7 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
       setErrorMessage(null)
       mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [open])
 
   const handleOpenChange = (next: boolean) => {

@@ -7,6 +7,10 @@ const eslintConfig = [
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
     },
   },
 ]

@@ -33,7 +33,7 @@ export function CreateProjectModal({
       setName('')
       mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [open])
 
   const handleOpenChange = (next: boolean) => {
