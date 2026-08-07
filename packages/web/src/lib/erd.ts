@@ -18,6 +18,7 @@ export interface Table {
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/
+const SAFE_SQL_TYPE = /^[A-Za-z][A-Za-z0-9_]*(?:\s+[A-Za-z][A-Za-z0-9_]*)*(?:\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\[\])?$/
 
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
@@ -25,9 +26,18 @@ function assertSnakeCaseIdentifier(kind: string, name: string): void {
   }
 }
 
+/**
+ * Reject SQL type fragments that can escape a column definition.
+ *
+ * The accepted grammar intentionally covers common scalar SQL types, optional
+ * numeric parameters such as `numeric(10,2)`, multi-word types such as
+ * `timestamp with time zone`, and array suffixes. It rejects statement
+ * terminators, comments, top-level commas, quotes, operators, and unbalanced
+ * parentheses so untrusted type text cannot introduce sibling DDL clauses.
+ */
 function assertValidSqlType(type: string): void {
-  if (type.includes(';')) {
-    throw new Error(`Invalid SQL type '${type}': semicolons are not allowed.`)
+  if (!SAFE_SQL_TYPE.test(type)) {
+    throw new Error(`Invalid SQL type '${type}'.`)
   }
 }
 
