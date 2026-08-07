@@ -9,6 +9,7 @@ import {
 } from '../lib/transcript.js'
 
 function writejsonl(dir: string, lines: object[]): string {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const path = join(dir, 'transcript.jsonl')
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
@@ -18,6 +19,7 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -26,6 +28,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('returns null for a non-existent file', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const result = await extractUsageFromTranscript(join(tempDir, 'no-file.jsonl'))
     expect(result).toBeNull()
   })
@@ -90,6 +93,7 @@ describe('extractUsageFromTranscript', () => {
   })
 
   it('handles malformed lines without throwing', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'transcript.jsonl')
     writeFileSync(
       path,
@@ -109,6 +113,7 @@ describe('detectSlashCommand', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -122,6 +127,7 @@ describe('detectSlashCommand', () => {
   })
 
   it('returns null for non-existent file', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     expect(await detectSlashCommand(join(tempDir, 'nope.jsonl'))).toBeNull()
   })
 
@@ -159,6 +165,7 @@ describe('extractMessages', () => {
   let tempDir: string
 
   beforeEach(() => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
   })
 
@@ -167,6 +174,7 @@ describe('extractMessages', () => {
   })
 
   it('returns empty array for non-existent file', async () => {
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const result = await extractMessages(join(tempDir, 'nope.jsonl'))
     expect(result).toEqual([])
   })
