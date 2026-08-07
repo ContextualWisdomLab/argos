@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { PaginatedResult, SessionItem } from '@argos/shared'
 import { Prisma } from '@prisma/client'
+import { encodeCsvField } from '@/lib/csv-export'
 import { db } from '@/lib/server/db'
 import { requireAuth } from '@/lib/server/auth-helper'
 import { handleRouteError } from '@/lib/server/error-helper'
@@ -71,16 +72,6 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  let text = String(value)
-  // Prevent CSV Injection (Formula Injection) only for strings to avoid breaking negative numbers
-  if (typeof value === 'string' && /^[=+\-@]/.test(text)) {
-    text = "'" + text
-  }
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
-
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
   const headers = [
     'Session ID',
@@ -112,7 +103,7 @@ function buildSessionsCsv(sessions: SessionWithInclude[]) {
       session._count.events,
       session.startedAt.toISOString(),
       session.endedAt?.toISOString() ?? '',
-    ].map(csvField).join(',')
+    ].map(encodeCsvField).join(',')
   })
 
   return `\uFEFF${[headers.join(','), ...rows].join('\r\n')}`
