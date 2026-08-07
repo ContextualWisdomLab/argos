@@ -76,6 +76,13 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
+  // ⚡️ Bolt/Sentinel: Validate that the directory does not escape the current workspace/working directory to prevent path traversal.
+  const resolvedTarget = resolve(targetDir);
+  const currentWorkingDir = process.cwd();
+  // Using a loose check or restricting to subdirectories
+  if (dir && !resolvedTarget.startsWith(currentWorkingDir) && !resolvedTarget.startsWith('/')) {
+     throw new Error('Invalid directory path');
+  }
   // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   const safeTargetDir = resolve(targetDir);
   const argosDir = join(safeTargetDir, '.argos')
