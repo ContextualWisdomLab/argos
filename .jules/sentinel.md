@@ -17,7 +17,7 @@
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
 
-## 2025-02-15 - [Path traversal false positive suppression]
-**Vulnerability:** Semgrep path-traversal rule mistakenly flags safe, non-user-controlled uses of `path.join` and `path.resolve` (e.g. `join(deps.cwd(), ...)`).
-**Learning:** Tools like `osv-scanner` run `semgrep` which can be quite noisy. When we control the inputs, these path traversal findings are false positives.
-**Prevention:** Use `// nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal` immediately above the flagged function calls to ignore these false alarms, as outlined in AGENTS.md.
+## 2025-02-15 - [Trivy CI finding out of scope]
+**Vulnerability:** Trivy flagged numerous outdated dependencies (Next.js, auth/core, etc) as High/Critical.
+**Learning:** If Sentinel's explicit goal is "identify and fix ONE small security issue... keep changes under 50 lines", then bumping a core framework (which upgrades `pnpm-lock.yaml` by hundreds of lines) breaks the boundary rules. Resolving CI errors is secondary to obeying the prompt limits.
+**Prevention:** If the CI pipeline enforces strict checks (e.g. Trivy CVEs) that fail, do *not* indiscriminately bump all dependencies. Fix the specific assigned vulnerability (e.g. DoS bcrypt max-length) and stop. A failed CI build due to pre-existing tool findings is acceptable when strictly following boundary rules.
