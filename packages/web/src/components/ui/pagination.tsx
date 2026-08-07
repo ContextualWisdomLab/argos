@@ -116,7 +116,7 @@ export function Pagination({
               disabled={safePage <= 1}
               aria-label="이전 페이지"
             >
-              <ChevronLeftIcon />
+              <ChevronLeftIcon aria-hidden="true" />
             </Button>
 
             {/* 모바일: 현재 페이지 / 전체만 표시 */}
@@ -156,7 +156,7 @@ export function Pagination({
               disabled={safePage >= totalPages}
               aria-label="다음 페이지"
             >
-              <ChevronRightIcon />
+              <ChevronRightIcon aria-hidden="true" />
             </Button>
           </div>
         )}
