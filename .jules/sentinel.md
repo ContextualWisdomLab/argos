@@ -26,7 +26,7 @@
 **Learning:** DDL 생성 시 자유 텍스트나 타입 입력이 포함될 때는 반드시 허용 목록(Allowlist) 기반 정규식을 사용해야 하며, 객체 상태를 반환할 때는 캡슐화를 보장하기 위해 깊은 복사(Deep Copy)를 수행해야 검증 우회를 방지할 수 있습니다.
 **Prevention:** 정규식(예: `SAFE_SQL_TYPE`, `SAFE_SQL_DEFAULT_VALUE`)을 도입하여 타입과 기본값을 검증하고, 객체를 반환할 때 `JSON.parse(JSON.stringify(table))`를 사용하여 원본 참조를 숨깁니다.
 
-## 2025-02-18 - [Fix High Severity Vulnerability in js-yaml]
-**Vulnerability:** `js-yaml` 4.3.0 버전에 Quadratic CPU consumption 취약점(CVE-2026-59870, GHSA-5p4m-2wfm-xmqj)이 존재하여, 악의적인 YAML 페이로드 입력 시 DoS 공격에 노출될 수 있었습니다.
+## 2026-07-02 - [Fix High Severity Vulnerability in js-yaml]
+**Vulnerability:** `js-yaml` versions 4.0.0 through versions below 4.3.0 were affected by quadratic CPU consumption in YAML merge-key chains (CVE-2026-59869, GHSA-52cp-r559-cp3m), allowing crafted YAML input to cause denial of service. Version 4.3.0 is patched.
 **Learning:** `pnpm` 환경에서 서드파티 패키지의 하위 의존성에 존재하는 취약점을 수정할 때, 직접적인 `package.json` 업데이트로 해결되지 않는다면 `pnpm.overrides`를 적극 활용하여 전체 프로젝트 수준에서 특정 안전한 버전을 강제할 수 있습니다.
 **Prevention:** `pnpm audit`과 같은 도구를 주기적으로 실행하여 취약점을 점검하고, 루트 `package.json`의 `"pnpm": { "overrides": { ... } }` 구문을 사용해 취약점이 패치된 버전을 고정(pin)합니다.
