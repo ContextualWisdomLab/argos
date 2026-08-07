@@ -35,15 +35,16 @@ export class ERDModel {
     }
     const table: Table = { name, columns: [], foreignKeys: [] }
     this.tables.set(name, table)
-    return table
+    return structuredClone(table)
   }
 
   getTable(name: string): Table | undefined {
-    return this.tables.get(name)
+    const t = this.tables.get(name)
+    return t ? structuredClone(t) : undefined
   }
 
   getTables(): Table[] {
-    return Array.from(this.tables.values())
+    return Array.from(this.tables.values()).map(t => structuredClone(t))
   }
 
   addColumn(tableName: string, column: Column): void {
@@ -56,7 +57,7 @@ export class ERDModel {
     if (table.columns.some((c) => c.name === column.name)) {
       throw new Error(`Column '${column.name}' already exists in table '${tableName}'.`)
     }
-    table.columns.push(column)
+    table.columns.push(structuredClone(column))
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
@@ -80,7 +81,7 @@ export class ERDModel {
         `Reference column '${fk.referenceColumn}' does not exist in table '${fk.referenceTable}'.`
       )
     }
-    table.foreignKeys.push(fk)
+    table.foreignKeys.push(structuredClone(fk))
   }
 
   generateDDL(): string {

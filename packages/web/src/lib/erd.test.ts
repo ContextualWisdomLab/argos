@@ -13,7 +13,7 @@ describe('ERDModel', () => {
       const table = model.addTable('users')
       expect(table.name).toBe('users')
       expect(model.getTables().length).toBe(1)
-      expect(model.getTable('users')).toBe(table)
+      expect(model.getTable('users')).toStrictEqual(table)
     })
 
     it('should throw when adding duplicate table', () => {

@@ -20,3 +20,8 @@
 **Vulnerability:** The standard user authentication routes (login, register, and reset-password) did not have a maximum length constraint on passwords. This allows an attacker to supply extremely long strings, which `bcrypt` will try to hash, causing CPU exhaustion and creating a Denial of Service (DoS) vulnerability.
 **Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
 **Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
+
+## 2025-08-07 - Mutation Bypass를 통한 SQL Injection 취약점 방지
+**Vulnerability:** `packages/web/src/lib/erd.ts` 내의 `ERDModel` 클래스에서 `getTable`, `addTable`, `addColumn`, `addForeignKey` 등의 메서드가 객체의 참조(reference)를 반환하거나 내부 배열에 그대로 저장하여, 외부에서 객체의 프로퍼티(예: `table.name`, `column.type`)를 임의로 변조(mutation)할 수 있는 취약점이 존재했습니다. 이를 통해 SQL Injection 필터링을 우회하고 악의적인 DDL 문을 주입할 수 있었습니다.
+**Learning:** 식별자에 대한 유효성 검사(Snake Case 등)를 수행하더라도, 상태 객체가 참조로 노출되면 언제든지 검증 이후에 값을 변조하여 SQL 주입 공격을 수행할 수 있습니다.
+**Prevention:** 상태를 관리하는 클래스에서 객체를 반환하거나 내부 배열에 추가할 때는 항상 `structuredClone()` 등을 사용하여 깊은 복사(deep copy)를 수행하여 외부 변조를 차단해야 합니다.
