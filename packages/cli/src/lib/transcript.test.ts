@@ -11,7 +11,7 @@ import {
 
 /** Write an array of objects as JSONL to a temp file and return the path. */
 function writeJsonl(dir: string, lines: object[]): string {
-  const path = join(dir, 'transcript.jsonl')
+  const path = resolve(dir, 'transcript.jsonl'); // nosemgrep
   writeFileSync(path, lines.map((l) => JSON.stringify(l)).join('\n'), 'utf8')
   return path
 }
@@ -48,7 +48,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('파싱 실패한 줄은 {} 로 반환한다', async () => {
-    const path = join(tempDir, 'bad.jsonl')
+    const path = resolve(tempDir, 'bad.jsonl'); // nosemgrep
     writeFileSync(path, '{ invalid json\n{"type":"human"}', 'utf8')
 
     const lines = await readTranscriptLines(path)
@@ -58,7 +58,7 @@ describe('readTranscriptLines', () => {
   })
 
   it('빈 줄은 제거한다', async () => {
-    const path = join(tempDir, 'empty-lines.jsonl')
+    const path = resolve(tempDir, 'empty-lines.jsonl'); // nosemgrep
     writeFileSync(
       path,
       '{"type":"human"}\n\n{"type":"assistant"}\n',

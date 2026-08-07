@@ -83,57 +83,6 @@ export class ERDModel {
     table.foreignKeys.push(fk)
   }
 
-  removeTable(name: string): void {
-    if (!this.tables.has(name)) {
-      throw new Error(`Table '${name}' does not exist.`)
-    }
-    for (const table of this.tables.values()) {
-      table.foreignKeys = table.foreignKeys.filter((fk) => fk.referenceTable !== name)
-    }
-    this.tables.delete(name)
-  }
-
-  removeColumn(tableName: string, columnName: string): void {
-    const table = this.tables.get(tableName)
-    if (!table) {
-      throw new Error(`Table '${tableName}' does not exist.`)
-    }
-    if (!table.columns.some((c) => c.name === columnName)) {
-      throw new Error(`Column '${columnName}' does not exist in table '${tableName}'.`)
-    }
-    table.columns = table.columns.filter((c) => c.name !== columnName)
-    table.foreignKeys = table.foreignKeys.filter((fk) => fk.columnName !== columnName)
-    for (const t of this.tables.values()) {
-      t.foreignKeys = t.foreignKeys.filter(
-        (fk) => !(fk.referenceTable === tableName && fk.referenceColumn === columnName)
-      )
-    }
-  }
-
-  removeForeignKey(
-    tableName: string,
-    columnName: string,
-    referenceTable: string,
-    referenceColumn: string
-  ): void {
-    const table = this.tables.get(tableName)
-    if (!table) {
-      throw new Error(`Table '${tableName}' does not exist.`)
-    }
-    const initialLength = table.foreignKeys.length
-    table.foreignKeys = table.foreignKeys.filter(
-      (fk) =>
-        !(
-          fk.columnName === columnName &&
-          fk.referenceTable === referenceTable &&
-          fk.referenceColumn === referenceColumn
-        )
-    )
-    if (table.foreignKeys.length === initialLength) {
-      throw new Error(`Foreign key not found in table '${tableName}'.`)
-    }
-  }
-
   generateDDL(): string {
     let ddl = ''
     for (const table of this.tables.values()) {

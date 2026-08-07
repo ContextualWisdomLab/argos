@@ -16,7 +16,3 @@
 **Vulnerability:** A custom buffer length check (`if (signatureBytes.length !== expectedSignatureBytes.length) return false`) before calling `crypto.timingSafeEqual()` leaked the length of the expected signature, enabling timing attacks.
 **Learning:** Never use custom 'homebrew' buffer-padding logic to match lengths for `crypto.timingSafeEqual()`, as early returns leak the length of the secret.
 **Prevention:** Ensure inputs are hashed to a uniform length (e.g., using `crypto.createHash('sha256')`) before comparison.
-## 2024-05-18 - ERD 엔지니어링 툴 기능 확장 시 종속성 안전 삭제 패턴
-**Vulnerability:** 데이터베이스 테이블이나 컬럼을 삭제할 때 외래 키(Foreign Key) 참조가 남아있는 경우 무결성 오류가 발생하거나 삭제 불가능 상태에 빠질 수 있는 구조적 취약점(데이터 불일치 및 Denial of Service 유발 가능성) 존재.
-**Learning:** 단순한 배열에서의 필터링만으로는 다른 테이블에서 참조 중인 외래 키를 정리할 수 없음. 삭제 동작은 캐스케이딩(Cascading) 로직을 필수적으로 포함해야 함. 다른 테이블을 순회하며 삭제하려는 대상을 참조하는 모든 연결고리를 함께 정리해야 안전한 삭제가 보장됨.
-**Prevention:** 모델을 수정하는 API나 로직을 설계할 때, 해당 요소와 관계를 맺고 있는 다른 요소들(예: 외래 키, 참조 테이블)의 의존성 그래프를 미리 파악하고, 상위 요소 삭제 시 연관된 모든 제약조건을 함께 해제하도록 Cascading Delete 패턴을 일관되게 적용할 것.

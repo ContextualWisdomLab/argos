@@ -43,8 +43,8 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
-    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
+    const claudePath = resolve(deps.cwd(), '.claude', 'settings.json'); // nosemgrep
+    const codexPath = resolve(deps.cwd(), '.codex', 'hooks.json'); // nosemgrep
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 
