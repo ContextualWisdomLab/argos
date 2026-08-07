@@ -11,7 +11,7 @@ describe('encodeCsvField', () => {
   })
 
   it.each([
-    ['=HYPERLINK("https://attacker.invalid")', "'=HYPERLINK(\"\"https://attacker.invalid\"\")"],
+    ['=HYPERLINK("https://attacker.invalid")', "'=HYPERLINK(\"https://attacker.invalid\")"],
     ['+SUM(1,2)', "'+SUM(1,2)"],
     ['-1+2', "'-1+2"],
     ['@SUM(1,2)', "'@SUM(1,2)"],

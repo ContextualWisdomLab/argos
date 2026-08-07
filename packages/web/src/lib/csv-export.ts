@@ -17,7 +17,7 @@ export function encodeCsvField(value: CsvFieldValue): string {
   if (value === null || value === undefined) return ''
 
   let text = String(value)
-  if (typeof value === 'string' && SPREADSHEET_FORMULA_PREFIX.test(text)) {
+  if (typeof value === 'string' && SPREADSHEET_FORMULA_PREFIX.test(text.trimStart())) {
     text = `'${text}`
   }
 
