@@ -68,14 +68,28 @@ describe('ERDModel', () => {
       ).toThrowError("Column 'created__at' must be snake_case.")
     })
 
-    it('should reject column types containing semicolons to prevent SQL injection', () => {
+    it('should reject unsafe SQL type syntax while preserving legitimate parameters', () => {
       model.addTable('users')
+
       expect(() =>
-        model.addColumn('users', { name: 'id', type: 'integer;' })
-      ).toThrowError("Invalid SQL type 'integer;': semicolons are not allowed.")
+        model.addColumn('users', { name: 'injected_column', type: 'integer, admin boolean' })
+      ).toThrowError("Invalid SQL type 'integer, admin boolean'.")
       expect(() =>
-        model.addColumn('users', { name: 'name', type: 'VARCHAR(255); DROP TABLE users;' })
-      ).toThrowError("Invalid SQL type 'VARCHAR(255); DROP TABLE users;': semicolons are not allowed.")
+        model.addColumn('users', { name: 'commented_type', type: 'integer -- comment' })
+      ).toThrowError("Invalid SQL type 'integer -- comment'.")
+      expect(() =>
+        model.addColumn('users', { name: 'unterminated_type', type: 'numeric(10,2' })
+      ).toThrowError("Invalid SQL type 'numeric(10,2'.")
+      expect(() =>
+        model.addColumn('users', { name: 'terminated_type', type: 'integer;' })
+      ).toThrowError("Invalid SQL type 'integer;'.")
+
+      expect(() =>
+        model.addColumn('users', { name: 'amount', type: 'numeric(10,2)' })
+      ).not.toThrow()
+      expect(() =>
+        model.addColumn('users', { name: 'recorded_at', type: 'timestamp with time zone' })
+      ).not.toThrow()
     })
   })
 
