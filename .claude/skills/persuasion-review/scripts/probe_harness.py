@@ -30,13 +30,10 @@ def free_port() -> int:
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
-    if not url.startswith(("http://", "https://")):
-        raise ValueError("Invalid URL scheme: only http/https allowed for probe readiness check")
     deadline = time.time() + timeout_sec
-    req = urllib.request.Request(url, headers={"User-Agent": "probe-harness/1.0"})
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(req, timeout=1).read()
+            urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:
             time.sleep(0.2)

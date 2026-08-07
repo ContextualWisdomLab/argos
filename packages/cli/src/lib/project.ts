@@ -22,7 +22,7 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
-  let currentDir = resolve((startDir || process.cwd()).replace(/\.\./g, ''))
+  let currentDir = resolve(startDir || process.cwd())
   let depth = 0
   const maxDepth = 10
 
@@ -73,7 +73,7 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  * @param dir Target directory (defaults to process.cwd())
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
-  const targetDir = (dir || process.cwd()).replace(/\.\./g, '')
+  const targetDir = dir || process.cwd()
   const argosDir = join(targetDir, '.argos')
 
   if (!existsSync(argosDir)) {

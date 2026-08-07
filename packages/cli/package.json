@@ -28,7 +28,6 @@
   "devDependencies": {
     "@argos/shared": "workspace:*",
     "@types/node": "^20",
-    "path-browserify": "^1.0.1",
     "typescript": "^5",
     "vitest": "^3.2.6"
   },
