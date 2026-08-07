@@ -105,7 +105,7 @@ async function main() {
     } else {
       // Print first and last 5 samples
       const sample = affected
-        .sort((a: any, b: any) => {
+        .sort((a, b) => {
           const da = a.date instanceof Date ? a.date : new Date(String(a.date))
           const db_ = b.date instanceof Date ? b.date : new Date(String(b.date))
           return db_.getTime() - da.getTime()

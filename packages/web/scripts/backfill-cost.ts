@@ -159,7 +159,7 @@ async function main() {
         }),
       ),
     )
-    invalidated += results.reduce((sum: number, r: { count: number }) => sum + r.count, 0)
+    invalidated += results.reduce((sum, r) => sum + r.count, 0)
   }
   console.log(`Invalidated ${invalidated} daily_project_stats row(s).`)
   console.log('Next dashboard call will lazily rebuild these days.')
