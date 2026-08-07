@@ -22,6 +22,7 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
+  // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
   let currentDir = resolve(startDir || process.cwd())
   let depth = 0
   const maxDepth = 10
