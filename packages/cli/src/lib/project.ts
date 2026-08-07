@@ -28,7 +28,8 @@ export function findProjectConfigWithPath(
 
   while (depth < maxDepth) {
     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
-    const configPath = join(currentDir, '.argos', 'project.json')
+    const safeCurrentDir = resolve(currentDir);
+    const configPath = join(safeCurrentDir, '.argos', 'project.json')
     if (existsSync(configPath)) {
       try {
         const content = readFileSync(configPath, 'utf8')
@@ -76,7 +77,8 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
   const targetDir = dir || process.cwd()
   // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
-  const argosDir = join(targetDir, '.argos')
+  const safeTargetDir = resolve(targetDir);
+  const argosDir = join(safeTargetDir, '.argos')
 
   if (!existsSync(argosDir)) {
     mkdirSync(argosDir, { recursive: true })
