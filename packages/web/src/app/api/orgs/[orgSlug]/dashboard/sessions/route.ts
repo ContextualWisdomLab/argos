@@ -73,11 +73,7 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
 
 function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
-  let text = String(value)
-  // CSV Formula Injection (Macromalware/Spreadsheet execution) prevention
-  if (/^[=+\-@\t\r]/.test(text)) {
-    text = "'" + text
-  }
+  const text = String(value)
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 

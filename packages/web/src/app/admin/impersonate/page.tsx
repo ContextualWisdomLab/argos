@@ -18,7 +18,7 @@ export default async function AdminImpersonatePage({
       {token ? (
         <AdminImpersonateClient
           token={token}
-          dashboardUrl="/dashboard"
+          dashboardUrl="https://argos-ai.xyz/dashboard"
         />
       ) : (
         <Card className="w-full max-w-md">

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const token = createAdminImpersonationToken(user.id)
     return NextResponse.json({
       impersonationUrl: `/admin/impersonate?token=${encodeURIComponent(token)}`,
-      dashboardUrl: '/dashboard',
+      dashboardUrl: 'https://argos-ai.xyz/dashboard',
     })
   } catch (err) {
     return handleRouteError(err)

@@ -1,51 +1,54 @@
 import 'server-only'
 
-import { createHmac, createHash, randomBytes, timingSafeEqual } from 'crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getEnv } from './env'
+import { env } from './env'
+
+export const ADMIN_USERNAME = env.ADMIN_USERNAME
+export const ADMIN_PASSWORD = env.ADMIN_PASSWORD
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
 const ADMIN_IMPERSONATION_TTL_MS = 60 * 1000
 const ADMIN_IMPERSONATION_PREFIX = 'argos_imp'
-const MAX_PASSWORD_LENGTH = 1024
+const MAX_SAFE_EQUAL_BYTES = 512
 
-function getAdminCredentials() {
-  const { ADMIN_USERNAME, ADMIN_PASSWORD } = getEnv()
-  return { username: ADMIN_USERNAME, password: ADMIN_PASSWORD }
-}
+function safeEqual(a: string, b: string): boolean {
+  const aBytes = Buffer.from(a)
+  const bBytes = Buffer.from(b)
 
-function sign(payload: string): string {
-  return createHmac('sha256', getEnv().ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
-}
-
-export async function verifyAdminCredentials(input: {
-  username: string
-  password: string
-}): Promise<boolean> {
-  const { username, password: expectedPassword } = getAdminCredentials()
-
-  // Prevent CPU exhaustion (DoS) by short-circuiting on fast check first
-  // and enforcing maximum input length.
-  if (input.username !== username || input.password.length > MAX_PASSWORD_LENGTH) {
+  if (aBytes.length > MAX_SAFE_EQUAL_BYTES || bBytes.length > MAX_SAFE_EQUAL_BYTES) {
     return false
   }
 
-  // Use fast uniform hash to prevent timing attacks without unnecessary slow derivation
-  // on a plaintext in-memory secret.
-  const inputPasswordHash = createHash('sha256').update(input.password).digest()
-  const expectedPasswordHash = createHash('sha256').update(expectedPassword).digest()
+  const aPadded = Buffer.alloc(MAX_SAFE_EQUAL_BYTES)
+  const bPadded = Buffer.alloc(MAX_SAFE_EQUAL_BYTES)
+  aBytes.copy(aPadded)
+  bBytes.copy(bPadded)
 
-  return timingSafeEqual(expectedPasswordHash, inputPasswordHash)
+  return timingSafeEqual(aPadded, bPadded) && aBytes.length === bBytes.length
+}
+
+function sign(payload: string): string {
+  return createHmac('sha256', env.ADMIN_COOKIE_SECRET).update(payload).digest('base64url')
+}
+
+export function verifyAdminCredentials(input: {
+  username: string
+  password: string
+}): boolean {
+  return (
+    safeEqual(input.username, ADMIN_USERNAME) &&
+    safeEqual(input.password, ADMIN_PASSWORD)
+  )
 }
 
 export function createAdminSessionCookieValue(): string {
-  const { username } = getAdminCredentials()
   const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS
   const nonce = randomBytes(16).toString('base64url')
-  const payload = `${username}.${expiresAt}.${nonce}`
+  const payload = `${ADMIN_USERNAME}.${expiresAt}.${nonce}`
   return `${payload}.${sign(payload)}`
 }
 
@@ -74,17 +77,8 @@ export function verifyAdminSessionCookie(value: string | undefined): boolean {
 
   const [username, expiresAtRaw, nonce, signature] = parts
   const payload = `${username}.${expiresAtRaw}.${nonce}`
-
-  const expectedSignature = sign(payload)
-  const signatureBytes = Buffer.from(signature)
-  const expectedSignatureBytes = Buffer.from(expectedSignature)
-
-  const signatureHash = createHash('sha256').update(signatureBytes).digest()
-  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
-
-  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return false
-
-  if (username !== getAdminCredentials().username) return false
+  if (!safeEqual(signature, sign(payload))) return false
+  if (!safeEqual(username, ADMIN_USERNAME)) return false
 
   const expiresAt = Number(expiresAtRaw)
   return Number.isFinite(expiresAt) && Date.now() <= expiresAt
@@ -116,17 +110,8 @@ export function verifyAdminImpersonationToken(token: string): string | null {
 
   const [prefix, userId, expiresAtRaw, nonce, signature] = parts
   const payload = `${prefix}.${userId}.${expiresAtRaw}.${nonce}`
-
-  if (prefix !== ADMIN_IMPERSONATION_PREFIX) return null
-
-  const expectedSignature = sign(payload)
-  const signatureBytes = Buffer.from(signature)
-  const expectedSignatureBytes = Buffer.from(expectedSignature)
-
-  const signatureHash = createHash('sha256').update(signatureBytes).digest()
-  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
-
-  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return null
+  if (!safeEqual(prefix, ADMIN_IMPERSONATION_PREFIX)) return null
+  if (!safeEqual(signature, sign(payload))) return null
 
   const expiresAt = Number(expiresAtRaw)
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null

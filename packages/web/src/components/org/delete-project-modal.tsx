@@ -88,11 +88,9 @@ export function DeleteProjectModal({
             placeholder={project?.name ?? ''}
             disabled={mutation.isPending}
             autoComplete="off"
-            aria-invalid={!!errorMessage || undefined}
-            aria-describedby={errorMessage ? "delete-project-error" : undefined}
           />
           {errorMessage && (
-            <p id="delete-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+            <p className="text-xs text-destructive">{errorMessage}</p>
           )}
         </div>
 

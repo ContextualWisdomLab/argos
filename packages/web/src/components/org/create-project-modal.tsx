@@ -83,10 +83,9 @@ export function CreateProjectModal({
               autoFocus
               disabled={mutation.isPending}
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "create-project-error" : undefined}
             />
             {errorMessage && (
-              <p id="create-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p className="text-xs text-destructive">{errorMessage}</p>
             )}
           </div>
 
