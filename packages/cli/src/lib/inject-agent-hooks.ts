@@ -14,9 +14,11 @@ export interface AgentHookResult {
  * 두 에이전트 중 무엇을 쓰든 argos 가 추적하도록 기본적으로 둘 다 설치한다(미사용 에이전트의 파일은 무해).
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
+  // We don't want path traversal via unsafe cwd argument
+  const safeCwd = cwd.replace(/\.\./g, '')
   return {
-    claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
+    claude: deps.hooks.inject(join(safeCwd, '.claude', 'settings.json'), 'claude'),
+    codex: deps.hooks.inject(join(safeCwd, '.codex', 'hooks.json'), 'codex'),
   }
 }
 

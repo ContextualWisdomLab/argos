@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { subDays, format, differenceInDays } from 'date-fns'
-import React, { Suspense } from 'react'
+import { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 
 const PRESETS = [
@@ -62,11 +62,9 @@ function DateRangePickerContent() {
           <button
             key={preset.days}
             type="button"
-            aria-pressed={activePreset === preset.days}
             onClick={() => handlePreset(preset.days)}
             className={cn(
               'px-3 py-1 text-xs font-medium rounded-md transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               activePreset === preset.days
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted',

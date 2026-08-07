@@ -5,9 +5,7 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "coverage": "pnpm install --frozen-lockfile && pnpm --filter @argos/web run coverage:erd"
+    "typecheck": "turbo typecheck"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -15,17 +13,17 @@
     "turbo": "^2.9.16",
     "typescript-eslint": "^8"
   },
-  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0",
   "pnpm": {
     "overrides": {
-      "@babel/core": "7.29.7",
-      "esbuild": "0.28.1",
-      "hono": "4.12.25",
-      "js-yaml": "4.2.0",
-      "undici": "7.29.0",
-      "ip-address": "10.3.1",
-      "brace-expansion": "5.0.9",
-      "fast-uri": "3.1.5"
+      "hono@4.12.23": "4.12.25",
+      "js-yaml@4.1.1": "4.2.0",
+      "esbuild@0.27.7": "0.28.1",
+      "@babel/core@7.29.0": "7.29.6",
+      "brace-expansion": ">=1.1.17",
+      "ip-address": ">=10.3.1",
+      "fast-uri": ">=3.1.5",
+      "undici": ">=7.29.0"
     }
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

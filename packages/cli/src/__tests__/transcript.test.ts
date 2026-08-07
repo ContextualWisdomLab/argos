@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mkdtempSync, rmSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { tmpdir } from 'os'
+import { realpathSync } from 'fs'
 import {
   extractUsageFromTranscript,
   detectSlashCommand,
@@ -18,7 +19,8 @@ describe('extractUsageFromTranscript', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'argos-test-'))
+    // realpathSync ensures no traversal via symlinked temp dirs breaks our valid boundary assumptions
+    tempDir = realpathSync(mkdtempSync(join(tmpdir(), 'argos-test-')))
   })
 
   afterEach(() => {
