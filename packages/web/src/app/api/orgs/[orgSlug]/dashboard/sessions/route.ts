@@ -10,7 +10,6 @@ import {
   resolveOrgScopedProjectIds,
 } from '@/lib/server/dashboard-route-helper'
 import { canAccessIndividualData, forbiddenByRole } from '@/lib/server/rbac'
-import { csvField } from '@/lib/server/csv/csv-helper'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -72,6 +71,11 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
+function csvField(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return ''
+  const text = String(value)
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+}
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
   const headers = [
@@ -235,7 +239,7 @@ export async function GET(
       if (ids.length === 0) {
         sessions = []
       } else {
-        // 2) 해당 id들만 기존 거조로 하이드레이션 후 rank 순서 복원.
+        // 2) 해당 id들만 기존 include 구조로 하이드레이션 후 rank 순서 복원.
         const rows = await db.claudeSession.findMany({
           where: { id: { in: ids } },
           include: sessionInclude,
