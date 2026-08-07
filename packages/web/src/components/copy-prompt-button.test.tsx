@@ -9,12 +9,14 @@ import '@testing-library/jest-dom/vitest'
 import { CopyPromptButton } from './copy-prompt-button'
 
 vi.mock('lucide-react', () => ({
-  Check: ({ 'aria-hidden': ariaHidden }: { 'aria-hidden'?: string }) => (
-    <svg data-testid="check-icon" aria-hidden={ariaHidden} />
-  ),
-  Copy: ({ 'aria-hidden': ariaHidden }: { 'aria-hidden'?: string }) => (
-    <svg data-testid="copy-icon" aria-hidden={ariaHidden} />
-  ),
+  Check: ({ 'aria-hidden': ariaHidden }: { 'aria-hidden'?: boolean | "true" | "false" }) => {
+    const isHidden = ariaHidden === true || ariaHidden === "true" ? "true" : undefined;
+    return <svg data-testid="check-icon" aria-hidden={isHidden} />
+  },
+  Copy: ({ 'aria-hidden': ariaHidden }: { 'aria-hidden'?: boolean | "true" | "false" }) => {
+    const isHidden = ariaHidden === true || ariaHidden === "true" ? "true" : undefined;
+    return <svg data-testid="copy-icon" aria-hidden={isHidden} />
+  },
 }))
 
 vi.mock('@/components/ui/button', () => ({
