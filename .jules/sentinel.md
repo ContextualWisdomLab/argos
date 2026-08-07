@@ -21,7 +21,7 @@
 **Learning:** `bcrypt` (and `bcryptjs`) is intentionally slow. While `bcrypt` may internally truncate passwords to 72 bytes, depending on the implementation the input string processing itself or the full string parsing before truncation can be very costly. In this codebase, the admin authentication correctly checked for a max length, but user schemas did not.
 **Prevention:** Always enforce a maximum string length limit (e.g. `.max(1024)`) on user inputs that will be passed into expensive algorithms like bcrypt hashing.
 
-## 2026-08-05 - [CSV Injection Vulnerability]
-**Vulnerability:** 사용자 입력 데이터가 검증이나 이스케이프 없이 CSV로 출력되어 CSV 인젝션 (CSV Injection) 취약점 발생 가능.
-**Learning:** 특정 기호(=, +, -, @)로 시작하는 문자열이 엑셀 등의 프로그램에서 수식으로 해석될 수 있으며, 이로 인해 악성 코드 실행 등의 위협이 있음.
-**Prevention:** CSV로 데이터를 내보낼 때, 값의 시작이 =, +, -, @ 일 경우 앞에 작은 따옴표(')를 추가하여 일반 텍스트로 처리되도록 해야 함.
+## 2026-08-05 - [CSV Formula Injection]
+**Vulnerability:** 사용자 제어 문자열이 CSV 셀의 수식 민감 접두사로 시작하도록 출력되면, 스프레드시트에서 파일을 열 때 해당 셀이 수식으로 해석될 수 있습니다.
+**Learning:** 수식 해석은 계산식 실행, 기만적 외부 링크 표시, 외부 데이터 조회 또는 데이터 유출 유도 같은 위험을 만들 수 있으며, 클라이언트·설정·사용자 상호작용에 따라 영향이 달라집니다. CSV 수식 해석 자체가 자동 원격 코드 실행을 의미하지는 않습니다.
+**Prevention:** CSV 필드는 공용 `encodeCsvField` 보안 경계를 사용합니다. 문자열의 선행 공백과 제어 문자를 고려한 뒤 `=`, `+`, `-`, `@` 및 승인된 Unicode 대응 문자 같은 수식 접두사를 중화하고, 그 다음 따옴표·쉼표·CR/LF를 RFC 4180 방식으로 이스케이프/인용해야 합니다. 테스트에서 같은 인코더를 복제하지 말고 실제 공용 구현 또는 실제 CSV 응답을 검증해야 합니다.
