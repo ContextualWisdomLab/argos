@@ -29,9 +29,11 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
 
   useEffect(() => {
     if (!open) {
-      setName('')
-      setErrorMessage(null)
-      mutation.reset()
+      setTimeout(() => {
+        setName('')
+        setErrorMessage(null)
+        mutation.reset()
+      }, 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])

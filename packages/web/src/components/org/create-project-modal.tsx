@@ -30,8 +30,10 @@ export function CreateProjectModal({
 
   useEffect(() => {
     if (!open) {
-      setName('')
-      mutation.reset()
+      setTimeout(() => {
+        setName('')
+        mutation.reset()
+      }, 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])

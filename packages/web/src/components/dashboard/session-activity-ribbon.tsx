@@ -160,34 +160,32 @@ export function SessionActivityRibbon({
 
   if (events.length === 0) return null
 
-  const trackMouse = (e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return e.clientX
-    return e.clientX - rect.left
-  }
-
-  const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
-    setHover({ kind: 'event', idx, x: trackMouse(e) })
-  }
-
-  const handleMergedHover = (
-    firstIdx: number,
-    toolName: string,
-    count: number,
-    firstEvent: TimelineEvent,
-  ) => (e: React.MouseEvent) => {
-    setHover({
-      kind: 'merged',
-      firstIdx,
-      toolName,
-      count,
-      firstEvent,
-      x: trackMouse(e),
-    })
-  }
-
   const segments: React.ReactNode[] = []
   for (const group of groups) {
+    const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      const x = rect ? e.clientX - rect.left : e.clientX
+      setHover({ kind: 'event', idx, x })
+    }
+
+    const handleMergedHover = (
+      firstIdx: number,
+      toolName: string,
+      count: number,
+      firstEvent: TimelineEvent,
+    ) => (e: React.MouseEvent) => {
+      const rect = containerRef.current?.getBoundingClientRect()
+      const x = rect ? e.clientX - rect.left : e.clientX
+      setHover({
+        kind: 'merged',
+        firstIdx,
+        toolName,
+        count,
+        firstEvent,
+        x,
+      })
+    }
+
     if (group.kind === 'single') {
       const { event, idx } = group
       const { bg, style } = segmentVisuals(event)

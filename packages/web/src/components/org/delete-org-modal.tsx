@@ -34,8 +34,10 @@ export function DeleteOrgModal({
 
   useEffect(() => {
     if (!open) {
-      setConfirmName('')
-      mutation.reset()
+      setTimeout(() => {
+        setConfirmName('')
+        mutation.reset()
+      }, 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])

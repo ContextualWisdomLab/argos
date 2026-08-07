@@ -28,10 +28,14 @@ export function RenameProjectModal({
 
   useEffect(() => {
     if (project) {
-      setName(project.name)
+      setTimeout(() => {
+        setName(project.name)
+      }, 0)
     } else {
-      setName('')
-      mutation.reset()
+      setTimeout(() => {
+        setName('')
+        mutation.reset()
+      }, 0)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project])
