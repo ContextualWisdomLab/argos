@@ -25,3 +25,8 @@
 **Vulnerability:** `packages/web/src/lib/erd.ts` 내의 `ERDModel` 클래스에서 `getTable`, `addTable`, `addColumn`, `addForeignKey` 등의 메서드가 객체의 참조(reference)를 반환하거나 내부 배열에 그대로 저장하여, 외부에서 객체의 프로퍼티(예: `table.name`, `column.type`)를 임의로 변조(mutation)할 수 있는 취약점이 존재했습니다. 이를 통해 SQL Injection 필터링을 우회하고 악의적인 DDL 문을 주입할 수 있었습니다.
 **Learning:** 식별자에 대한 유효성 검사(Snake Case 등)를 수행하더라도, 상태 객체가 참조로 노출되면 언제든지 검증 이후에 값을 변조하여 SQL 주입 공격을 수행할 수 있습니다.
 **Prevention:** 상태를 관리하는 클래스에서 객체를 반환하거나 내부 배열에 추가할 때는 항상 `structuredClone()` 등을 사용하여 깊은 복사(deep copy)를 수행하여 외부 변조를 차단해야 합니다.
+
+## 2026-08-07 - OSV-Scanner 취약점 탐지 및 의존성 강제 고정
+**Vulnerability:** 의존성 스캔 중 `js-yaml`과 `nanoid` 패키지에서 알려진 보안 취약점이 발견되었습니다. 해당 패키지들은 다른 패키지의 하위 의존성(transitive dependency)으로 설치되고 있었습니다.
+**Learning:** 직접 설치하지 않은 하위 의존성이라도 전체 애플리케이션의 보안에 영향을 미칠 수 있으며, 의존성 트리 깊은 곳에 있는 취약점은 발견 및 수정이 어려울 수 있습니다.
+**Prevention:** `pnpm audit` 또는 `osv-scanner`와 같은 도구를 CI 파이프라인에 통합하여 지속적으로 스캔하고, 취약점이 발견될 경우 `package.json`의 `pnpm.overrides`를 활용하여 안전한 패치 버전으로 강제 고정(override)하여 선제적으로 방어해야 합니다.
