@@ -155,12 +155,17 @@ export function SessionTimelineChart({
 }: SessionTimelineChartProps) {
   // Cache the normalized tool events until the underlying messages change.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
-    return messages
-      .filter((message) => message.role === 'TOOL')
-      .map((message) => ({
-        toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: new Date(message.timestamp).getTime(),
-      }))
+    // ⚡ Bolt: filter-map 체인을 단일 for-of 루프로 최적화하고, O(N log N) 병목을 유발하는 불필요한 Date 객체 생성 대신 Date.parse()를 사용합니다.
+    const result: ToolCallPoint[] = []
+    for (const message of messages) {
+      if (message.role === 'TOOL') {
+        result.push({
+          toolName: message.toolName ?? 'unknown',
+          parsedTimestamp: Date.parse(message.timestamp),
+        })
+      }
+    }
+    return result
   }, [messages])
 
   const chartData = useMemo(
