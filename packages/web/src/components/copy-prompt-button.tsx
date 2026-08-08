@@ -39,8 +39,10 @@ export function CopyPromptButton({
       onClick={handleCopy}
       className={cn("gap-1.5", className)}
     >
-      {copied ? <Check /> : <Copy />}
-      {copied ? copiedLabel : label}
+      {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+      <span aria-live="polite">
+        {copied ? copiedLabel : label}
+      </span>
     </Button>
   );
 }
