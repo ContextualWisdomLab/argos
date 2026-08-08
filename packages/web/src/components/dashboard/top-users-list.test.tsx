@@ -21,7 +21,6 @@ describe('TopUsersList', () => {
       {
         userId: 'u1',
         name: 'Alice',
-        email: 'alice@example.com',
         avatarUrl: null,
         sessionCount: 5,
         inputTokens: 1000,
@@ -33,7 +32,6 @@ describe('TopUsersList', () => {
       {
         userId: 'u2',
         name: 'Bob',
-        email: 'bob@example.com',
         avatarUrl: null,
         sessionCount: 2,
         inputTokens: 200,
@@ -55,7 +53,6 @@ describe('TopUsersList', () => {
       {
         userId: 'u1',
         name: 'Zero',
-        email: 'zero@example.com',
         avatarUrl: null,
         sessionCount: 1,
         inputTokens: 0,
