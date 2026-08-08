@@ -10,6 +10,7 @@ import {
   resolveOrgScopedProjectIds,
 } from '@/lib/server/dashboard-route-helper'
 import { canAccessIndividualData, forbiddenByRole } from '@/lib/server/rbac'
+import { buildSessionsCsv, getSessionTotals } from '@/lib/server/csv'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -32,19 +33,8 @@ const sessionInclude = {
 
 type SessionWithInclude = Prisma.ClaudeSessionGetPayload<{ include: typeof sessionInclude }>
 
-function getSessionTotals(session: SessionWithInclude) {
-  let inputTokens = 0
-  let outputTokens = 0
-  let estimatedCostUsd = 0
 
-  for (const r of session.usageRecords) {
-    inputTokens += r.inputTokens
-    outputTokens += r.outputTokens
-    estimatedCostUsd += r.estimatedCostUsd ?? 0
-  }
 
-  return { inputTokens, outputTokens, estimatedCostUsd }
-}
 
 function mapSessionItem(session: SessionWithInclude): SessionItem {
   const totals = getSessionTotals(session)
@@ -69,49 +59,6 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
       name: session.project.name,
     },
   }
-}
-
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
-
-function buildSessionsCsv(sessions: SessionWithInclude[]) {
-  const headers = [
-    'Session ID',
-    'User',
-    'Project',
-    'Title',
-    'First Prompt',
-    'Input Tokens',
-    'Output Tokens',
-    'Estimated Cost USD',
-    'Event Count',
-    'Started At',
-    'Ended At',
-  ]
-
-  const rows = sessions.map((session) => {
-    const totals = getSessionTotals(session)
-    const title = session.title?.trim() || session.messages[0]?.content.slice(0, 200).trim() || ''
-
-    return [
-      session.id,
-      session.user.name,
-      session.project.name,
-      title,
-      session.messages[0]?.content ?? '',
-      totals.inputTokens,
-      totals.outputTokens,
-      totals.estimatedCostUsd,
-      session._count.events,
-      session.startedAt.toISOString(),
-      session.endedAt?.toISOString() ?? '',
-    ].map(csvField).join(',')
-  })
-
-  return `\uFEFF${[headers.join(','), ...rows].join('\r\n')}`
 }
 
 // GET /api/orgs/:orgSlug/dashboard/sessions?from=&to=&projectId=&page=&pageSize=&sort=recent|cost
