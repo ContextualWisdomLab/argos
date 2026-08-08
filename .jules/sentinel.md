@@ -24,3 +24,7 @@
 **Vulnerability:** The application was generating CSV exports where user-controlled input (such as names or titles) was directly embedded into the CSV without formula mitigation. This allowed Spreadsheet Macro Injection (CSV Injection) where inputs starting with formula prefixes (like `=`) would be executed as formulas by spreadsheet software like Excel.
 **Learning:** Standard CSV string escaping (quoting fields with commas or quotes) is not enough to prevent code execution when the CSV is opened in spreadsheet programs.
 **Prevention:** Always prevent CSV Formula Injection by prepending a single quote (`'`) to any field value that begins with characters that can trigger formula evaluation (`=`, `+`, `-`, `@`, `\t`, `\r`) before the standard CSV quoting logic is applied.
+## 2026-08-08 - [Dependency Vulnerability Mitigation]
+**Vulnerability:** Detected outdated dependencies with known vulnerabilities (`js-yaml`, `nanoid`) through the GitHub Actions CI (OSV-Scanner and Trivy-FS check run failures).
+**Learning:** Security gates in CI ensure vulnerable dependency versions do not propagate to production. When the CI strictly flags dependencies (like `nanoid` < 3.3.17 or `js-yaml` < 4.3.1), they must be addressed recursively in a monorepo setup to guarantee all instances are updated.
+**Prevention:** Use `pnpm up -r <package-name>` to proactively handle monorepo dependency vulnerabilities safely without breaking sub-project lockfiles. Keep track of specific CI job failures to verify exactly which packages triggered the pipeline's security policies.
