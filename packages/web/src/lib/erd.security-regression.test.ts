@@ -31,7 +31,13 @@ describe("ERDModel security regressions", () => {
 
   it("rejects non-canonical or unbounded SQL type text", () => {
     model.addTable("users");
-    const unsafeTypes = [" TEXT", "TEXT ", "TEXT\t", "TEXT\n", `X${"A".repeat(128)}`];
+    const unsafeTypes = [
+      " TEXT",
+      "TEXT ",
+      "TEXT\t",
+      "TEXT\n",
+      `X${"A".repeat(128)}`,
+    ];
 
     unsafeTypes.forEach((type, index) => {
       expect(() =>
@@ -49,7 +55,11 @@ describe("ERDModel security regressions", () => {
     added.columns.push({ name: "injected", type: "TEXT" });
 
     const fetched = model.getTable("users");
-    expect(fetched).toStrictEqual({ name: "users", columns: [], foreignKeys: [] });
+    expect(fetched).toStrictEqual({
+      name: "users",
+      columns: [],
+      foreignKeys: [],
+    });
     if (!fetched) throw new Error("users table should exist");
 
     fetched.name = "changed_again";
