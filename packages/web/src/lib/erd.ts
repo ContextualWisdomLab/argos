@@ -18,10 +18,27 @@ export interface Table {
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/;
-const SAFE_SQL_TYPE = /^[a-zA-Z0-9_\s]+(?:\([0-9a-zA-Z\s,]+\))?$/;
+const SIMPLE_SQL_TYPE = /^[a-zA-Z][a-zA-Z0-9_]*$/;
+const PARAMETERIZED_SQL_TYPE =
+  /^[a-zA-Z][a-zA-Z0-9_]*\((?:MAX|[0-9]+)(?:, [0-9]+)?\)$/i;
+const MULTI_WORD_SQL_TYPE =
+  /^(?:DOUBLE PRECISION|CHARACTER VARYING(?:\((?:MAX|[0-9]+)\))?|(?:TIME|TIMESTAMP)(?:\([0-9]+\))? (?:WITH|WITHOUT) TIME ZONE)$/i;
+const MAX_SQL_TYPE_LENGTH = 128;
 
 function assertSafeSqlType(type: string): void {
-  if (!SAFE_SQL_TYPE.test(type)) {
+  const isCanonicalWhitespace =
+    type === type.trim() && !/[\t\r\n\f\v]/.test(type);
+  const matchesSafeGrammar =
+    SIMPLE_SQL_TYPE.test(type) ||
+    PARAMETERIZED_SQL_TYPE.test(type) ||
+    MULTI_WORD_SQL_TYPE.test(type);
+
+  if (
+    type.length === 0 ||
+    type.length > MAX_SQL_TYPE_LENGTH ||
+    !isCanonicalWhitespace ||
+    !matchesSafeGrammar
+  ) {
     throw new Error(`Invalid SQL type: '${type}'`);
   }
 }
