@@ -183,6 +183,72 @@ describe("ERDModel", () => {
     });
   });
 
+  describe("Remove Management", () => {
+    beforeEach(() => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "id", type: "integer" });
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+    });
+
+    it("should remove table successfully if no foreign keys reference it", () => {
+      model.removeTable("posts");
+      expect(model.getTable("posts")).toBeUndefined();
+    });
+
+    it("should throw when removing non-existent table", () => {
+      expect(() => model.removeTable("non_existent")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when removing table referenced by foreign keys", () => {
+      expect(() => model.removeTable("users")).toThrowError(
+        "Cannot remove table 'users' because it is referenced by a foreign key in table 'posts'.",
+      );
+    });
+
+    it("should remove column successfully if no foreign keys reference it", () => {
+      model.removeColumn("posts", "id");
+      expect(model.getTable("posts")?.columns.length).toBe(1);
+    });
+
+    it("should throw when removing non-existent column", () => {
+      expect(() => model.removeColumn("posts", "non_existent")).toThrowError(
+        "Column 'non_existent' does not exist in table 'posts'.",
+      );
+    });
+
+    it("should throw when removing column with foreign key constraint", () => {
+      expect(() => model.removeColumn("posts", "user_id")).toThrowError(
+        "Cannot remove column 'user_id' because it is used in a foreign key in table 'posts'.",
+      );
+    });
+
+    it("should throw when removing column referenced by foreign keys", () => {
+      expect(() => model.removeColumn("users", "id")).toThrowError(
+        "Cannot remove column 'id' because it is referenced by a foreign key in table 'posts'.",
+      );
+    });
+
+    it("should remove foreign key successfully", () => {
+      model.removeForeignKey("posts", "user_id");
+      expect(model.getTable("posts")?.foreignKeys.length).toBe(0);
+    });
+
+    it("should throw when removing non-existent foreign key", () => {
+      expect(() => model.removeForeignKey("posts", "id")).toThrowError(
+        "Foreign key on column 'id' does not exist in table 'posts'.",
+      );
+    });
+  });
+
   describe("DDL Generation", () => {
     it("should generate empty string if no tables exist", () => {
       expect(model.generateDDL()).toBe("");

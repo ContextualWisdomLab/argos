@@ -113,6 +113,74 @@ export class ERDModel {
     table.foreignKeys.push(structuredClone(fk));
   }
 
+  removeTable(name: string): void {
+    assertSnakeCaseIdentifier("Table", name);
+    if (!this.tables.has(name)) {
+      throw new Error(`Table '${name}' does not exist.`);
+    }
+    for (const table of this.tables.values()) {
+      if (table.name === name) continue;
+      for (const fk of table.foreignKeys) {
+        if (fk.referenceTable === name) {
+          throw new Error(
+            `Cannot remove table '${name}' because it is referenced by a foreign key in table '${table.name}'.`,
+          );
+        }
+      }
+    }
+    this.tables.delete(name);
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", columnName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    const columnIndex = table.columns.findIndex((c) => c.name === columnName);
+    if (columnIndex === -1) {
+      throw new Error(
+        `Column '${columnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+    for (const fk of table.foreignKeys) {
+      if (fk.columnName === columnName) {
+        throw new Error(
+          `Cannot remove column '${columnName}' because it is used in a foreign key in table '${tableName}'.`,
+        );
+      }
+    }
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === columnName) {
+          throw new Error(
+            `Cannot remove column '${columnName}' because it is referenced by a foreign key in table '${t.name}'.`,
+          );
+        }
+      }
+    }
+    table.columns.splice(columnIndex, 1);
+  }
+
+  removeForeignKey(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", columnName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    const fkIndex = table.foreignKeys.findIndex(
+      (fk) => fk.columnName === columnName,
+    );
+    if (fkIndex === -1) {
+      throw new Error(
+        `Foreign key on column '${columnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+    table.foreignKeys.splice(fkIndex, 1);
+  }
+
   generateDDL(): string {
     let ddl = "";
     for (const table of this.tables.values()) {
