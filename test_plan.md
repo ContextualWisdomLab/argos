@@ -1,0 +1,5 @@
+1. **Identify the vulnerability:** CSV Injection (Spreadsheet Macro Injection) is possible when exporting sessions in `packages/web/src/app/api/orgs/[orgSlug]/dashboard/sessions/route.ts` through the `csvField` function. Malicious users could inject formulas starting with `=`, `+`, `-`, `@`, `\t`, or `\r` into the title or prompts, which could execute when a victim opens the CSV in Excel or other spreadsheet software.
+2. **Fix the vulnerability:** Update `packages/web/src/app/api/orgs/[orgSlug]/dashboard/sessions/route.ts` to prepend a single quote (`'`) to any CSV field that starts with a formula injection character (`=`, `+`, `-`, `@`, `\t`, or `\r`).
+3. **Verify the change:** Check the file to make sure it is syntactically correct and run tests.
+4. **Update `.jules/sentinel.md` journal:** Add an entry recording this critical finding and the implemented defense against CSV Formula Injection.
+5. **Complete Pre-commit steps:** Run linters, types checks, and tests as part of the pre-commit step.
