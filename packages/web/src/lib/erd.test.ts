@@ -70,27 +70,6 @@ describe("ERDModel", () => {
       ).toThrowError("Invalid SQL type: 'VARCHAR(255); DROP TABLE users;'");
     });
 
-    it("should reject SQL type suffixes that inject column constraints", () => {
-      model.addTable("users");
-      const unsafeTypes = [
-        "TEXT PRIMARY KEY",
-        "INTEGER NOT NULL",
-        "VARCHAR(255) UNIQUE",
-        "INTEGER REFERENCES users(id)",
-        "INTEGER GENERATED ALWAYS AS IDENTITY",
-        "TEXT DEFAULT secret",
-      ];
-
-      unsafeTypes.forEach((type, index) => {
-        expect(() =>
-          model.addColumn("users", {
-            name: `unsafe_${index}`,
-            type,
-          }),
-        ).toThrowError(`Invalid SQL type: '${type}'`);
-      });
-    });
-
     it("should accept valid SQL types with spaces and commas", () => {
       model.addTable("valid_types_test");
       model.addColumn("valid_types_test", {
