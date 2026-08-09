@@ -26,6 +26,7 @@ describe("ERDModel security regressions", () => {
           type,
         }),
       ).toThrowError(`Invalid SQL type: '${type}'`);
+      expect(model.getTable("users")?.columns).toStrictEqual([]);
     });
   });
 
@@ -46,6 +47,7 @@ describe("ERDModel security regressions", () => {
           type,
         }),
       ).toThrowError(`Invalid SQL type: '${type}'`);
+      expect(model.getTable("users")?.columns).toStrictEqual([]);
     });
   });
 
