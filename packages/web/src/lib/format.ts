@@ -67,9 +67,7 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
+  const diffMs = Date.parse(timestamp) - Date.parse(baseTimestamp)
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {
@@ -105,7 +103,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
  * 정확한 시각은 hover 등 title 속성에 별도로 넣어 보조한다.
  */
 export function formatLastUsed(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime()
+  const diffMs = Date.now() - Date.parse(iso)
   if (diffMs < ONE_DAY_MS) {
     return formatRelativeTime(iso)
   }
@@ -119,8 +117,8 @@ export function formatDurationMs(ms: number): string {
 }
 
 export function formatDuration(startedAt: string, endedAt?: string | null): string {
-  const start = new Date(startedAt).getTime()
-  const end = endedAt ? new Date(endedAt).getTime() : Date.now()
+  const start = Date.parse(startedAt)
+  const end = endedAt ? Date.parse(endedAt) : Date.now()
   const diffMs = Math.max(0, end - start)
 
   if (diffMs < 1000) return '0s'
