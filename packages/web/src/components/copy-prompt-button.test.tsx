@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
@@ -6,18 +7,18 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Fix for "React is not defined" error in underlying components
-global.React = React;
+(global as any).React = React;
 // Fix for "The current testing environment is not configured to support act(...)"
-global.IS_REACT_ACT_ENVIRONMENT = true;
+(global as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 import { CopyPromptButton } from "./copy-prompt-button";
 
 // Mock lucide-react icons to avoid React undefined issues
 vi.mock("lucide-react", () => ({
-  Check: ({ "aria-hidden": ariaHidden }: { "aria-hidden"?: string }) => (
+  Check: ({ "aria-hidden": ariaHidden }: { "aria-hidden"?: boolean | "true" | "false" }) => (
     <svg data-testid="check-icon" aria-hidden={ariaHidden} />
   ),
-  Copy: ({ "aria-hidden": ariaHidden }: { "aria-hidden"?: string }) => (
+  Copy: ({ "aria-hidden": ariaHidden }: { "aria-hidden"?: boolean | "true" | "false" }) => (
     <svg data-testid="copy-icon" aria-hidden={ariaHidden} />
   ),
 }));
