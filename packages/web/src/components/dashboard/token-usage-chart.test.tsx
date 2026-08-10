@@ -35,6 +35,9 @@ describe('TokenUsageChart', () => {
         date: '2023-01-01',
         inputTokens: 1000,
         outputTokens: 500,
+        cacheReadTokens: 0,
+        cacheCreationTokens: 0,
+        estimatedCostUsd: 0.002,
       },
     ]
 
