@@ -68,7 +68,7 @@ function buildChartData(
   sessionStartedAt: string
 ): ChartDataItem[] {
   const sortedUsage = [...usageTimeline].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp) // ⚡ Bolt: Use Date.parse instead of new Date().getTime() to prevent unnecessary object allocations
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
@@ -78,7 +78,7 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map((usage) => {
-    const currentTimestamp = new Date(usage.timestamp).getTime()
+    const currentTimestamp = Date.parse(usage.timestamp)
 
     while (
       toolIndex < sortedTools.length &&
@@ -103,7 +103,7 @@ function buildChartData(
   })
 }
 
-function CustomTooltip({
+export function CustomTooltip({
   active,
   payload,
 }: TooltipProps<number, string> & { chartData?: ChartDataItem[] }) {
@@ -159,7 +159,7 @@ export function SessionTimelineChart({
       .filter((message) => message.role === 'TOOL')
       .map((message) => ({
         toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: new Date(message.timestamp).getTime(),
+        parsedTimestamp: Date.parse(message.timestamp),
       }))
   }, [messages])
 

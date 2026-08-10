@@ -3,7 +3,7 @@ import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
-import { SessionTimelineChart } from './session-timeline-chart'
+import { SessionTimelineChart, CustomTooltip } from './session-timeline-chart'
 
 vi.mock('recharts', async () => {
   const OriginalModule = await vi.importActual('recharts')
@@ -274,5 +274,48 @@ describe('SessionTimelineChart', () => {
     ])
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
+  })
+})
+
+
+describe('CustomTooltip', () => {
+  it('returns null when active is false or payload is empty', () => {
+    const { container: c1 } = render(<CustomTooltip active={false} /> as unknown as undefined)
+    expect(c1.firstChild).toBeNull()
+
+    const { container: c2 } = render(<CustomTooltip active={true} payload={[]} /> as unknown as undefined)
+    expect(c2.firstChild).toBeNull()
+  })
+
+  it('renders correctly with data', () => {
+    const payload = [{
+      payload: {
+        relativeTime: '1m',
+        input: 100,
+        output: 50,
+        cost: 0.001,
+        model: 'gpt-4',
+        toolSummary: 'alpha'
+      }
+    }]
+    const { getAllByText, getByText } = render(<CustomTooltip active={true} payload={payload as unknown as undefined} /> as unknown as undefined)
+    expect(getAllByText('1m')[0]).toBeDefined()
+    expect(getByText('gpt-4')).toBeDefined()
+    expect(getByText('alpha')).toBeDefined()
+  })
+
+  it('renders correctly without model and toolSummary', () => {
+    const payload = [{
+      payload: {
+        relativeTime: '1m',
+        input: 100,
+        output: 50,
+        cost: 0.001
+      }
+    }]
+    const { getAllByText } = render(<CustomTooltip active={true} payload={payload as unknown as undefined} /> as unknown as undefined)
+    expect(getAllByText('1m')[0]).toBeDefined()
+
+
   })
 })

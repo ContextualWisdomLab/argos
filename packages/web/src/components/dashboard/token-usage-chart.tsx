@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts'
 import { formatTokens, formatCost } from '@/lib/format'
 import type { UsageSeries } from '@argos/shared'
@@ -13,7 +13,7 @@ interface TokenUsageChartProps {
 const COST_PER_INPUT_TOKEN = 0.000003 // $3 per million
 const COST_PER_OUTPUT_TOKEN = 0.000015 // $15 per million
 
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+export function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
   if (!active || !payload || payload.length === 0) return null
 
   const inputTokens = payload[0]?.value ?? 0
@@ -46,7 +46,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 export function TokenUsageChart({ data }: TokenUsageChartProps) {
   const chartData = useMemo(() => {
     return data.map(d => {
-      const date = new Date(d.date)
+      const date = new Date(d.date) // ⚡ Bolt: No date parse optimization needed here as format() requires a Date object, and N is very small (number of days)
       return {
         date: format(date, 'MMM d'),
         fullDate: format(date, 'MMM d, yyyy'),
