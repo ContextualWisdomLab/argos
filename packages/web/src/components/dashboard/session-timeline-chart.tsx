@@ -67,9 +67,16 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  // ⚡ Bolt: Parse dates once in O(N) using Date.parse() instead of O(N log N) inside sort comparator to prevent unnecessary object memory allocations
+  const usageWithTime = usageTimeline.map(usage => ({
+    usage,
+    parsedTimestamp: Date.parse(usage.timestamp)
+  }))
+
+  const sortedUsage = usageWithTime.sort(
+    (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
+
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,8 +84,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = new Date(usage.timestamp).getTime()
+  return sortedUsage.map(({ usage, parsedTimestamp }) => {
+    const currentTimestamp = parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
@@ -159,7 +166,8 @@ export function SessionTimelineChart({
       .filter((message) => message.role === 'TOOL')
       .map((message) => ({
         toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: new Date(message.timestamp).getTime(),
+        // ⚡ Bolt: Use Date.parse() to avoid unnecessary object allocations
+        parsedTimestamp: Date.parse(message.timestamp),
       }))
   }, [messages])
 
