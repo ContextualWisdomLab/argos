@@ -12,6 +12,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "eslint": "^9",
+    "playwright": "^1.40.0",
     "turbo": "^2.9.16",
     "typescript-eslint": "^8"
   },

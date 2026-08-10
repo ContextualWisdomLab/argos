@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Loader2 } from 'lucide-react'
 import { useDeleteOrg } from '@/hooks/use-delete-org'
 
 interface DeleteOrgModalProps {
@@ -113,7 +114,7 @@ export function DeleteOrgModal({
             disabled={!canDelete}
             onClick={handleDelete}
           >
-            {mutation.isPending ? '삭제 중…' : '삭제'}
+            {mutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />삭제 중…</> : '삭제'}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
