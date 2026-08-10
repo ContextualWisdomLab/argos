@@ -35,6 +35,33 @@ describe("ERDModel", () => {
     it("should return undefined for non-existent table", () => {
       expect(model.getTable("non_existent")).toBeUndefined();
     });
+
+    it("should remove a table", () => {
+      model.addTable("users");
+      model.removeTable("users");
+      expect(model.getTable("users")).toBeUndefined();
+    });
+
+    it("should throw when removing a non-existent table", () => {
+      expect(() => model.removeTable("non_existent")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when removing a referenced table", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+      expect(() => model.removeTable("users")).toThrowError(
+        "Cannot remove table 'users' because it is referenced by table 'posts'.",
+      );
+    });
   });
 
   describe("Column Management", () => {
@@ -97,6 +124,83 @@ describe("ERDModel", () => {
       expect(() =>
         model.addColumn("users", { name: "created__at", type: "timestamp" }),
       ).toThrowError("Column 'created__at' must be snake_case.");
+    });
+
+    it("should reject invalid SQL default values", () => {
+      model.addTable("users");
+      expect(() =>
+        model.addColumn("users", {
+          name: "id",
+          type: "integer",
+          defaultValue: "1; DROP TABLE users",
+        }),
+      ).toThrowError("Invalid SQL default value: '1; DROP TABLE users'");
+    });
+
+    it("should accept valid SQL default values", () => {
+      model.addTable("users");
+      model.addColumn("users", {
+        name: "active",
+        type: "boolean",
+        defaultValue: "TRUE",
+      });
+      model.addColumn("users", {
+        name: "created_at",
+        type: "timestamp",
+        defaultValue: "CURRENT_TIMESTAMP",
+      });
+      model.addColumn("users", {
+        name: "name",
+        type: "varchar",
+        defaultValue: "'John Doe'",
+      });
+      expect(model.getTable("users")?.columns.length).toBe(3);
+    });
+
+    it("should remove a column", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.removeColumn("users", "id");
+      expect(model.getTable("users")?.columns.length).toBe(0);
+    });
+
+    it("should throw when removing a non-existent column", () => {
+      model.addTable("users");
+      expect(() => model.removeColumn("users", "non_existent")).toThrowError(
+        "Column 'non_existent' does not exist in table 'users'.",
+      );
+    });
+
+    it("should throw when removing a column with foreign key constraint", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "role_id", type: "integer" });
+      model.addTable("roles");
+      model.addColumn("roles", { name: "id", type: "integer" });
+      model.addForeignKey("users", {
+        columnName: "role_id",
+        referenceTable: "roles",
+        referenceColumn: "id",
+      });
+
+      expect(() => model.removeColumn("users", "role_id")).toThrowError(
+        "Cannot remove column 'role_id' because it is used in a foreign key.",
+      );
+    });
+
+    it("should throw when removing a column referenced by foreign key", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      expect(() => model.removeColumn("users", "id")).toThrowError(
+        "Cannot remove column 'id' because it is referenced by table 'posts'.",
+      );
     });
   });
 
@@ -181,6 +285,22 @@ describe("ERDModel", () => {
         });
       }).toThrowError("Reference table 'UserProfiles' must be snake_case.");
     });
+
+    it("should remove a foreign key", () => {
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+      model.removeForeignKey("posts", "user_id");
+      expect(model.getTable("posts")?.foreignKeys.length).toBe(0);
+    });
+
+    it("should throw when removing a non-existent foreign key", () => {
+      expect(() => model.removeForeignKey("posts", "user_id")).toThrowError(
+        "Foreign key for column 'user_id' does not exist in table 'posts'.",
+      );
+    });
   });
 
   describe("DDL Generation", () => {
@@ -199,14 +319,19 @@ describe("ERDModel", () => {
         name: "name",
         type: "VARCHAR(255)",
         isNullable: false,
+        isUnique: true,
       });
-      model.addColumn("users", { name: "bio", type: "TEXT" });
+      model.addColumn("users", {
+        name: "active",
+        type: "BOOLEAN",
+        defaultValue: "TRUE",
+      });
 
       const ddl = model.generateDDL();
       const expected = `CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  bio TEXT
+  name VARCHAR(255) UNIQUE NOT NULL,
+  active BOOLEAN DEFAULT TRUE
 );`;
       expect(ddl).toBe(expected);
     });
@@ -248,6 +373,20 @@ CREATE TABLE posts (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );`;
       expect(ddl).toBe(expected);
+    });
+  });
+
+  describe("Coverage Edge Cases", () => {
+    it("should throw when removing column from non-existent table", () => {
+      expect(() => model.removeColumn("non_existent", "id")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when removing foreign key from non-existent table", () => {
+      expect(() => model.removeForeignKey("non_existent", "id")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
     });
   });
 });
