@@ -40,14 +40,14 @@ describe('CopyPromptButton', () => {
     const button = screen.getByRole('button');
     expect(button).toBeDefined();
     expect(button.getAttribute('aria-pressed')).toBeNull();
-    expect(screen.getByText('프롬프트 복사')).toBeDefined();
+    expect(screen.getByText('프롬프트 복사').getAttribute('aria-live')).toBe('polite');
     expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 
   it('renders correctly with custom labels', () => {
     render(<CopyPromptButton text="test prompt" label="Copy" copiedLabel="Copied" />);
 
-    expect(screen.getByText('Copy')).toBeDefined();
+    expect(screen.getByText('Copy').getAttribute('aria-live')).toBe('polite');
   });
 
   it('copies text and shows copied state temporarily', async () => {
@@ -63,7 +63,7 @@ describe('CopyPromptButton', () => {
 
     // A copy action reports its result without masquerading as a toggle.
     expect(button.getAttribute('aria-pressed')).toBeNull();
-    expect(screen.getByText('Copied')).toBeDefined();
+    expect(screen.getByText('Copied').getAttribute('aria-live')).toBe('polite');
     expect(screen.getByTestId('check-icon').getAttribute('aria-hidden')).toBe('true');
 
     // Fast-forward timer
@@ -73,7 +73,7 @@ describe('CopyPromptButton', () => {
 
     // Check reverted state
     expect(button.getAttribute('aria-pressed')).toBeNull();
-    expect(screen.getByText('Copy')).toBeDefined();
+    expect(screen.getByText('Copy').getAttribute('aria-live')).toBe('polite');
     expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 
@@ -96,6 +96,7 @@ describe('CopyPromptButton', () => {
 
     // It shouldn't change state since it failed
     expect(button.getAttribute('aria-pressed')).toBeNull();
+    expect(screen.getByText('프롬프트 복사').getAttribute('aria-live')).toBe('polite');
     expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 });
