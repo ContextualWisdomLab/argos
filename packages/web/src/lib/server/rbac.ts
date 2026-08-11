@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server'
-import type { OrgRole } from '@prisma/client'
+import { NextResponse } from "next/server";
+import type { OrgRole } from "@prisma/client";
+
+import { jsonError } from "./error-helper";
 
 /**
  * Level 1 RBAC 유틸.
@@ -18,7 +20,7 @@ import type { OrgRole } from '@prisma/client'
  * VIEWER만 false.
  */
 export function canAccessIndividualData(role: OrgRole): boolean {
-  return role !== 'VIEWER'
+  return role !== "VIEWER";
 }
 
 /**
@@ -26,14 +28,14 @@ export function canAccessIndividualData(role: OrgRole): boolean {
  * OWNER, MANAGER만 true.
  */
 export function canManageOrg(role: OrgRole): boolean {
-  return role === 'OWNER' || role === 'MANAGER'
+  return role === "OWNER" || role === "MANAGER";
 }
 
 /**
  * org 삭제 가능 여부. OWNER만.
  */
 export function canDeleteOrg(role: OrgRole): boolean {
-  return role === 'OWNER'
+  return role === "OWNER";
 }
 
 /**
@@ -43,23 +45,21 @@ export function canDeleteOrg(role: OrgRole): boolean {
 export function canAccessSession(
   role: OrgRole,
   sessionUserId: string,
-  currentUserId: string
+  currentUserId: string,
 ): boolean {
-  if (role !== 'VIEWER') return true
-  return sessionUserId === currentUserId
+  if (role !== "VIEWER") return true;
+  return sessionUserId === currentUserId;
 }
 
 /**
  * 역할 거부 시 403 응답을 생성. 라우트에서 early return에 사용.
  */
 export function forbiddenByRole(role: OrgRole, need: string): NextResponse {
-  return NextResponse.json(
-    {
-      error: 'forbidden',
-      message: `현재 역할(${role})에서는 이 리소스에 접근할 수 없습니다. 필요: ${need}`,
-    },
-    { status: 403 }
-  )
+  return jsonError(
+    "FORBIDDEN",
+    `현재 역할(${role})에서는 이 리소스에 접근할 수 없습니다. 필요: ${need}`,
+    403,
+  );
 }
 
 /**
@@ -69,33 +69,33 @@ export function forbiddenByRole(role: OrgRole, need: string): NextResponse {
  * 주의: mutation 없이 새 객체를 반환.
  */
 const PII_KEYS = new Set([
-  'userId',
-  'user_id',
-  'userName',
-  'user_name',
-  'userEmail',
-  'user_email',
-  'email',
-  'activeUserIds',
-  'active_user_ids',
-  'userStats',
-  'user_stats',
-  'topUsers',
-  'top_users',
-])
+  "userId",
+  "user_id",
+  "userName",
+  "user_name",
+  "userEmail",
+  "user_email",
+  "email",
+  "activeUserIds",
+  "active_user_ids",
+  "userStats",
+  "user_stats",
+  "topUsers",
+  "top_users",
+]);
 
 export function stripPii<T>(value: T): T {
-  if (value === null || value === undefined) return value
+  if (value === null || value === undefined) return value;
   if (Array.isArray(value)) {
-    return value.map((v) => stripPii(v)) as unknown as T
+    return value.map((v) => stripPii(v)) as unknown as T;
   }
-  if (typeof value === 'object') {
-    const out: Record<string, unknown> = {}
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      if (PII_KEYS.has(k)) continue
-      out[k] = stripPii(v)
+      if (PII_KEYS.has(k)) continue;
+      out[k] = stripPii(v);
     }
-    return out as T
+    return out as T;
   }
-  return value
+  return value;
 }
