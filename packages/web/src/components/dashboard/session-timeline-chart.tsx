@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from 'recharts'
-import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
+import {
+  formatTokens,
+  formatCost,
+  formatRelativeTimeFromMs,
+} from '@/lib/format'
 import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
 
 interface SessionTimelineChartProps {
@@ -67,19 +71,18 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  const sortedUsage = usageTimeline
+    .map((usage) => ({ usage, timestampMs: Date.parse(usage.timestamp) }))
+    .sort((a, b) => a.timestampMs - b.timestampMs)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
+  const sessionStartedAtMs = Date.parse(sessionStartedAt)
 
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
-
+  return sortedUsage.map(({ usage, timestampMs: currentTimestamp }) => {
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
@@ -93,7 +96,7 @@ function buildChartData(
     }
 
     return {
-      relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
+      relativeTime: formatRelativeTimeFromMs(currentTimestamp, sessionStartedAtMs),
       input: usage.inputTokens,
       output: usage.outputTokens,
       cost: usage.estimatedCostUsd,

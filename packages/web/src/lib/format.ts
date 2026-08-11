@@ -67,7 +67,15 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const diffMs = Date.parse(timestamp) - Date.parse(baseTimestamp)
+  return formatRelativeTimeFromMs(Date.parse(timestamp), Date.parse(baseTimestamp))
+}
+
+/** Format a timestamp offset when both values are already parsed. */
+export function formatRelativeTimeFromMs(
+  timestampMs: number,
+  baseTimestampMs: number
+): string {
+  const diffMs = timestampMs - baseTimestampMs
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {

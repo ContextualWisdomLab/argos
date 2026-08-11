@@ -253,6 +253,7 @@ describe('SessionTimelineChart', () => {
     ]
     const originalUsageOrder = usageTimeline.map(({ timestamp }) => timestamp)
     const originalMessageOrder = messages.map(({ timestamp }) => timestamp)
+    const parseSpy = vi.spyOn(Date, 'parse')
 
     render(
       <SessionTimelineChart
@@ -274,5 +275,8 @@ describe('SessionTimelineChart', () => {
     ])
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
+    expect(parseSpy).toHaveBeenCalledTimes(
+      usageTimeline.length + messages.length + 1
+    )
   })
 })
