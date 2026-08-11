@@ -54,6 +54,7 @@ describe('AdminDashboard copy feedback', () => {
       throw new Error(`Unexpected fetch: ${url}`)
     })
 
+    vi.stubGlobal('React', React)
     vi.stubGlobal('fetch', fetchMock)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
