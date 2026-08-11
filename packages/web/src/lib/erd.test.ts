@@ -170,6 +170,9 @@ describe("ERDModel", () => {
         defaultValue: "'John Doe'",
       });
       expect(model.getTable("users")?.columns.length).toBe(3);
+      expect(
+        model.getTable("users")?.columns.map((column) => column.defaultValue),
+      ).toEqual(["TRUE", "CURRENT_TIMESTAMP", "\'John Doe\'"]);
     });
 
     it("should remove a column", () => {
