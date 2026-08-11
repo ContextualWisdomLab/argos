@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -41,6 +41,7 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copiedResetTimer = useRef<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -83,6 +84,15 @@ export function AdminDashboard() {
       window.clearTimeout(timer)
     }
   }, [query])
+
+  useEffect(
+    () => () => {
+      if (copiedResetTimer.current !== null) {
+        window.clearTimeout(copiedResetTimer.current)
+      }
+    },
+    []
+  )
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
@@ -148,7 +158,13 @@ export function AdminDashboard() {
     try {
       await navigator.clipboard.writeText(resetLink.url)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (copiedResetTimer.current !== null) {
+        window.clearTimeout(copiedResetTimer.current)
+      }
+      copiedResetTimer.current = window.setTimeout(() => {
+        setCopied(false)
+        copiedResetTimer.current = null
+      }, 2000)
     } catch {
       // clipboard API unavailable or blocked; fail silently
     }
