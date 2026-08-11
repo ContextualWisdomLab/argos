@@ -97,7 +97,6 @@ export class ERDModel {
     }
     for (const table of this.tables.values()) {
       if (
-        table.name !== name &&
         table.foreignKeys.some((fk) => fk.referenceTable === name)
       ) {
         throw new Error(

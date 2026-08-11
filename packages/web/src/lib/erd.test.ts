@@ -62,6 +62,21 @@ describe("ERDModel", () => {
         "Cannot remove table 'users' because it is referenced by table 'posts'.",
       );
     });
+
+    it("should throw when removing a self-referenced table", () => {
+      model.addTable("employees");
+      model.addColumn("employees", { name: "id", type: "integer" });
+      model.addColumn("employees", { name: "manager_id", type: "integer" });
+      model.addForeignKey("employees", {
+        columnName: "manager_id",
+        referenceTable: "employees",
+        referenceColumn: "id",
+      });
+
+      expect(() => model.removeTable("employees")).toThrowError(
+        "Cannot remove table 'employees' because it is referenced by table 'employees'.",
+      );
+    });
   });
 
   describe("Column Management", () => {
