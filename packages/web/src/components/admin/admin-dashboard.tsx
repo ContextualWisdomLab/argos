@@ -1,6 +1,7 @@
 'use client'
+import React from "react";
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -41,11 +42,15 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const copiedResetTimer = useRef<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
+  )
+
+  const isSelectedUserAdmin = useMemo(
+    () => selectedUser?.memberships.some((m) => m.role === 'OWNER' || m.role === 'MANAGER') || false,
+    [selectedUser]
   )
 
   useEffect(() => {
@@ -84,15 +89,6 @@ export function AdminDashboard() {
       window.clearTimeout(timer)
     }
   }, [query])
-
-  useEffect(
-    () => () => {
-      if (copiedResetTimer.current !== null) {
-        window.clearTimeout(copiedResetTimer.current)
-      }
-    },
-    []
-  )
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
@@ -158,13 +154,7 @@ export function AdminDashboard() {
     try {
       await navigator.clipboard.writeText(resetLink.url)
       setCopied(true)
-      if (copiedResetTimer.current !== null) {
-        window.clearTimeout(copiedResetTimer.current)
-      }
-      copiedResetTimer.current = window.setTimeout(() => {
-        setCopied(false)
-        copiedResetTimer.current = null
-      }, 2000)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // clipboard API unavailable or blocked; fail silently
     }
@@ -278,10 +268,14 @@ export function AdminDashboard() {
                   <Button
                     className="w-full"
                     onClick={handleOpenDashboardAsUser}
-                    disabled={openingDashboard}
+                    disabled={openingDashboard || isSelectedUserAdmin}
                   >
                     <LogIn className="size-4" aria-hidden="true" />
-                    {openingDashboard ? 'Opening...' : 'Open dashboard as user'}
+                    {openingDashboard
+                      ? 'Opening...'
+                      : isSelectedUserAdmin
+                        ? 'Cannot impersonate admins'
+                        : 'Open dashboard as user'}
                   </Button>
 
                   <Button
