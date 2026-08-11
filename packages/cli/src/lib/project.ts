@@ -1,16 +1,35 @@
-import { dirname, join, resolve } from 'path'
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs'
-import { normalizeApiUrl } from './config.js'
+import { dirname } from "path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { fileURLToPath, pathToFileURL } from "url";
+import { normalizeApiUrl } from "./config.js";
+
+function absolutePath(path: string): string {
+  return fileURLToPath(pathToFileURL(path));
+}
+
+function projectConfigPath(directory: string): string {
+  return fileURLToPath(
+    new URL(".argos/project.json", pathToFileURL(`${directory}/`)),
+  );
+}
+
+function argosDirectoryPath(directory: string): string {
+  return fileURLToPath(new URL(".argos/", pathToFileURL(`${directory}/`)));
+}
+
+function argosFilePath(directory: string, fileName: string): string {
+  return fileURLToPath(new URL(fileName, pathToFileURL(`${directory}/`)));
+}
 
 export interface ProjectConfig {
-  projectId: string
-  orgId: string
+  projectId: string;
+  orgId: string;
   // v0.1.13 미만에서 만들어진 project.json 에는 orgSlug 가 없을 수 있다.
   // 누락 시 CLI 는 orgId 로 대체해 서버를 호출한다.
-  orgSlug?: string
-  orgName: string
-  projectName: string
-  apiUrl?: string
+  orgSlug?: string;
+  orgName: string;
+  projectName: string;
+  apiUrl?: string;
 }
 
 /**
@@ -22,38 +41,38 @@ export interface ProjectConfig {
 export function findProjectConfigWithPath(
   startDir?: string,
 ): { config: ProjectConfig; configPath: string } | null {
-  let currentDir = resolve(startDir || process.cwd())
-  let depth = 0
-  const maxDepth = 10
+  let currentDir = absolutePath(startDir || process.cwd());
+  let depth = 0;
+  const maxDepth = 10;
 
   while (depth < maxDepth) {
-    const configPath = join(currentDir, '.argos', 'project.json')
+    const configPath = projectConfigPath(currentDir);
     if (existsSync(configPath)) {
       try {
-        const content = readFileSync(configPath, 'utf8')
-        const parsed = JSON.parse(content) as ProjectConfig
-        const normalized = normalizeApiUrl(parsed.apiUrl)
+        const content = readFileSync(configPath, "utf8");
+        const parsed = JSON.parse(content) as ProjectConfig;
+        const normalized = normalizeApiUrl(parsed.apiUrl);
         if (normalized) {
-          parsed.apiUrl = normalized
+          parsed.apiUrl = normalized;
         } else {
-          delete parsed.apiUrl
+          delete parsed.apiUrl;
         }
-        return { config: parsed, configPath }
+        return { config: parsed, configPath };
       } catch {
-        return null
+        return null;
       }
     }
 
-    const parentDir = dirname(currentDir)
+    const parentDir = dirname(currentDir);
     if (parentDir === currentDir) {
       // Reached root directory
-      break
+      break;
     }
-    currentDir = parentDir
-    depth++
+    currentDir = parentDir;
+    depth++;
   }
 
-  return null
+  return null;
 }
 
 /**
@@ -62,8 +81,8 @@ export function findProjectConfigWithPath(
  * @returns ProjectConfig or null if not found
  */
 export function findProjectConfig(startDir?: string): ProjectConfig | null {
-  const result = findProjectConfigWithPath(startDir)
-  return result ? result.config : null
+  const result = findProjectConfigWithPath(startDir);
+  return result ? result.config : null;
 }
 
 /**
@@ -73,18 +92,18 @@ export function findProjectConfig(startDir?: string): ProjectConfig | null {
  * @param dir Target directory (defaults to process.cwd())
  */
 export function writeProjectConfig(config: ProjectConfig, dir?: string): void {
-  const targetDir = dir || process.cwd()
-  const argosDir = join(targetDir, '.argos')
+  const targetDir = absolutePath(dir || process.cwd());
+  const argosDir = argosDirectoryPath(targetDir);
 
   if (!existsSync(argosDir)) {
-    mkdirSync(argosDir, { recursive: true })
+    mkdirSync(argosDir, { recursive: true });
   }
 
-  const configPath = join(argosDir, 'project.json')
-  writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
+  const configPath = argosFilePath(argosDir, "project.json");
+  writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
 
   // Create .gitignore with comment (but don't actually ignore anything)
-  const gitignorePath = join(argosDir, '.gitignore')
-  const gitignoreComment = '# argos 설정 (gitignore 하지 않음)\n'
-  writeFileSync(gitignorePath, gitignoreComment, 'utf8')
+  const gitignorePath = argosFilePath(argosDir, ".gitignore");
+  const gitignoreComment = "# argos 설정 (gitignore 하지 않음)\n";
+  writeFileSync(gitignorePath, gitignoreComment, "utf8");
 }
