@@ -1,4 +1,4 @@
-import * as path from 'path'
+import { join } from 'path'
 import chalk from 'chalk'
 import type { CommandFactory } from '../deps.js'
 import { DEFAULT_API_URL } from '../lib/config.js'
@@ -43,8 +43,8 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    const claudePath = path.join(deps.cwd(), '.claude', 'settings.json')
-    const codexPath = path.join(deps.cwd(), '.codex', 'hooks.json')
+    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
+    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 
