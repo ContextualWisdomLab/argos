@@ -56,9 +56,10 @@ describe('AdminDashboard copy feedback', () => {
 
     vi.stubGlobal('React', React)
     vi.stubGlobal('fetch', fetchMock)
+    const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
-      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      value: { writeText },
     })
 
     render(<AdminDashboard />)
@@ -73,6 +74,7 @@ describe('AdminDashboard copy feedback', () => {
       await Promise.resolve()
     })
     expect(screen.getByRole('button', { name: 'Copied' })).toBeTruthy()
+    expect(writeText).toHaveBeenCalledWith(resetUrl)
 
     act(() => vi.advanceTimersByTime(1000))
 
