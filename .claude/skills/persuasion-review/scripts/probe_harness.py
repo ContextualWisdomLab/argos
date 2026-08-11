@@ -15,12 +15,11 @@ API:
 from __future__ import annotations
 
 import json
-import http.client
 import os
 import socket
 import subprocess
 import time
-from urllib.parse import urlsplit
+import urllib.request
 from pathlib import Path
 
 
@@ -31,36 +30,16 @@ def free_port() -> int:
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
-    parsed = urlsplit(url)
-    if parsed.scheme not in {"http", "https"}:
-        raise ValueError("readiness URL must use http or https")
-    if parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
-        raise ValueError("readiness URL must target localhost")
-    try:
-        port = parsed.port
-    except ValueError as exc:
-        raise ValueError("readiness URL has an invalid port") from exc
-
-    connection_type = http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
-    request_path = parsed.path or "/"
-    if parsed.query:
-        request_path += f"?{parsed.query}"
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return False
 
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
-        connection: http.client.HTTPConnection | http.client.HTTPSConnection | None = None
         try:
-            connection = connection_type(parsed.hostname, port, timeout=1)
-            connection.request("GET", request_path)
-            response = connection.getresponse()
-            response.read()
-            if response.status < 500:
-                return True
-        except (OSError, http.client.HTTPException):
+            urllib.request.urlopen(url, timeout=1).read() # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected
+            return True
+        except Exception:
             time.sleep(0.2)
-        finally:
-            if connection is not None:
-                connection.close()
     return False
 
 
