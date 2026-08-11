@@ -91,6 +91,7 @@ describe('extractUsageFromTranscript', () => {
 
   it('handles malformed lines without throwing', async () => {
     // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
     const path = join(tempDir, 'transcript.jsonl')
     writeFileSync(
       path,
