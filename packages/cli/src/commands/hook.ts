@@ -48,7 +48,7 @@ async function readStdinWithTimeout(timeoutMs: number): Promise<string | null> {
     return null
   }
 
-  return new Promise((join) => {
+  return new Promise((resolve) => {
     let data = ''
     let timeoutId: NodeJS.Timeout | null = null
     let completed = false
@@ -58,7 +58,7 @@ async function readStdinWithTimeout(timeoutMs: number): Promise<string | null> {
       completed = true
       if (timeoutId) clearTimeout(timeoutId)
       process.stdin.removeAllListeners()
-      join(result)
+      resolve(result)
     }
 
     timeoutId = setTimeout(() => complete(null), timeoutMs)

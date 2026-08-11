@@ -54,7 +54,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
   // Step 3: 승인 polling
   const spinner = ora('브라우저 로그인 대기 중...').start()
 
-  const token = await new Promise<string>((join, reject) => {
+  const token = await new Promise<string>((resolve, reject) => {
     let attempts = 0
     const maxAttempts = 450 // 15분 (2초 간격)
 
@@ -77,7 +77,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
           reject(new Error('로그인이 거부되었습니다.'))
         } else if (result.token) {
           clearInterval(interval)
-          join(result.token)
+          resolve(result.token)
         }
       } catch {
         // 일시적 오류는 무시하고 계속 polling

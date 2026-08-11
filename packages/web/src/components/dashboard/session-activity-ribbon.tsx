@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import {
   formatSlashCommandText,
+  buildTimelineGroups,
   type TimelineEvent,
-  type TimelineGroup,
 } from '@/lib/timeline-events'
 import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
 import { segmentVisuals } from './session-ribbon-visuals'
 
 type Props = {
   events: TimelineEvent[]
-  groups: TimelineGroup[]
   selectedIdx: number | null
   onSelect: (idx: number) => void
   sessionStartedAt: string
@@ -148,7 +147,6 @@ function MergedTooltipBody({
 
 export function SessionActivityRibbon({
   events,
-  groups,
   selectedIdx,
   onSelect,
   sessionStartedAt,
@@ -157,6 +155,8 @@ export function SessionActivityRibbon({
 }: Props) {
   const [hover, setHover] = useState<HoverState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const groups = useMemo(() => buildTimelineGroups(events), [events])
 
   if (events.length === 0) return null
 

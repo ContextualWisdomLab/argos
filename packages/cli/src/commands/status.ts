@@ -1,5 +1,4 @@
 import { join } from 'path'
-
 import chalk from 'chalk'
 import type { CommandFactory } from '../deps.js'
 import { DEFAULT_API_URL } from '../lib/config.js'
