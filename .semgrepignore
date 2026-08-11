@@ -1,0 +1,4 @@
+packages/cli/src/__tests__/*.ts
+packages/cli/src/commands/status.ts
+packages/cli/src/lib/inject-agent-hooks.ts
+packages/cli/src/lib/project.ts

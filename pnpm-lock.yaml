@@ -16,12 +16,18 @@ importers:
 
   .:
     devDependencies:
+      '@eslint/config-array':
+        specifier: ^0.23.5
+        version: 0.23.5
       '@eslint/eslintrc':
         specifier: ^3
         version: 3.3.5
       eslint:
         specifier: ^9
         version: 9.39.4(jiti@2.6.1)
+      minimatch:
+        specifier: ^10.2.6
+        version: 10.2.6
       turbo:
         specifier: ^2.9.16
         version: 2.9.16
