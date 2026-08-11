@@ -1,42 +1,36 @@
-import { NextResponse, after } from "next/server";
-import { EventType, Prisma } from "@prisma/client";
-import { IngestEventSchema, type IngestEventResponse } from "@argos/shared";
-import { db } from "@/lib/server/db";
-import { requireAuth } from "@/lib/server/auth-helper";
-import { handleRouteError, jsonError } from "@/lib/server/error-helper";
+import { NextResponse, after } from 'next/server'
+import { EventType, Prisma } from '@prisma/client'
+import { IngestEventSchema, type IngestEventResponse } from '@argos/shared'
+import { db } from '@/lib/server/db'
+import { requireAuth } from '@/lib/server/auth-helper'
+import { handleRouteError } from '@/lib/server/error-helper'
 import {
   deriveFields,
   truncateMessageContent,
   truncateToolResponse,
-} from "@/lib/server/events";
-import { calculateCost } from "@/lib/server/cost";
+} from '@/lib/server/events'
+import { calculateCost } from '@/lib/server/cost'
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // POST /api/events
 export async function POST(req: Request) {
   try {
-    const auth = await requireAuth(req);
-    if (auth instanceof NextResponse) return auth;
-    const { userId } = auth;
+    const auth = await requireAuth(req)
+    if (auth instanceof NextResponse) return auth
+    const { userId } = auth
 
     // 1. IngestEventSchema 검증 (Zod safeParse - 응답 shape 호환을 위해 parse 아님)
-    const parseResult = IngestEventSchema.safeParse(await req.json());
+    const parseResult = IngestEventSchema.safeParse(await req.json())
     if (!parseResult.success) {
       return NextResponse.json(
-        {
-          error: {
-            code: "VALIDATION_ERROR",
-            message: "Validation failed",
-            details: parseResult.error.issues,
-          },
-        },
-        { status: 400 },
-      );
+        { error: 'Validation failed', details: parseResult.error.issues },
+        { status: 400 }
+      )
     }
 
-    const payload = parseResult.data;
+    const payload = parseResult.data
 
     // 2. Project 조회 + org 멤버십 확인 (403 if 비멤버)
     const project = await db.project.findUnique({
@@ -53,18 +47,17 @@ export async function POST(req: Request) {
           },
         },
       },
-    });
+    })
 
     if (!project) {
-      return jsonError("PROJECT_NOT_FOUND", "Project not found", 404);
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
     if (project.organization.memberships.length === 0) {
-      return jsonError(
-        "FORBIDDEN",
-        "Forbidden: not a member of the organization",
-        403,
-      );
+      return NextResponse.json(
+        { error: 'Forbidden: not a member of the organization' },
+        { status: 403 }
+      )
     }
 
     // 3. ClaudeSession upsert (create-only, 이미 존재하면 update 없음)
@@ -76,18 +69,18 @@ export async function POST(req: Request) {
         id: payload.sessionId,
         projectId: payload.projectId,
         userId,
-        agent: payload.agent ?? "CLAUDE",
+        agent: payload.agent ?? 'CLAUDE',
         transcriptPath: null,
       },
       update: {},
-    });
+    })
 
     // 4. deriveFields(payload)로 파생 필드 계산
-    const derived = deriveFields(payload);
-    const eventType = mapHookEventNameToEventType(payload.hookEventName);
+    const derived = deriveFields(payload)
+    const eventType = mapHookEventNameToEventType(payload.hookEventName)
 
     // 5. Event insert — PRE_TOOL_USE는 Event 대신 TOOL Message로 기록
-    if (eventType !== "PRE_TOOL_USE") {
+    if (eventType !== 'PRE_TOOL_USE') {
       await db.event.create({
         data: {
           sessionId: payload.sessionId,
@@ -106,13 +99,13 @@ export async function POST(req: Request) {
           agentDesc: derived.agentDesc,
           agentId: payload.agentId ?? null,
         },
-      });
+      })
     }
 
     // 5-1. PRE/POST TOOL 이벤트는 TOOL Message row upsert로 실시간 기록
     // Stop 때 transcript 기반으로 전체 교체되므로 여기선 best-effort 채움
     if (
-      (eventType === "PRE_TOOL_USE" || eventType === "POST_TOOL_USE") &&
+      (eventType === 'PRE_TOOL_USE' || eventType === 'POST_TOOL_USE') &&
       payload.toolUseId &&
       payload.toolName
     ) {
@@ -122,32 +115,28 @@ export async function POST(req: Request) {
         toolName: payload.toolName,
         toolInput: payload.toolInput,
         toolResponse: payload.toolResponse,
-        isPost: eventType === "POST_TOOL_USE",
-      });
+        isPost: eventType === 'POST_TOOL_USE',
+      })
     }
 
     // 6. Stop/SubagentStop이면 응답 후 비동기 처리
     // Vercel/Node serverless에선 setImmediate가 응답 후 드롭됨 → next/server의 after() 사용
-    if (eventType === "STOP" || eventType === "SUBAGENT_STOP") {
+    if (eventType === 'STOP' || eventType === 'SUBAGENT_STOP') {
       after(async () => {
         try {
           // Main Stop: 세션 종료 메타 업데이트 (endedAt, title, summary)
           // SubagentStop은 CLI에서 이미 필터링되지만 방어적으로 STOP만 처리
-          if (eventType === "STOP") {
+          if (eventType === 'STOP') {
             await db.claudeSession.update({
               where: { id: payload.sessionId },
               data: {
                 endedAt: new Date(),
                 // create 시 누락됐어도 STOP 에서 출처를 교정 (Codex STOP 은 항상 agent 를 실어 보냄)
                 ...(payload.agent ? { agent: payload.agent } : {}),
-                ...(payload.title !== undefined
-                  ? { title: payload.title }
-                  : {}),
-                ...(payload.summary !== undefined
-                  ? { summary: payload.summary }
-                  : {}),
+                ...(payload.title !== undefined ? { title: payload.title } : {}),
+                ...(payload.summary !== undefined ? { summary: payload.summary } : {}),
               },
-            });
+            })
           }
 
           // usagePerTurn이 있으면 per-turn bulk insert (신규)
@@ -163,10 +152,10 @@ export async function POST(req: Request) {
                 cacheReadTokens: u.cacheReadTokens,
                 estimatedCostUsd: calculateCost(u),
                 model: u.model ?? null,
-                isSubagent: eventType === "SUBAGENT_STOP",
+                isSubagent: eventType === 'SUBAGENT_STOP',
                 timestamp: new Date(u.timestamp),
               })),
-            });
+            })
 
             // Invalidate DailyProjectStat cache for any past dates in the inserted records.
             // Ensures late-arriving per-turn data is reflected on next dashboard load.
@@ -174,29 +163,25 @@ export async function POST(req: Request) {
               new Date().getUTCFullYear(),
               new Date().getUTCMonth(),
               new Date().getUTCDate(),
-            );
+            )
             const pastDates = [
               ...new Set(
                 payload.usagePerTurn
                   .map((u) => {
-                    const d = new Date(u.timestamp);
-                    return Date.UTC(
-                      d.getUTCFullYear(),
-                      d.getUTCMonth(),
-                      d.getUTCDate(),
-                    );
+                    const d = new Date(u.timestamp)
+                    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
                   })
                   .filter((ms) => ms < todayMs)
                   .map((ms) => new Date(ms).toISOString()),
               ),
-            ];
+            ]
             if (pastDates.length > 0) {
               await db.dailyProjectStat.deleteMany({
                 where: {
                   projectId: payload.projectId,
                   date: { in: pastDates.map((iso) => new Date(iso)) },
                 },
-              });
+              })
             }
           } else if (payload.usage) {
             // 하위호환: usagePerTurn이 없으면 기존 단일 insert
@@ -211,18 +196,16 @@ export async function POST(req: Request) {
                 cacheReadTokens: payload.usage.cacheReadTokens,
                 estimatedCostUsd: calculateCost(payload.usage),
                 model: payload.usage.model ?? null,
-                isSubagent: eventType === "SUBAGENT_STOP",
+                isSubagent: eventType === 'SUBAGENT_STOP',
               },
-            });
+            })
           }
 
           // messages가 있으면 Message 교체 (transcript가 authoritative)
           // 실시간으로 들어온 TOOL row들도 여기서 정확한 timestamp/duration/content로 덮어씀
           if (payload.messages && payload.messages.length > 0) {
             await db.$transaction([
-              db.message.deleteMany({
-                where: { sessionId: payload.sessionId },
-              }),
+              db.message.deleteMany({ where: { sessionId: payload.sessionId } }),
               db.message.createMany({
                 data: payload.messages.map((m) => ({
                   sessionId: payload.sessionId,
@@ -236,12 +219,12 @@ export async function POST(req: Request) {
                   durationMs: m.durationMs ?? null,
                 })),
               }),
-            ]);
+            ])
           }
         } catch {
           // 에러 발생해도 무시 (fire-and-forget)
         }
-      });
+      })
     }
 
     // 7. 즉시 202 Accepted 응답 — self-heal payload 포함 (IngestEventResponse superset)
@@ -254,10 +237,10 @@ export async function POST(req: Request) {
           orgSlug: project.organization.slug,
         },
       } satisfies IngestEventResponse,
-      { status: 202 },
-    );
+      { status: 202 }
+    )
   } catch (err) {
-    return handleRouteError(err);
+    return handleRouteError(err)
   }
 }
 
@@ -268,37 +251,37 @@ export async function POST(req: Request) {
  * Stop 때 transcript 기반으로 전체 교체되므로 best-effort만 한다.
  */
 async function upsertToolMessage(opts: {
-  sessionId: string;
-  toolUseId: string;
-  toolName: string;
-  toolInput?: Record<string, unknown>;
-  toolResponse?: string;
-  isPost: boolean;
+  sessionId: string
+  toolUseId: string
+  toolName: string
+  toolInput?: Record<string, unknown>
+  toolResponse?: string
+  isPost: boolean
 }): Promise<void> {
   const existing = await db.message.findFirst({
     where: { sessionId: opts.sessionId, toolUseId: opts.toolUseId },
-  });
+  })
 
   if (existing) {
     if (opts.isPost) {
-      const startMs = existing.timestamp.getTime();
-      const endMs = Date.now();
+      const startMs = existing.timestamp.getTime()
+      const endMs = Date.now()
       await db.message.update({
         where: { id: existing.id },
         data: {
-          content: truncateMessageContent(opts.toolResponse ?? ""),
+          content: truncateMessageContent(opts.toolResponse ?? ''),
           durationMs: Math.max(0, endMs - startMs),
         },
-      });
+      })
     }
-    return;
+    return
   }
 
   await db.message.create({
     data: {
       sessionId: opts.sessionId,
-      role: "TOOL",
-      content: truncateMessageContent(opts.toolResponse ?? ""),
+      role: 'TOOL',
+      content: truncateMessageContent(opts.toolResponse ?? ''),
       sequence: 0, // Stop 때 transcript 기준으로 재할당
       timestamp: new Date(),
       toolName: opts.toolName,
@@ -306,23 +289,23 @@ async function upsertToolMessage(opts: {
       toolUseId: opts.toolUseId,
       durationMs: null,
     },
-  });
+  })
 }
 
 // hookEventName → EventType 매핑
 function mapHookEventNameToEventType(hookEventName: string): EventType {
   switch (hookEventName) {
-    case "SESSION_START":
-      return EventType.SESSION_START;
-    case "PRE_TOOL_USE":
-      return EventType.PRE_TOOL_USE;
-    case "POST_TOOL_USE":
-      return EventType.POST_TOOL_USE;
-    case "STOP":
-      return EventType.STOP;
-    case "SUBAGENT_STOP":
-      return EventType.SUBAGENT_STOP;
+    case 'SESSION_START':
+      return EventType.SESSION_START
+    case 'PRE_TOOL_USE':
+      return EventType.PRE_TOOL_USE
+    case 'POST_TOOL_USE':
+      return EventType.POST_TOOL_USE
+    case 'STOP':
+      return EventType.STOP
+    case 'SUBAGENT_STOP':
+      return EventType.SUBAGENT_STOP
     default:
-      throw new Error(`Unknown hookEventName: ${hookEventName}`);
+      throw new Error(`Unknown hookEventName: ${hookEventName}`)
   }
 }
