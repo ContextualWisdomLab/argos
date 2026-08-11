@@ -9,8 +9,10 @@ import { cleanup } from '@testing-library/react';
 global.React = React;
 
 vi.mock('lucide-react', () => ({
-  Copy: () => React.createElement('svg', { 'data-testid': 'copy-icon' }),
-  Check: () => React.createElement('svg', { 'data-testid': 'check-icon' }),
+  Copy: (props: React.SVGProps<SVGSVGElement>) =>
+    React.createElement('svg', { ...props, 'data-testid': 'copy-icon' }),
+  Check: (props: React.SVGProps<SVGSVGElement>) =>
+    React.createElement('svg', { ...props, 'data-testid': 'check-icon' }),
 }));
 
 describe('CopyPromptButton', () => {
@@ -37,9 +39,9 @@ describe('CopyPromptButton', () => {
 
     const button = screen.getByRole('button');
     expect(button).toBeDefined();
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-pressed')).toBeNull();
     expect(screen.getByText('프롬프트 복사')).toBeDefined();
-    expect(screen.getByTestId('copy-icon')).toBeDefined();
+    expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 
   it('renders correctly with custom labels', () => {
@@ -59,10 +61,10 @@ describe('CopyPromptButton', () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test prompt');
 
-    // Check copied state
-    expect(button.getAttribute('aria-pressed')).toBe('true');
+    // A copy action reports its result without masquerading as a toggle.
+    expect(button.getAttribute('aria-pressed')).toBeNull();
     expect(screen.getByText('Copied')).toBeDefined();
-    expect(screen.getByTestId('check-icon')).toBeDefined();
+    expect(screen.getByTestId('check-icon').getAttribute('aria-hidden')).toBe('true');
 
     // Fast-forward timer
     await act(async () => {
@@ -70,9 +72,9 @@ describe('CopyPromptButton', () => {
     });
 
     // Check reverted state
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-pressed')).toBeNull();
     expect(screen.getByText('Copy')).toBeDefined();
-    expect(screen.getByTestId('copy-icon')).toBeDefined();
+    expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 
   it('fails silently if clipboard API is blocked or throws error', async () => {
@@ -93,7 +95,7 @@ describe('CopyPromptButton', () => {
     });
 
     // It shouldn't change state since it failed
-    expect(button.getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByTestId('copy-icon')).toBeDefined();
+    expect(button.getAttribute('aria-pressed')).toBeNull();
+    expect(screen.getByTestId('copy-icon').getAttribute('aria-hidden')).toBe('true');
   });
 });
