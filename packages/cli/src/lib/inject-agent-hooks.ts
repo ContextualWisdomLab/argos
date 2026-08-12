@@ -1,35 +1,43 @@
-import { join } from 'path'
-import chalk from 'chalk'
-import type { ExternalDeps } from '../deps.js'
+import { fileURLToPath, pathToFileURL } from "url";
+import chalk from "chalk";
+import type { ExternalDeps } from "../deps.js";
 
-type InjectResult = 'injected' | 'already_present'
+type InjectResult = "injected" | "already_present";
 
 export interface AgentHookResult {
-  claude: InjectResult
-  codex: InjectResult
+  claude: InjectResult;
+  codex: InjectResult;
 }
 
 /**
  * Claude Code(.claude/settings.json) 와 Codex(.codex/hooks.json) hook 을 모두 주입한다.
  * 두 에이전트 중 무엇을 쓰든 argos 가 추적하도록 기본적으로 둘 다 설치한다(미사용 에이전트의 파일은 무해).
  */
-export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
+export function injectAgentHooks(
+  deps: ExternalDeps,
+  cwd: string,
+): AgentHookResult {
+  const cwdUrl = pathToFileURL(`${cwd}/`);
   return {
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
-    claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal
-    codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
-  }
+    claude: deps.hooks.inject(
+      fileURLToPath(new URL(".claude/settings.json", cwdUrl)),
+      "claude",
+    ),
+    codex: deps.hooks.inject(
+      fileURLToPath(new URL(".codex/hooks.json", cwdUrl)),
+      "codex",
+    ),
+  };
 }
 
 /** 주입 결과를 사람이 읽는 메시지로 출력한다. */
 export function printAgentHookResult(result: AgentHookResult): void {
   const line = (label: string, r: InjectResult) =>
-    r === 'injected'
+    r === "injected"
       ? chalk.green(`✓ ${label} hooks 설치 완료`)
-      : chalk.yellow(`✓ ${label} hooks 이미 설치됨`)
-  console.log(line('Claude Code (.claude/settings.json)', result.claude))
-  console.log(line('Codex (.codex/hooks.json)', result.codex))
+      : chalk.yellow(`✓ ${label} hooks 이미 설치됨`);
+  console.log(line("Claude Code (.claude/settings.json)", result.claude));
+  console.log(line("Codex (.codex/hooks.json)", result.codex));
 }
 
 /**
@@ -37,8 +45,12 @@ export function printAgentHookResult(result: AgentHookResult): void {
  * 세팅 직후 사용자가 한 번은 거쳐야 하는 단계이므로 명시적으로 안내한다.
  */
 export function printCodexTrustNotice(): void {
-  console.log()
-  console.log(chalk.bold('Codex 사용자 추가 단계 (1회):'))
-  console.log('  Codex 는 보안상 새 hook 을 자동 실행하지 않습니다.')
-  console.log('  codex 를 실행한 뒤 ' + chalk.cyan('/hooks') + ' 에서 argos hook 들을 trust 하세요.')
+  console.log();
+  console.log(chalk.bold("Codex 사용자 추가 단계 (1회):"));
+  console.log("  Codex 는 보안상 새 hook 을 자동 실행하지 않습니다.");
+  console.log(
+    "  codex 를 실행한 뒤 " +
+      chalk.cyan("/hooks") +
+      " 에서 argos hook 들을 trust 하세요.",
+  );
 }
