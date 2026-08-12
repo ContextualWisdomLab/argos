@@ -10,7 +10,6 @@ export function formatTokens(n: number): string {
   }
   return n.toLocaleString()
 }
-
 export function formatCost(usd: number): string {
   if (usd >= 1) {
     return `$${usd.toFixed(2)}`
@@ -141,3 +140,4 @@ export function formatDuration(startedAt: string, endedAt?: string | null): stri
   const minutes = totalMinutes % 60
   return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`
 }
+

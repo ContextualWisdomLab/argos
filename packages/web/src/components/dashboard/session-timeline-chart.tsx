@@ -23,7 +23,6 @@ interface SessionTimelineChartProps {
   messages: SessionDetail['messages']
   sessionStartedAt: string
 }
-
 interface ToolCallPoint {
   toolName: string
   parsedTimestamp: number
@@ -212,3 +211,4 @@ export function SessionTimelineChart({
     </ResponsiveContainer>
   )
 }
+

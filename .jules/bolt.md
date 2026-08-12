@@ -1,3 +1,5 @@
-## 2024-08-10 - Date Parsing Optimization
-**Learning:** Using `new Date(string).getTime()` inside loops or sort callbacks causes unnecessary object allocations and slows down parsing in V8.
-**Action:** Always prefer `Date.parse(string)` when parsing ISO strings to timestamps, especially in performance-critical paths like charts and list rendering.
+## 2026-08-11 - Use `Date.parse` for timestamp primitives
+
+**Learning:** `Date.parse(value)` returns the timestamp primitive directly, while `new Date(value).getTime()` also constructs a `Date` object. Both use the same ECMAScript string-parsing semantics for these call sites.
+
+**Action:** In frequently executed paths that only need a timestamp primitive, prefer `Date.parse(value)`. Treat the allocation reduction as a bounded micro-optimization unless a committed benchmark establishes a larger runtime effect.

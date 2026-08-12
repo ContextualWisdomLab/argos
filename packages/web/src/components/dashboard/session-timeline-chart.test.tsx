@@ -17,7 +17,6 @@ vi.mock('recharts', async () => {
     ),
   }
 })
-
 function readChartData(): Array<{
   input: number
   toolSummary: string
@@ -280,3 +279,4 @@ describe('SessionTimelineChart', () => {
     )
   })
 })
+
