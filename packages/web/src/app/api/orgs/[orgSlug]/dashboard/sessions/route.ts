@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client'
 import { db } from '@/lib/server/db'
 import { requireAuth } from '@/lib/server/auth-helper'
 import { handleRouteError } from '@/lib/server/error-helper'
+import { csvField } from '@/lib/server/csv/export'
 import { parseDateRange, parsePagination } from '@/lib/server/dashboard'
 import {
   assertOrgAccessBySlugOrResponse,
@@ -69,12 +70,6 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
       name: session.project.name,
     },
   }
-}
-
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
