@@ -18,6 +18,7 @@ vi.mock('./jwt', () => ({
 }))
 
 import { requireAuth } from './auth-helper'
+import { db } from '@/lib/server/db'
 import { verifyJwt } from './jwt'
 
 beforeEach(() => {
@@ -48,6 +49,23 @@ describe('requireAuth', () => {
     expect((result as NextResponse).status).toBe(401)
     await expect((result as NextResponse).json()).resolves.toEqual({
       error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
+    })
+  })
+
+  it('routes database failures through the shared route error handler', async () => {
+    vi.mocked(verifyJwt).mockResolvedValue({ sub: 'user-1' })
+    vi.mocked(db.cliToken.findUnique).mockRejectedValue(new Error('database unavailable'))
+
+    const result = await requireAuth(
+      new Request('https://argos.example/api/events', {
+        headers: { Authorization: 'Bearer valid-token' },
+      }),
+    )
+
+    expect(result).toBeInstanceOf(NextResponse)
+    expect((result as NextResponse).status).toBe(500)
+    await expect((result as NextResponse).json()).resolves.toEqual({
+      error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
     })
   })
 })

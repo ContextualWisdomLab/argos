@@ -3,7 +3,7 @@ import 'server-only'
 import { createHash } from 'crypto'
 import { NextResponse } from 'next/server'
 import { db } from './db'
-import { jsonError } from './error-helper'
+import { handleRouteError, jsonError } from './error-helper'
 import { verifyJwt } from './jwt'
 
 // 토큰 검증 결과 in-memory 캐시. TTL 동안 revocation 반영이 지연될 수 있으나,
@@ -75,8 +75,8 @@ export async function requireAuth(
   let cliToken
   try {
     cliToken = await db.cliToken.findUnique({ where: { tokenHash } })
-  } catch {
-    return jsonError('INTERNAL_ERROR', 'Internal server error', 500)
+  } catch (err) {
+    return handleRouteError(err)
   }
 
   if (!cliToken || cliToken.revokedAt) {
