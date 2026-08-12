@@ -1,46 +1,46 @@
-'use client'
+"use client";
 
-import { useState, useRef, useMemo, useCallback } from 'react'
+import { useState, useRef, useMemo, useCallback } from "react";
 import {
   formatSlashCommandText,
   type TimelineEvent,
   type TimelineGroup,
-} from '@/lib/timeline-events'
-import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
-import { segmentVisuals } from './session-ribbon-visuals'
+} from "@/lib/timeline-events";
+import { formatTokens, formatCost, formatRelativeTime } from "@/lib/format";
+import { segmentVisuals } from "./session-ribbon-visuals";
 
 type Props = {
-  events: TimelineEvent[]
-  groups: TimelineGroup[]
-  selectedIdx: number | null
-  onSelect: (idx: number) => void
-  sessionStartedAt: string
-  expandedGroups: Set<number>
-  onToggleGroup: (firstIdx: number) => void
-}
+  events: TimelineEvent[];
+  groups: TimelineGroup[];
+  selectedIdx: number | null;
+  onSelect: (idx: number) => void;
+  sessionStartedAt: string;
+  expandedGroups: Set<number>;
+  onToggleGroup: (firstIdx: number) => void;
+};
 
 type HoverState =
-  | { kind: 'event'; idx: number; x: number }
+  | { kind: "event"; idx: number; x: number }
   | {
-      kind: 'merged'
-      firstIdx: number
-      toolName: string
-      count: number
-      firstEvent: TimelineEvent
-      x: number
-    }
+      kind: "merged";
+      firstIdx: number;
+      toolName: string;
+      count: number;
+      firstEvent: TimelineEvent;
+      x: number;
+    };
 
 function EventTooltipBody({
   event,
   sessionStartedAt,
 }: {
-  event: TimelineEvent
-  sessionStartedAt: string
+  event: TimelineEvent;
+  sessionStartedAt: string;
 }) {
-  const elapsed = formatRelativeTime(event.timestamp, sessionStartedAt)
+  const elapsed = formatRelativeTime(event.timestamp, sessionStartedAt);
 
-  if (event.kind === 'message' && event.role === 'HUMAN') {
-    const preview = formatSlashCommandText(event.content).slice(0, 120)
+  if (event.kind === "message" && event.role === "HUMAN") {
+    const preview = formatSlashCommandText(event.content).slice(0, 120);
     return (
       <>
         <p className="font-medium">User</p>
@@ -51,10 +51,10 @@ function EventTooltipBody({
           </p>
         )}
       </>
-    )
+    );
   }
 
-  if (event.kind === 'message') {
+  if (event.kind === "message") {
     return (
       <>
         <p className="font-medium">Agent</p>
@@ -63,12 +63,16 @@ function EventTooltipBody({
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-chart-1" />
             <span className="text-muted-foreground">Input:</span>
-            <span className="font-medium tabular-nums">{formatTokens(event.inputTokens)}</span>
+            <span className="font-medium tabular-nums">
+              {formatTokens(event.inputTokens)}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-chart-2" />
             <span className="text-muted-foreground">Output:</span>
-            <span className="font-medium tabular-nums">{formatTokens(event.outputTokens)}</span>
+            <span className="font-medium tabular-nums">
+              {formatTokens(event.outputTokens)}
+            </span>
           </div>
           <div className="pt-1 mt-1 border-t border-border">
             <span className="text-muted-foreground">Cost:</span>
@@ -84,17 +88,18 @@ function EventTooltipBody({
           )}
         </div>
       </>
-    )
+    );
   }
 
   const dur = event.durationMs
     ? `${(event.durationMs / 1000).toFixed(1)}s`
-    : null
-  const label = event.isSkillCall && event.skillName
-    ? `Skill: ${event.skillName}`
-    : event.isAgentCall && event.agentType
-      ? `Subagent: ${event.agentType}`
-      : event.toolName
+    : null;
+  const label =
+    event.isSkillCall && event.skillName
+      ? `Skill: ${event.skillName}`
+      : event.isAgentCall && event.agentType
+        ? `Subagent: ${event.agentType}`
+        : event.toolName;
   return (
     <>
       <p className="font-medium">Tool</p>
@@ -112,7 +117,7 @@ function EventTooltipBody({
         )}
       </div>
     </>
-  )
+  );
 }
 
 function MergedTooltipBody({
@@ -121,12 +126,12 @@ function MergedTooltipBody({
   firstEvent,
   sessionStartedAt,
 }: {
-  toolName: string
-  count: number
-  firstEvent: TimelineEvent
-  sessionStartedAt: string
+  toolName: string;
+  count: number;
+  firstEvent: TimelineEvent;
+  sessionStartedAt: string;
 }) {
-  const elapsed = formatRelativeTime(firstEvent.timestamp, sessionStartedAt)
+  const elapsed = formatRelativeTime(firstEvent.timestamp, sessionStartedAt);
   return (
     <>
       <p className="font-medium">Tool</p>
@@ -143,7 +148,7 @@ function MergedTooltipBody({
         </p>
       </div>
     </>
-  )
+  );
 }
 
 export function SessionActivityRibbon({
@@ -155,42 +160,49 @@ export function SessionActivityRibbon({
   expandedGroups,
   onToggleGroup,
 }: Props) {
-  const [hover, setHover] = useState<HoverState | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [hover, setHover] = useState<HoverState | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const trackMouse = useCallback((e: React.MouseEvent) => {
-    const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return e.clientX
-    return e.clientX - rect.left
-  }, [])
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return e.clientX;
+    return e.clientX - rect.left;
+  }, []);
 
-  const handleEventHover = useCallback((idx: number) => (e: React.MouseEvent) => {
-    setHover({ kind: 'event', idx, x: trackMouse(e) })
-  }, [trackMouse])
+  const handleEventHover = useCallback(
+    (idx: number) => (e: React.MouseEvent) => {
+      setHover({ kind: "event", idx, x: trackMouse(e) });
+    },
+    [trackMouse],
+  );
 
-  const handleMergedHover = useCallback((
-    firstIdx: number,
-    toolName: string,
-    count: number,
-    firstEvent: TimelineEvent,
-  ) => (e: React.MouseEvent) => {
-    setHover({
-      kind: 'merged',
-      firstIdx,
-      toolName,
-      count,
-      firstEvent,
-      x: trackMouse(e),
-    })
-  }, [trackMouse])
+  const handleMergedHover = useCallback(
+    (
+      firstIdx: number,
+      toolName: string,
+      count: number,
+      firstEvent: TimelineEvent,
+    ) =>
+      (e: React.MouseEvent) => {
+        setHover({
+          kind: "merged",
+          firstIdx,
+          toolName,
+          count,
+          firstEvent,
+          x: trackMouse(e),
+        });
+      },
+    [trackMouse],
+  );
 
   const segments = useMemo(() => {
-    const result: React.ReactNode[] = []
+    const result: React.ReactNode[] = [];
     for (const group of groups) {
-      if (group.kind === 'single') {
-        const { event, idx } = group
-        const { bg, style } = segmentVisuals(event)
-        const selected = idx === selectedIdx
+      if (group.kind === "single") {
+        const { event, idx } = group;
+        const { bg, style } = segmentVisuals(event);
+        const selected = idx === selectedIdx;
         result.push(
           <button
             key={`s-${idx}`}
@@ -201,20 +213,21 @@ export function SessionActivityRibbon({
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
+            aria-pressed={selected}
             className={`h-full ${bg} transition-opacity ${
               selected
-                ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                : 'hover:opacity-70'
+                ? "outline outline-2 outline-offset-[-2px] outline-foreground"
+                : "hover:opacity-70"
             }`}
           />,
-        )
-        continue
+        );
+        continue;
       }
 
       if (group.items.length === 1) {
-        const { event, idx } = group.items[0]
-        const { bg, style } = segmentVisuals(event)
-        const selected = idx === selectedIdx
+        const { event, idx } = group.items[0];
+        const { bg, style } = segmentVisuals(event);
+        const selected = idx === selectedIdx;
         result.push(
           <button
             key={`gs-${idx}`}
@@ -225,26 +238,29 @@ export function SessionActivityRibbon({
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
+            aria-pressed={selected}
             className={`h-full ${bg} transition-opacity ${
               selected
-                ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                : 'hover:opacity-70'
+                ? "outline outline-2 outline-offset-[-2px] outline-foreground"
+                : "hover:opacity-70"
             }`}
           />,
-        )
-        continue
+        );
+        continue;
       }
 
-      const firstIdx = group.items[0].idx
-      const lastIdx = group.items[group.items.length - 1].idx
+      const firstIdx = group.items[0].idx;
+      const lastIdx = group.items[group.items.length - 1].idx;
       const containsSelected =
-        selectedIdx !== null && selectedIdx >= firstIdx && selectedIdx <= lastIdx
-      const isExpanded = expandedGroups.has(firstIdx) || containsSelected
+        selectedIdx !== null &&
+        selectedIdx >= firstIdx &&
+        selectedIdx <= lastIdx;
+      const isExpanded = expandedGroups.has(firstIdx) || containsSelected;
 
       if (isExpanded) {
         for (const { event, idx } of group.items) {
-          const { bg, style } = segmentVisuals(event)
-          const selected = idx === selectedIdx
+          const { bg, style } = segmentVisuals(event);
+          const selected = idx === selectedIdx;
           result.push(
             <button
               key={`gc-${idx}`}
@@ -255,22 +271,23 @@ export function SessionActivityRibbon({
               onMouseMove={handleEventHover(idx)}
               onMouseLeave={() => setHover(null)}
               aria-label={`Event ${idx + 1}`}
+              aria-pressed={selected}
               className={`h-full ${bg} transition-opacity ${
                 selected
-                  ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                  : 'hover:opacity-70'
+                  ? "outline outline-2 outline-offset-[-2px] outline-foreground"
+                  : "hover:opacity-70"
               }`}
             />,
-          )
+          );
         }
-        continue
+        continue;
       }
 
       result.push(
         <button
           key={`gh-${firstIdx}`}
           type="button"
-          style={{ flex: '0 0 10px' }}
+          style={{ flex: "0 0 10px" }}
           onClick={() => onToggleGroup(firstIdx)}
           onMouseEnter={handleMergedHover(
             firstIdx,
@@ -286,16 +303,25 @@ export function SessionActivityRibbon({
           )}
           onMouseLeave={() => setHover(null)}
           aria-label={`${group.toolName} x${group.items.length}`}
+          aria-expanded={false}
           className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
         >
           <span className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px bg-background/50" />
         </button>,
-      )
+      );
     }
-    return result
-  }, [groups, expandedGroups, selectedIdx, onSelect, onToggleGroup, handleEventHover, handleMergedHover])
+    return result;
+  }, [
+    groups,
+    expandedGroups,
+    selectedIdx,
+    onSelect,
+    onToggleGroup,
+    handleEventHover,
+    handleMergedHover,
+  ]);
 
-  if (events.length === 0) return null
+  if (events.length === 0) return null;
 
   return (
     <div ref={containerRef} className="relative">
@@ -307,11 +333,11 @@ export function SessionActivityRibbon({
           className="pointer-events-none absolute z-10 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg p-3"
           style={{
             left: `${hover.x}px`,
-            bottom: 'calc(100% + 6px)',
-            transform: 'translateX(-50%)',
+            bottom: "calc(100% + 6px)",
+            transform: "translateX(-50%)",
           }}
         >
-          {hover.kind === 'event' ? (
+          {hover.kind === "event" ? (
             <EventTooltipBody
               event={events[hover.idx]}
               sessionStartedAt={sessionStartedAt}
@@ -327,5 +353,5 @@ export function SessionActivityRibbon({
         </div>
       )}
     </div>
-  )
+  );
 }
