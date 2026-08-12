@@ -12,8 +12,11 @@ describe('csvField', () => {
     expect(csvField('+123')).toBe("'+123")
     expect(csvField('-123')).toBe("'-123")
     expect(csvField('@test')).toBe("'@test")
-    expect(csvField('\ttest')).toBe("'\ttest")
-    expect(csvField('\rtest')).toBe('"\'\rtest"') // Due to regex `/[",\r\n]/.test(text)` it gets wrapped in double quotes after escaping
+  })
+
+  it('strips leading whitespace that could bypass CSV injection', () => {
+    expect(csvField(' =cmd|c!test')).toBe("'=cmd|c!test")
+    expect(csvField('\t=cmd|c!test')).toBe("'=cmd|c!test")
   })
 
   it('quotes text containing quotes or newlines', () => {
