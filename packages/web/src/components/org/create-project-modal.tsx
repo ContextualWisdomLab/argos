@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -105,7 +106,14 @@ export function CreateProjectModal({
               size="sm"
               disabled={!name.trim() || mutation.isPending}
             >
-              {mutation.isPending ? '생성 중…' : '생성'}
+              {mutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  생성 중…
+                </>
+              ) : (
+                '생성'
+              )}
             </Button>
           </AlertDialogFooter>
         </form>
