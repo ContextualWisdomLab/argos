@@ -38,7 +38,7 @@ describe('CreateProjectModal', () => {
       isPending: false,
       isError: false,
       error: null,
-    } as any)
+    } as unknown as ReturnType<typeof useCreateProject>)
     render(<CreateProjectModal orgSlug="test-org" open={true} onOpenChange={() => {}} />)
     expect(screen.getByTestId('alert-dialog')).toBeInTheDocument()
     expect(screen.getByText('새 프로젝트 만들기')).toBeInTheDocument()
@@ -51,7 +51,7 @@ describe('CreateProjectModal', () => {
       isPending: true,
       isError: false,
       error: null,
-    } as any)
+    } as unknown as ReturnType<typeof useCreateProject>)
 
     render(<CreateProjectModal orgSlug="test-org" open={true} onOpenChange={() => {}} />)
 
