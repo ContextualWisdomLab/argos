@@ -1,7 +1,7 @@
 import { ResetPasswordSchema } from '@argos/shared'
 import { NextRequest, NextResponse } from 'next/server'
 
-import { handleRouteError } from '@/lib/server/error-helper'
+import { handleRouteError, jsonError } from '@/lib/server/error-helper'
 import {
   getPasswordResetStatus,
   resetPasswordWithToken,
@@ -12,12 +12,12 @@ export const dynamic = 'force-dynamic'
 
 function statusToResponse(status: 'not_found' | 'expired' | 'used') {
   if (status === 'not_found') {
-    return NextResponse.json({ error: 'Reset link not found' }, { status: 404 })
+    return jsonError('RESET_LINK_NOT_FOUND', 'Reset link not found', 404)
   }
   if (status === 'expired') {
-    return NextResponse.json({ error: 'Reset link expired' }, { status: 410 })
+    return jsonError('RESET_LINK_EXPIRED', 'Reset link expired', 410)
   }
-  return NextResponse.json({ error: 'Reset link already used' }, { status: 410 })
+  return jsonError('RESET_LINK_ALREADY_USED', 'Reset link already used', 410)
 }
 
 export async function GET(

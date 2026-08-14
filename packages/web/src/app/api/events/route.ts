@@ -24,9 +24,11 @@ export async function POST(req: Request) {
     // 1. IngestEventSchema 검증 (Zod safeParse - 응답 shape 호환을 위해 parse 아님)
     const parseResult = IngestEventSchema.safeParse(await req.json())
     if (!parseResult.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parseResult.error.issues },
-        { status: 400 }
+      return jsonError(
+        'VALIDATION_ERROR',
+        'Validation failed',
+        400,
+        parseResult.error.issues,
       )
     }
 
@@ -50,13 +52,14 @@ export async function POST(req: Request) {
     })
 
     if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+      return jsonError('PROJECT_NOT_FOUND', 'Project not found', 404)
     }
 
     if (project.organization.memberships.length === 0) {
-      return NextResponse.json(
-        { error: 'Forbidden: not a member of the organization' },
-        { status: 403 }
+      return jsonError(
+        'PROJECT_FORBIDDEN',
+        'Forbidden: not a member of the organization',
+        403,
       )
     }
 
@@ -67,32 +70,13 @@ export async function POST(req: Request) {
     // 메타(endedAt/title/summary)를 덮어쓰고 messages 전체를 삭제·교체할 수 있다
     // (아래 STOP 핸들러의 deleteMany/createMany). owner 격리로 cross-user·cross-tenant
     // 쓰기를 차단한다.
-    const existingSession = await db.claudeSession.findUnique({
-      where: { id: payload.sessionId },
-      select: { userId: true },
+    const sessionError = await ensureSessionOwnership({
+      sessionId: payload.sessionId,
+      projectId: payload.projectId,
+      userId,
+      agent: payload.agent,
     })
-    if (existingSession && existingSession.userId !== userId) {
-      return jsonError(
-        'SESSION_FORBIDDEN',
-        'session belongs to another user',
-        403
-      )
-    }
-
-    // 3. ClaudeSession upsert (create-only, 이미 존재하면 update 없음)
-    // 세션 출처(agent)는 생성 시 payload.agent 로 기록. 모든 Codex 이벤트가 'CODEX' 를 실어 보내므로
-    // 어느 이벤트가 세션을 만들든 올바르게 기록된다. 미지정(구버전 CLI)은 CLAUDE.
-    await db.claudeSession.upsert({
-      where: { id: payload.sessionId },
-      create: {
-        id: payload.sessionId,
-        projectId: payload.projectId,
-        userId,
-        agent: payload.agent ?? 'CLAUDE',
-        transcriptPath: null,
-      },
-      update: {},
-    })
+    if (sessionError) return sessionError
 
     // 4. deriveFields(payload)로 파생 필드 계산
     const derived = deriveFields(payload)
@@ -260,6 +244,67 @@ export async function POST(req: Request) {
     )
   } catch (err) {
     return handleRouteError(err)
+  }
+}
+
+/**
+ * Ensure an event can only address a session owned by the same user and project.
+ *
+ * The create-after-read path handles new sessions, while a unique-key race is
+ * re-read before accepting the event. This prevents a concurrent request from
+ * turning the initial ownership check into a cross-project write.
+ */
+async function ensureSessionOwnership(input: {
+  sessionId: string
+  projectId: string
+  userId: string
+  agent?: 'CLAUDE' | 'CODEX'
+}): Promise<NextResponse | null> {
+  const existing = await db.claudeSession.findUnique({
+    where: { id: input.sessionId },
+    select: { userId: true, projectId: true },
+  })
+
+  if (existing) {
+    return existing.userId === input.userId && existing.projectId === input.projectId
+      ? null
+      : jsonError(
+          'SESSION_FORBIDDEN',
+          'session does not belong to the requested user and project',
+          403,
+        )
+  }
+
+  try {
+    await db.claudeSession.create({
+      data: {
+        id: input.sessionId,
+        projectId: input.projectId,
+        userId: input.userId,
+        agent: input.agent ?? 'CLAUDE',
+        transcriptPath: null,
+      },
+    })
+    return null
+  } catch (error) {
+    if (
+      !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+      error.code !== 'P2002'
+    ) {
+      throw error
+    }
+
+    const raced = await db.claudeSession.findUnique({
+      where: { id: input.sessionId },
+      select: { userId: true, projectId: true },
+    })
+    return raced && raced.userId === input.userId && raced.projectId === input.projectId
+      ? null
+      : jsonError(
+          'SESSION_FORBIDDEN',
+          'session does not belong to the requested user and project',
+          403,
+        )
   }
 }
 
