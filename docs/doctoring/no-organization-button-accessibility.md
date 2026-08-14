@@ -16,7 +16,7 @@ The DOM regression test proves the shipped component, rather than a helper in is
 2. logout is non-submitting and has the repository focus-ring utilities;
 3. logout dispatches the intended sign-out callback;
 4. the decorative icon is absent from the accessibility tree contract; and
-5. activating the create button opens the organization modal.
+5. activating the create button opens the real organization dialog and exposes its visible title and labelled name input.
 
 ## Standards traceability
 
@@ -26,6 +26,6 @@ WCAG 2.2 Success Criterion 2.4.7 requires keyboard-operable interfaces to provid
 
 Web Accessibility Initiative. (2023). *Web Content Accessibility Guidelines (WCAG) 2.2*. World Wide Web Consortium. https://www.w3.org/TR/WCAG22/
 
-Web Accessibility Initiative. (2026). *Accessible Rich Internet Applications (WAI-ARIA) 1.3*. World Wide Web Consortium. https://www.w3.org/TR/wai-aria-1.3/
+Web Accessibility Initiative. (2026, June 4). *Accessible Rich Internet Applications (WAI-ARIA) 1.3* [Working draft]. World Wide Web Consortium. https://www.w3.org/TR/wai-aria-1.3/
 
 WHATWG. (2026). *HTML standard: The button element*. https://html.spec.whatwg.org/multipage/form-elements.html#the-button-element
