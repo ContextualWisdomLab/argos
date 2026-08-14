@@ -81,6 +81,23 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
   return `+${hours}h ${minutes}m`
 }
 
+/**
+ * Format an event timestamp as a non-negative `hours:mm:ss` session offset.
+ *
+ * The caller supplies the already-parsed session anchor so a virtualized list
+ * can reuse one primitive value across every visible row.
+ */
+export function formatElapsedHms(timestamp: string, sessionStartedAtMs: number): string {
+  const timestampMs = Date.parse(timestamp)
+  if (Number.isNaN(timestampMs) || Number.isNaN(sessionStartedAtMs)) return ''
+
+  const diffSeconds = Math.max(0, Math.floor((timestampMs - sessionStartedAtMs) / 1000))
+  const hours = Math.floor(diffSeconds / 3600)
+  const minutes = Math.floor((diffSeconds % 3600) / 60)
+  const seconds = diffSeconds % 60
+  return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 /**
@@ -88,7 +105,7 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000
  * 정확한 시각은 hover 등 title 속성에 별도로 넣어 보조한다.
  */
 export function formatLastUsed(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime()
+  const diffMs = Date.now() - Date.parse(iso)
   if (diffMs < ONE_DAY_MS) {
     return formatRelativeTime(iso)
   }
@@ -102,8 +119,8 @@ export function formatDurationMs(ms: number): string {
 }
 
 export function formatDuration(startedAt: string, endedAt?: string | null): string {
-  const start = new Date(startedAt).getTime()
-  const end = endedAt ? new Date(endedAt).getTime() : Date.now()
+  const start = Date.parse(startedAt)
+  const end = endedAt ? Date.parse(endedAt) : Date.now()
   const diffMs = Math.max(0, end - start)
 
   if (diffMs < 1000) return '0s'

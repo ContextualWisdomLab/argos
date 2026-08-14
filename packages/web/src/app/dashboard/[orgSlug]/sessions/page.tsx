@@ -332,8 +332,16 @@ function SessionsContent({
                     <td className="py-3 px-2 w-10">
                       <button
                         type="button"
-                        aria-label={session.title ? `세션 삭제: ${formatSlashCommandText(session.title)}` : '세션 삭제'}
-                        title={session.title ? `세션 삭제: ${formatSlashCommandText(session.title)}` : '세션 삭제'}
+                        aria-label={
+                          session.title
+                            ? `세션 삭제: ${formatSlashCommandText(session.title)}`
+                            : '세션 삭제'
+                        }
+                        title={
+                          session.title
+                            ? `세션 삭제: ${formatSlashCommandText(session.title)}`
+                            : '세션 삭제'
+                        }
                         onClick={(e) => {
                           e.stopPropagation()
                           setSessionToDelete(session)

@@ -44,7 +44,7 @@ function DateRangePickerContent() {
 
   const handlePreset = (days: number) => {
     const to = format(today, 'yyyy-MM-dd')
-    const from = format(subDays(today, days), 'yyyy-MM-dd')
+    const from = format(subDays(today, days - 1), 'yyyy-MM-dd')
 
     const newParams = new URLSearchParams(searchParams.toString())
     newParams.set('from', from)
