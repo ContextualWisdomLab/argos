@@ -28,7 +28,7 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         )}
         aria-expanded={open}
         aria-controls={contentId}
-        aria-label={`${title} 섹션 ${open ? "닫기" : "열기"}`}
+        aria-label={`${open ? 'Collapse' : 'Expand'} ${title} section`}
       >
         <h2 className="text-base font-medium">{title}</h2>
         {open ? (

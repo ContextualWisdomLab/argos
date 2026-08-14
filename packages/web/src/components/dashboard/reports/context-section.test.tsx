@@ -20,20 +20,20 @@ describe('ContextSection', () => {
     )
 
     // Initially closed
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 열기' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('button', { name: 'Expand Test Title section' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
     // Click to open
-    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 열기' }))
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 닫기' })).toHaveAttribute('aria-expanded', 'true')
+    await user.click(screen.getByRole('button', { name: 'Expand Test Title section' }))
+    expect(screen.getByRole('button', { name: 'Collapse Test Title section' })).toHaveAttribute('aria-expanded', 'true')
 
-    const region = screen.getByRole('region', { name: 'Test Title 섹션 닫기' })
+    const region = screen.getByRole('region', { name: 'Collapse Test Title section' })
     expect(region).toBeInTheDocument()
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
 
     // Click to close
-    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 닫기' }))
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 열기' })).toHaveAttribute('aria-expanded', 'false')
+    await user.click(screen.getByRole('button', { name: 'Collapse Test Title section' }))
+    expect(screen.getByRole('button', { name: 'Expand Test Title section' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
@@ -44,8 +44,8 @@ describe('ContextSection', () => {
       </ContextSection>
     )
 
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 닫기' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Collapse Test Title section' })).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Test Title 섹션 닫기' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Collapse Test Title section' })).toBeInTheDocument()
   })
 })
