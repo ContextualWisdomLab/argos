@@ -21,4 +21,5 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
+- 프로젝트 이름 변경·삭제 버튼과 텍스트가 이름을 제공하는 프로젝트 생성 버튼의 장식 아이콘을 접근성 트리에서 숨기고, 버튼의 기존 접근 가능한 이름이 유지되는지 렌더링 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
