@@ -79,11 +79,22 @@ describe('AdminDashboard accessibility feedback', () => {
     })
 
     expect(writeText).toHaveBeenCalledWith('https://example.com/reset/token')
-    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+    const copiedButton = screen.getByRole('button', { name: 'Copied' })
+    expect(copiedButton).toBeInTheDocument()
     expect(screen.getByTestId('check-icon')).toBeInTheDocument()
     expect(screen.queryByTestId('copy-icon')).not.toBeInTheDocument()
 
-    act(() => vi.advanceTimersByTime(2000))
+    act(() => vi.advanceTimersByTime(1000))
+    await act(async () => {
+      fireEvent.click(copiedButton)
+      await Promise.resolve()
+    })
+    expect(writeText).toHaveBeenCalledTimes(2)
+
+    act(() => vi.advanceTimersByTime(1000))
+    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+
+    act(() => vi.advanceTimersByTime(1000))
     expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
     expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
     expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument()

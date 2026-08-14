@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -41,18 +41,21 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyResetTimer = useRef<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
   )
 
-  useEffect(() => {
-    if (!copied) return
-
-    const timer = window.setTimeout(() => setCopied(false), 2000)
-    return () => window.clearTimeout(timer)
-  }, [copied])
+  useEffect(
+    () => () => {
+      if (copyResetTimer.current !== null) {
+        window.clearTimeout(copyResetTimer.current)
+      }
+    },
+    []
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -154,6 +157,13 @@ export function AdminDashboard() {
     if (!resetLink) return
     await navigator.clipboard.writeText(resetLink.url)
     setCopied(true)
+    if (copyResetTimer.current !== null) {
+      window.clearTimeout(copyResetTimer.current)
+    }
+    copyResetTimer.current = window.setTimeout(() => {
+      setCopied(false)
+      copyResetTimer.current = null
+    }, 2000)
   }
 
   return (
