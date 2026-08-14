@@ -28,6 +28,7 @@ const users = [
 
 describe('AdminDashboard accessibility feedback', () => {
   beforeEach(() => {
+    vi.stubGlobal('React', React)
     writeText.mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
