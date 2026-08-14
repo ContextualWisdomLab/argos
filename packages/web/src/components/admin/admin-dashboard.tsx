@@ -1,4 +1,3 @@
-import React from "react";
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -47,6 +46,13 @@ export function AdminDashboard() {
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
   )
+
+  useEffect(() => {
+    if (!copied) return
+
+    const timer = window.setTimeout(() => setCopied(false), 2000)
+    return () => window.clearTimeout(timer)
+  }, [copied])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -286,7 +292,7 @@ export function AdminDashboard() {
                         ) : (
                           <Copy className="size-4" aria-hidden="true" />
                         )}
-                        {copied ? 'Copied' : 'Copy link'}
+                        <span aria-live="polite">{copied ? 'Copied' : 'Copy link'}</span>
                       </Button>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
