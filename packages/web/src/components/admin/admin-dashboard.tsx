@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -209,8 +209,7 @@ export function AdminDashboard() {
                       <button
                         key={user.id}
                         type="button"
-                        aria-pressed={selected}
-                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
+                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
                           setSelectedUserId(user.id)
                           setResetLink(null)
@@ -280,11 +279,7 @@ export function AdminDashboard() {
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
                       <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        {copied ? (
-                          <Check className="size-4" aria-hidden="true" />
-                        ) : (
-                          <Copy className="size-4" aria-hidden="true" />
-                        )}
+                        <Copy className="size-4" aria-hidden="true" />
                         {copied ? 'Copied' : 'Copy link'}
                       </Button>
                       <p className="text-xs text-muted-foreground">
