@@ -95,14 +95,14 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         <button
           onClick={handleAllow}
           disabled={loading}
-          className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           허용
         </button>
         <button
           onClick={handleDeny}
           disabled={loading}
-          className="px-6 py-2 rounded-md border border-border bg-background text-foreground font-medium hover:bg-muted disabled:opacity-50 transition-colors"
+          className="px-6 py-2 rounded-md border border-border bg-background text-foreground font-medium hover:bg-muted disabled:opacity-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           거부
         </button>
