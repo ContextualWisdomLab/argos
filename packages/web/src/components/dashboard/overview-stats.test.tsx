@@ -1,12 +1,21 @@
 /** @vitest-environment jsdom */
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { OverviewStats } from './overview-stats'
 
 describe('OverviewStats explanation toggle', () => {
+  beforeEach(() => {
+    vi.stubGlobal('React', React)
+  })
+
+  afterEach(() => {
+    cleanup()
+    vi.unstubAllGlobals()
+  })
+
   it('exposes state, reveals the explanation, and rotates a hidden standard icon', () => {
     render(
       <OverviewStats
