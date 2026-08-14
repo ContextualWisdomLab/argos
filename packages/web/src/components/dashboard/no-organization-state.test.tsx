@@ -5,11 +5,26 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { NoOrganizationState } from './no-organization-state';
 
-const signOut = vi.fn();
+const mocks = vi.hoisted(() => ({
+  signOut: vi.fn(),
+  push: vi.fn(),
+  reset: vi.fn(),
+  mutateAsync: vi.fn(),
+}));
 
 global.React = React;
 
-vi.mock('next-auth/react', () => ({ signOut }));
+vi.mock('next-auth/react', () => ({ signOut: mocks.signOut }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: mocks.push }),
+}));
+vi.mock('@/hooks/use-create-org', () => ({
+  useCreateOrg: () => ({
+    isPending: false,
+    reset: mocks.reset,
+    mutateAsync: mocks.mutateAsync,
+  }),
+}));
 vi.mock('lucide-react', () => ({
   PlusIcon: (props: React.SVGProps<SVGSVGElement>) => (
     <svg data-testid="plus-icon" {...props} />
@@ -23,11 +38,6 @@ vi.mock('@/components/ui/button', () => ({
 vi.mock('@/components/copy-prompt-button', () => ({
   CopyPromptButton: ({ text }: { text: string }) => (
     <button type="button">{text}</button>
-  ),
-}));
-vi.mock('@/components/org/create-org-modal', () => ({
-  CreateOrgModal: ({ open }: { open: boolean }) => (
-    <div data-testid="create-org-modal" data-open={String(open)} />
   ),
 }));
 
@@ -59,23 +69,22 @@ describe('NoOrganizationState accessibility boundaries', () => {
     expect(logoutButton.className).toContain('focus-visible:ring-ring');
 
     fireEvent.click(logoutButton);
-    expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/login' });
+    expect(mocks.signOut).toHaveBeenCalledWith({ callbackUrl: '/login' });
   });
 
-  it('hides the decorative create icon while preserving the button label and action', () => {
+  it('hides the decorative create icon while opening the real organization dialog', () => {
     renderState();
 
     const createButton = screen.getByRole('button', { name: '조직 수동 생성' });
     const plusIcon = screen.getByTestId('plus-icon');
 
     expect(plusIcon.getAttribute('aria-hidden')).toBe('true');
-    expect(screen.getByTestId('create-org-modal').getAttribute('data-open')).toBe(
-      'false',
-    );
+    expect(screen.queryByRole('alertdialog')).toBeNull();
 
     fireEvent.click(createButton);
-    expect(screen.getByTestId('create-org-modal').getAttribute('data-open')).toBe(
-      'true',
-    );
+
+    expect(screen.getByRole('alertdialog')).toBeTruthy();
+    expect(screen.getByText('새 조직 만들기')).toBeTruthy();
+    expect(screen.getByLabelText('조직 이름')).toBeTruthy();
   });
 });
