@@ -66,10 +66,12 @@ describe("DateRangePicker", () => {
     expect(calledUrl).toContain("to=");
   });
 
-  it("has aria-pressed set correctly based on active state", () => {
+  it("sets aria-pressed to the exact active and inactive states", () => {
     render(<DateRangePicker />);
 
     const button7d = screen.getByRole("button", { name: "Select the last 7 days" });
-    expect(button7d.hasAttribute("aria-pressed")).toBe(true);
+    const button30d = screen.getByRole("button", { name: "Select the last 30 days" });
+    expect(button7d.getAttribute("aria-pressed")).toBe("true");
+    expect(button30d.getAttribute("aria-pressed")).toBe("false");
   });
 });
