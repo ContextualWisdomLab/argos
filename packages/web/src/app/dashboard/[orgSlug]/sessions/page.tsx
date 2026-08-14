@@ -50,11 +50,9 @@ function SortPicker({
         <button
           key={opt.value}
           type="button"
-          aria-pressed={value === opt.value}
           onClick={() => onChange(opt.value)}
           className={cn(
             'px-3 py-1 text-xs font-medium rounded-md transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             value === opt.value
               ? 'bg-primary text-primary-foreground'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted',
@@ -344,10 +342,9 @@ function SessionsContent({
                           'inline-flex size-7 items-center justify-center rounded-md text-muted-foreground',
                           'hover:bg-destructive/10 hover:text-destructive transition-colors',
                           'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive',
                         )}
                       >
-                        <Trash2 className="size-4" aria-hidden="true" />
+                        <Trash2 className="size-4" />
                       </button>
                     </td>
                   </tr>
