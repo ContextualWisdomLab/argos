@@ -3,6 +3,16 @@ import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
+
+const formatRelativeTimeSpy = vi.hoisted(() =>
+  vi.fn((_timestamp: string | number, _baseTimestamp: string | number) => '+1m')
+)
+
+vi.mock('@/lib/format', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/format')>()
+  return { ...actual, formatRelativeTime: formatRelativeTimeSpy }
+})
+
 import { SessionTimelineChart } from './session-timeline-chart'
 
 vi.mock('recharts', async () => {
@@ -275,4 +285,32 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+  it('reuses parsed event and session timestamps for relative labels', () => {
+    const timestamp = '2023-01-01T00:01:00.000Z'
+    const sessionStartedAt = '2023-01-01T00:00:00.000Z'
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp,
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt={sessionStartedAt}
+      />
+    )
+
+    expect(formatRelativeTimeSpy).toHaveBeenCalledWith(
+      Date.parse(timestamp),
+      Date.parse(sessionStartedAt)
+    )
+  })
+
 })

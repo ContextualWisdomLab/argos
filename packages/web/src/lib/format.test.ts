@@ -88,6 +88,15 @@ describe('formatRelativeTime (baseTimestamp 오프셋 모드)', () => {
     ).toBe('+0m')
   })
 
+  it('이미 파싱된 숫자 timestamp도 같은 오프셋을 반환한다', () => {
+    expect(
+      formatRelativeTime(
+        Date.parse('2026-06-01T00:03:30Z'),
+        Date.parse('2026-06-01T00:00:00Z'),
+      ),
+    ).toBe('+3m')
+  })
+
   it('60분 미만은 "+Nm"', () => {
     expect(
       formatRelativeTime('2026-06-01T00:03:30Z', '2026-06-01T00:00:00Z'),
