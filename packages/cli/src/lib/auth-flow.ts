@@ -4,22 +4,55 @@ import ora from 'ora'
 import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
-function openBrowser(url: string): void {
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
+const CONTROL_CHARACTERS = /[\u0000-\u001F\u007F]/
+const BROWSER_PROTOCOLS = new Set(['http:', 'https:'])
+
+/**
+ * Parse and canonicalize an untrusted browser target.
+ *
+ * Only credential-free HTTP(S) URLs can cross the operating-system launcher
+ * boundary. Raw control characters are rejected before WHATWG URL parsing can
+ * trim or normalize them away.
+ */
+export function normalizeBrowserUrl(candidate: string): string {
+  if (CONTROL_CHARACTERS.test(candidate)) {
+    throw new Error('Invalid browser URL')
+  }
+
+  let parsed: URL
+  try {
+    parsed = new URL(candidate)
+  } catch {
+    throw new Error('Invalid browser URL')
+  }
+
+  if (
+    !BROWSER_PROTOCOLS.has(parsed.protocol) ||
+    parsed.hostname.length === 0 ||
+    parsed.username.length > 0 ||
+    parsed.password.length > 0
+  ) {
+    throw new Error('Invalid browser URL')
+  }
+
+  return parsed.href
+}
+
+function openBrowser(candidate: string): void {
+  const url = normalizeBrowserUrl(candidate)
+
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
-      windowsVerbatimArguments: true,
+    // Launch Explorer directly so untrusted URL data never crosses cmd.exe.
+    const child = spawn('explorer.exe', [url], {
       detached: true,
-      stdio: 'ignore'
+      stdio: 'ignore',
+      windowsHide: true,
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
     const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
     const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   }
