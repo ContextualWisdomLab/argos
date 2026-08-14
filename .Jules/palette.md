@@ -6,6 +6,6 @@
 **Learning:** `ContextSection` 컴포넌트와 같이 아코디언 형태의 접을 수 있는 영역은 스크린 리더가 컨텐츠의 상태를 올바르게 인식하고 읽어주기 위해 토글 버튼과 컨텐츠 컨테이너 간의 명확한 ARIA 연결이 필요합니다. React의 `useId()` 훅을 사용하여 `aria-controls`, `id`, `aria-labelledby`를 동적으로 생성해 서로 연결하면 안정적입니다. 또한, 컨텐츠 영역에는 `role="region"`이 반드시 필요하다는 점을 확인했습니다.
 **Action:** 향후 접을 수 있는 컴포넌트(Collapsible Region)를 만들거나 수정할 때는 항상 `useId()`를 사용하여 토글 버튼(`aria-controls`)과 컨텐츠 컨테이너(`id`, `role="region"`, `aria-labelledby`)를 동적으로 연결하도록 합니다. 추가로 키보드 네비게이션 사용자를 위한 명확한 포커스 링(`focus-visible` 관련 클래스 적용) 처리도 잊지 말아야 합니다.
 
-## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
-**Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
-**Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
+## 2024-07-13 - 대화형 리스트 및 버튼의 접근성 및 시각적 피드백 개선
+**Learning:** `admin-dashboard.tsx` 컴포넌트에서 사용자 목록을 나타내는 대화형 리스트 요소가 키보드 포커스와 선택 상태를 시각적으로 잘 나타내지 못했습니다(`focus-visible` 클래스 및 `aria-pressed` 누락). 또한 "Copy link" 버튼은 클릭했을 때 상태 변화를 사용자에게 인지시키는 아이콘 변경 등 충분한 시각적 피드백이 없었습니다.
+**Action:** 스크린 리더와 키보드 접근성을 개선하기 위해 `focus-visible` 유틸리티 클래스(`focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring`)와 `aria-pressed={selected}` 속성을 추가했습니다. 그리고 "Copy link" 버튼의 경우 `copied` 상태에 따라 아이콘을 `Copy`에서 `Check`로 전환하도록 구현하여 즉각적인 시각적 피드백을 제공했습니다. 앞으로 대화형 컴포넌트에는 키보드 포커스 스타일을 반드시 포함하고 시각적인 상태 변화도 명확히 해야 합니다.
