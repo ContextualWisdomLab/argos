@@ -67,7 +67,7 @@ export function formatRelativeTime(
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: ko })
     } catch {
-      return timestamp
+      return String(timestamp)
     }
   }
 
