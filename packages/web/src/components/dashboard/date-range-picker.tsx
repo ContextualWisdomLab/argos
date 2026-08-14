@@ -20,7 +20,7 @@ function DateRangePickerContent() {
   const currentTo = searchParams.get('to')
 
   const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
+  const sevenDaysAgo = subDays(today, 6)
 
   const defaultFrom = currentFrom || format(sevenDaysAgo, 'yyyy-MM-dd')
   const defaultTo = currentTo || format(today, 'yyyy-MM-dd')

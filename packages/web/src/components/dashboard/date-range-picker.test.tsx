@@ -73,6 +73,11 @@ describe("DateRangePicker", () => {
     render(<DateRangePicker />);
 
     const button7d = screen.getByRole("button", { name: "Select 7d range" });
-    expect(button7d.hasAttribute("aria-pressed")).toBe(true);
+    expect(button7d.getAttribute("aria-pressed")).toBe("true");
+
+    const button30d = screen.getByRole("button", {
+      name: "Select 30d range",
+    });
+    expect(button30d.getAttribute("aria-pressed")).toBe("false");
   });
 });
