@@ -21,4 +21,5 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
+- 조직이 없는 상태의 로그아웃 제어를 명시적인 비제출 버튼으로 고정하고 키보드 `focus-visible` 표시를 추가했으며, 텍스트가 이미 이름을 제공하는 조직 생성 버튼의 `PlusIcon`을 접근성 트리에서 숨겼습니다. 실제 클릭·모달 전환을 포함한 DOM 회귀 테스트로 계약을 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
