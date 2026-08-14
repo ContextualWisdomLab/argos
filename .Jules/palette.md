@@ -13,3 +13,7 @@
 ## 2024-07-25 - 접근성 개선: 커스텀 버튼
 **Learning:** 애플리케이션 내에서 `Button` 컴포넌트가 아닌 순수 `<button>` 태그를 사용할 때, 키보드 네비게이션을 위한 `focus-visible` 클래스, 상태를 나타내는 `aria-pressed`, 장식용 아이콘에 대한 `aria-hidden` 처리가 자주 누락되는 경향이 있음을 발견함.
 **Action:** 커스텀 인터랙티브 엘리먼트를 개발할 때, 기능과 목적에 맞는 ARIA 속성을 부여하고, `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`을 적용하여 키보드 접근성을 기본적으로 확보할 것.
+
+## 2024-07-29 - Overview stats chevron icon replacement
+**Learning:** `overview-stats.tsx`의 설명 토글은 텍스트 기호 대신 디자인 시스템의 표준 `ChevronRight` 아이콘을 사용해야 시각적 일관성과 정렬이 유지됩니다.
+**Action:** 토글 아이콘에는 `aria-hidden="true"`를 적용하고, 실제 렌더링 테스트에서 `aria-expanded`, 설명 영역 가시성, 회전 상태를 함께 검증합니다.
