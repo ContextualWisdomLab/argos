@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { getEnv } from './env'
+import { jsonError } from './error-helper'
 
 const ADMIN_SESSION_COOKIE = 'argos_admin_session'
 const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000
@@ -100,7 +101,7 @@ export function requireAdmin(req: NextRequest): NextResponse | null {
     return null
   }
 
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return jsonError('UNAUTHORIZED', 'Unauthorized', 401)
 }
 
 export function createAdminImpersonationToken(userId: string): string {

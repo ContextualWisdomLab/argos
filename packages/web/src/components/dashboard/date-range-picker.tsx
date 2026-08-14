@@ -6,10 +6,10 @@ import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 
 const PRESETS = [
-  { days: 7, label: '7d' },
-  { days: 30, label: '30d' },
-  { days: 90, label: '90d' },
-  { days: 3650, label: 'ALL' },
+  { days: 7, label: '7d', accessibleLabel: 'Select the last 7 days' },
+  { days: 30, label: '30d', accessibleLabel: 'Select the last 30 days' },
+  { days: 90, label: '90d', accessibleLabel: 'Select the last 90 days' },
+  { days: 3650, label: 'ALL', accessibleLabel: 'Select all available dates' },
 ] as const
 
 function DateRangePickerContent() {
@@ -63,8 +63,8 @@ function DateRangePickerContent() {
             key={preset.days}
             type="button"
             aria-pressed={activePreset === preset.days}
-            aria-label={`Select ${preset.label} range`}
-            title={`Select ${preset.label} range`}
+            aria-label={preset.accessibleLabel}
+            title={preset.accessibleLabel}
             onClick={() => handlePreset(preset.days)}
             className={cn(
               'px-3 py-1 text-xs font-medium rounded-md transition-colors',
