@@ -58,7 +58,11 @@ export function formatDateTimeFull(s: string): string {
  */
 export function formatRelativeTime(timestamp: string): string
 export function formatRelativeTime(timestamp: string, baseTimestamp: string): string
-export function formatRelativeTime(timestamp: string, baseTimestamp?: string): string {
+export function formatRelativeTime(timestamp: number, baseTimestamp: number): string
+export function formatRelativeTime(
+  timestamp: string | number,
+  baseTimestamp?: string | number
+): string {
   if (baseTimestamp === undefined) {
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: ko })
@@ -67,9 +71,10 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
+  const timestampMs = typeof timestamp === 'number' ? timestamp : Date.parse(timestamp)
+  const baseTimestampMs =
+    typeof baseTimestamp === 'number' ? baseTimestamp : Date.parse(baseTimestamp)
+  const diffMs = timestampMs - baseTimestampMs
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {

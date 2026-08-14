@@ -77,9 +77,9 @@ function buildChartData(
 
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
+  const sessionStartedAtMs = Date.parse(sessionStartedAt)
 
   return sortedUsage.map(({ usage, parsed: currentTimestamp }) => {
-
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
@@ -93,7 +93,7 @@ function buildChartData(
     }
 
     return {
-      relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
+      relativeTime: formatRelativeTime(currentTimestamp, sessionStartedAtMs),
       input: usage.inputTokens,
       output: usage.outputTokens,
       cost: usage.estimatedCostUsd,
