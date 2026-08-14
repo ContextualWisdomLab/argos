@@ -68,6 +68,7 @@ async function renderLoadedDashboard() {
 
 describe('AdminDashboard accessibility feedback', () => {
   beforeEach(() => {
+    vi.stubGlobal('React', React)
     installAdminFetchMock()
     refresh.mockReset()
     Object.defineProperty(navigator, 'clipboard', {
