@@ -59,7 +59,7 @@ export function skillCallRowsRelation(
       'event'::text AS source
     FROM events
     WHERE is_skill_call = true
-      AND project_id IN (${Prisma.join(projectIds)}) /* 🛡️ Sentinel: Prevent SQL injection via proper parameterization */
+      AND project_id IN (${Prisma.join(projectIds)})
       AND skill_name IS NOT NULL
       AND timestamp >= ${fromInclusive}
       AND timestamp < ${toExclusive}
@@ -81,7 +81,7 @@ export function skillCallRowsRelation(
       'g'
     ) AS slash_match(match)
     WHERE m.role = 'HUMAN'
-      AND s.project_id IN (${Prisma.join(projectIds)}) /* 🛡️ Sentinel: Prevent SQL injection via proper parameterization */
+      AND s.project_id IN (${Prisma.join(projectIds)})
       AND m.timestamp >= ${fromInclusive}
       AND m.timestamp < ${toExclusive}
       AND NOT EXISTS (

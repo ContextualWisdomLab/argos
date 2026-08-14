@@ -30,7 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2024-08-14 - Prisma queryRaw에서 배열 파라미터화 및 SQL 인젝션
-**Vulnerability:** `db.$queryRaw` 내에서 템플릿 리터럴로 배열 변수를 보간할 때, `ANY(${projectIds}::text[])` 형태를 사용하면 Prisma가 배열 값들을 단일 파라미터로 적절히 변환하지 못해 SQL 인젝션 공격에 노출될 수 있음.
-**Learning:** Prisma는 배열 보간 시 `Prisma.join()`을 사용해 동적으로 개별 파라미터(`$1, $2, ...`)로 매핑되도록 지원함. 단순 배열 캐스팅은 이 메커니즘을 우회함.
-**Prevention:** Prisma의 원시 SQL 쿼리에서 배열 조건을 사용할 때는 항상 `IN (${Prisma.join(arrayVariable)})` 형식으로 작성하여 쿼리 파라미터화가 안전하게 이뤄지도록 할 것.
+## 2024-08-14 - Prisma queryRaw 배열 목록 바인딩
+**Compatibility:** `$queryRaw` 태그 템플릿은 보간 값을 준비된 문장의 파라미터로 바인딩하므로 기존 `ANY(${projectIds}::text[])` 사용 자체가 SQL 인젝션 근거는 아니었습니다.
+**Learning:** `Prisma.join()`은 `IN` 목록의 각 값을 개별 파라미터(`$1, $2, ...`)로 생성해 PostgreSQL 목록 구문과 명시적으로 맞춥니다.
+**Prevention:** 동적 배열 목록에는 `IN (${Prisma.join(arrayVariable)})`을 사용하고, 값 보간의 파라미터화와 SQL 구문 호환성을 서로 다른 보안 근거로 기록합니다.
