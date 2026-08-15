@@ -280,9 +280,6 @@ export default function OrgSessionDetailPage({
                   ) : (
                     <Copy className="size-4" aria-hidden="true" />
                   )}
-                  <span className="sr-only" aria-live="polite">
-                    {debugCopied ? 'JSON copied' : ''}
-                  </span>
                 </Button>
                 <pre className="text-xs bg-muted/40 text-muted-foreground rounded-md p-4 pt-12 overflow-auto whitespace-pre">
                   {debugJson}
