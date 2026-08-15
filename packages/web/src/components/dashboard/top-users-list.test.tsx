@@ -34,9 +34,12 @@ describe('TopUsersList', () => {
       }
     ]
 
-    render(<TopUsersList users={users} />)
+    const { container } = render(<TopUsersList users={users} />)
     expect(screen.getByText('Charlie')).toBeDefined()
     expect(screen.getByText('T0')).toBeDefined()
+    expect(
+      (container.querySelector('.bg-brand') as HTMLElement).style.width
+    ).toBe('0%')
   })
 
   it('renders list of users correctly', () => {
@@ -73,7 +76,7 @@ describe('TopUsersList', () => {
       }
     ]
 
-    render(<TopUsersList users={users} />)
+    const { container } = render(<TopUsersList users={users} />)
 
     expect(screen.getByText('Alice')).toBeDefined()
     expect(screen.getByText('T300')).toBeDefined()
@@ -84,5 +87,11 @@ describe('TopUsersList', () => {
     expect(screen.getByText('T100')).toBeDefined()
     expect(screen.getByText('2 sessions')).toBeDefined()
     expect(screen.getByText('$0.5')).toBeDefined()
+
+    const bars = container.querySelectorAll<HTMLElement>('.bg-brand')
+    expect(bars).toHaveLength(3)
+    expect(bars[0].style.width).toBe('100%')
+    expect(parseFloat(bars[1].style.width)).toBeCloseTo(100 / 3)
+    expect(bars[2].style.width).toBe('0%')
   })
 })
