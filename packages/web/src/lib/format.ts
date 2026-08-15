@@ -52,6 +52,28 @@ export function formatDateTimeFull(s: string): string {
 }
 
 /**
+ * Format already-parsed timestamps as a session-relative offset.
+ *
+ * Chart builders call this after caching timestamp parsing so hot render paths
+ * do not repeatedly parse the same `sessionStartedAt` anchor for each usage row.
+ */
+export function formatRelativeTimeFromMs(
+  timestampMs: number,
+  baseTimestampMs: number,
+): string {
+  const diffMs = timestampMs - baseTimestampMs
+  const totalMinutes = Math.floor(diffMs / 60000)
+
+  if (totalMinutes < 60) {
+    return `+${totalMinutes}m`
+  }
+
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `+${hours}h ${minutes}m`
+}
+
+/**
  * Format a timestamp as relative time.
  * - With `baseTimestamp`: offset from base (e.g. "+3m", "+1h 5m").
  * - Without: distance-to-now (e.g. "2 minutes ago").
@@ -67,18 +89,7 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
-  const totalMinutes = Math.floor(diffMs / 60000)
-
-  if (totalMinutes < 60) {
-    return `+${totalMinutes}m`
-  }
-
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return `+${hours}h ${minutes}m`
+  return formatRelativeTimeFromMs(Date.parse(timestamp), Date.parse(baseTimestamp))
 }
 
 /**
