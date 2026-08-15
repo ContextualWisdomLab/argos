@@ -167,17 +167,10 @@ export async function POST(req: Request) {
               new Date().getUTCMonth(),
               new Date().getUTCDate(),
             )
-            const pastDates = [
-              ...new Set(
-                payload.usagePerTurn
-                  .map((u) => {
-                    const d = new Date(u.timestamp)
-                    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-                  })
-                  .filter((ms) => ms < todayMs)
-                  .map((ms) => new Date(ms).toISOString()),
-              ),
-            ]
+            const pastDates = derivePastUsageDateIsoStrings(
+              payload.usagePerTurn,
+              todayMs,
+            )
             if (pastDates.length > 0) {
               await db.dailyProjectStat.deleteMany({
                 where: {
@@ -245,6 +238,34 @@ export async function POST(req: Request) {
   } catch (err) {
     return handleRouteError(err)
   }
+}
+
+/**
+ * Derive unique past UTC day-start ISO timestamps for usage-turn cache invalidation.
+ *
+ * The helper intentionally preserves the endpoint's historical invalid-timestamp
+ * behavior: invalid timestamps produce `NaN`, fail the `ms < todayMs` check, and
+ * are therefore ignored instead of throwing inside the fire-and-forget callback.
+ */
+export function derivePastUsageDateIsoStrings(
+  usagePerTurn: readonly { timestamp: string }[],
+  todayMs: number,
+): string[] {
+  const pastDates = new Set<string>()
+
+  for (const usage of usagePerTurn) {
+    const date = new Date(usage.timestamp)
+    const ms = Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+    )
+    if (ms < todayMs) {
+      pastDates.add(new Date(ms).toISOString())
+    }
+  }
+
+  return Array.from(pastDates)
 }
 
 /**
