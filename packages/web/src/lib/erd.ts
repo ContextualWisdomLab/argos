@@ -3,6 +3,8 @@ export interface Column {
   type: string;
   isPrimaryKey?: boolean;
   isNullable?: boolean;
+  isUnique?: boolean;
+  defaultValue?: string;
 }
 
 export interface ForeignKey {
@@ -24,6 +26,9 @@ const PARAMETERIZED_SQL_TYPE =
 const MULTI_WORD_SQL_TYPE =
   /^(?:DOUBLE PRECISION|CHARACTER VARYING(?:\((?:MAX|[0-9]+)\))?|(?:TIME|TIMESTAMP)(?:\([0-9]+\))? (?:WITH|WITHOUT) TIME ZONE)$/i;
 const MAX_SQL_TYPE_LENGTH = 128;
+const MAX_DEFAULT_VALUE_LENGTH = 255;
+const SAFE_SQL_DEFAULT_VALUE =
+  /^('(?:[^']|'')*')$|^(?:-?[0-9]+(?:\.[0-9]+)?)$|^(?:TRUE|FALSE|CURRENT_TIMESTAMP|CURRENT_DATE|NULL)$/i;
 
 function assertSafeSqlType(type: string): void {
   const isCanonicalWhitespace =
@@ -40,6 +45,20 @@ function assertSafeSqlType(type: string): void {
     !matchesSafeGrammar
   ) {
     throw new Error(`Invalid SQL type: '${type}'`);
+  }
+}
+
+function assertSafeSqlDefaultValue(value: string): void {
+  const isCanonicalWhitespace =
+    value === value.trim() && !/[\t\r\n\f\v]/.test(value);
+
+  if (
+    value.length === 0 ||
+    value.length > MAX_DEFAULT_VALUE_LENGTH ||
+    !isCanonicalWhitespace ||
+    !SAFE_SQL_DEFAULT_VALUE.test(value)
+  ) {
+    throw new Error(`Invalid SQL default value: '${value}'`);
   }
 }
 
@@ -71,10 +90,30 @@ export class ERDModel {
     return Array.from(this.tables.values()).map((t) => structuredClone(t));
   }
 
+  removeTable(name: string): void {
+    assertSnakeCaseIdentifier("Table", name);
+    if (!this.tables.has(name)) {
+      throw new Error(`Table '${name}' does not exist.`);
+    }
+    for (const table of this.tables.values()) {
+      if (
+        table.foreignKeys.some((fk) => fk.referenceTable === name)
+      ) {
+        throw new Error(
+          `Cannot remove table '${name}' because it is referenced by table '${table.name}'.`,
+        );
+      }
+    }
+    this.tables.delete(name);
+  }
+
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier("Table", tableName);
     assertSnakeCaseIdentifier("Column", column.name);
     assertSafeSqlType(column.type);
+    if (column.defaultValue !== undefined) {
+      assertSafeSqlDefaultValue(column.defaultValue);
+    }
     const table = this.tables.get(tableName);
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`);
@@ -85,6 +124,40 @@ export class ERDModel {
       );
     }
     table.columns.push(structuredClone(column));
+  }
+
+  removeColumn(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", columnName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    const colIndex = table.columns.findIndex((c) => c.name === columnName);
+    if (colIndex === -1) {
+      throw new Error(
+        `Column '${columnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+    if (table.foreignKeys.some((fk) => fk.columnName === columnName)) {
+      throw new Error(
+        `Cannot remove column '${columnName}' because it is used in a foreign key.`,
+      );
+    }
+    for (const t of this.tables.values()) {
+      if (
+        t.foreignKeys.some(
+          (fk) =>
+            fk.referenceTable === tableName &&
+            fk.referenceColumn === columnName,
+        )
+      ) {
+        throw new Error(
+          `Cannot remove column '${columnName}' because it is referenced by table '${t.name}'.`,
+        );
+      }
+    }
+    table.columns.splice(colIndex, 1);
   }
 
   addForeignKey(tableName: string, fk: ForeignKey): void {
@@ -113,6 +186,24 @@ export class ERDModel {
     table.foreignKeys.push(structuredClone(fk));
   }
 
+  removeForeignKey(tableName: string, columnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", columnName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    const fkIndex = table.foreignKeys.findIndex(
+      (fk) => fk.columnName === columnName,
+    );
+    if (fkIndex === -1) {
+      throw new Error(
+        `Foreign key for column '${columnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+    table.foreignKeys.splice(fkIndex, 1);
+  }
+
   generateDDL(): string {
     let ddl = "";
     for (const table of this.tables.values()) {
@@ -122,8 +213,14 @@ export class ERDModel {
         if (col.isPrimaryKey) {
           def += " PRIMARY KEY";
         }
+        if (col.isUnique) {
+          def += " UNIQUE";
+        }
         if (col.isNullable === false) {
           def += " NOT NULL";
+        }
+        if (col.defaultValue !== undefined) {
+          def += ` DEFAULT ${col.defaultValue}`;
         }
         return def;
       });
