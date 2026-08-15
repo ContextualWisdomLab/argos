@@ -30,7 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2024-08-14 - Prisma queryRaw 배열 목록 바인딩
-**Compatibility:** `$queryRaw` 태그 템플릿은 보간 값을 준비된 문장의 파라미터로 바인딩하므로 기존 `ANY(${projectIds}::text[])` 사용 자체가 SQL 인젝션 근거는 아니었습니다.
-**Learning:** `Prisma.join()`은 `IN` 목록의 각 값을 개별 파라미터(`$1, $2, ...`)로 생성해 PostgreSQL 목록 구문과 명시적으로 맞춥니다.
-**Prevention:** 동적 배열 목록에는 `IN (${Prisma.join(arrayVariable)})`을 사용하고, 값 보간의 파라미터화와 SQL 구문 호환성을 서로 다른 보안 근거로 기록합니다.
