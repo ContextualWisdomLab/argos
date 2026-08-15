@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2 } from 'lucide-react'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { useDeleteOrg } from '@/hooks/use-delete-org'
 
 interface DeleteOrgModalProps {
@@ -90,10 +90,16 @@ export function DeleteOrgModal({
             disabled={mutation.isPending}
             autoComplete="off"
             aria-invalid={!!errorMessage || undefined}
-            aria-describedby={errorMessage ? "delete-org-error" : undefined}
+            aria-describedby={errorMessage ? 'delete-org-error' : undefined}
           />
           {errorMessage && (
-            <p id="delete-org-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+            <p
+              id="delete-org-error"
+              role="alert"
+              className="text-xs text-destructive"
+            >
+              {errorMessage}
+            </p>
           )}
         </div>
 
@@ -113,8 +119,13 @@ export function DeleteOrgModal({
             size="sm"
             disabled={!canDelete}
             onClick={handleDelete}
+            aria-busy={mutation.isPending}
           >
-            {mutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />삭제 중…</> : '삭제'}
+            <PendingActionLabel
+              pending={mutation.isPending}
+              idleLabel="삭제"
+              pendingLabel="삭제 중…"
+            />
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
