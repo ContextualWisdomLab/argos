@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2 } from 'lucide-react'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { useCreateOrg } from '@/hooks/use-create-org'
 import { ApiError } from '@/lib/api-client'
 
@@ -95,10 +95,16 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
               autoFocus
               disabled={mutation.isPending}
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "create-org-error" : undefined}
+              aria-describedby={errorMessage ? 'create-org-error' : undefined}
             />
             {errorMessage && (
-              <p id="create-org-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p
+                id="create-org-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errorMessage}
+              </p>
             )}
           </div>
 
@@ -116,8 +122,13 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
               type="submit"
               size="sm"
               disabled={!name.trim() || mutation.isPending}
+              aria-busy={mutation.isPending}
             >
-              {mutation.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />생성 중…</> : '생성'}
+              <PendingActionLabel
+                pending={mutation.isPending}
+                idleLabel="생성"
+                pendingLabel="생성 중…"
+              />
             </Button>
           </AlertDialogFooter>
         </form>
