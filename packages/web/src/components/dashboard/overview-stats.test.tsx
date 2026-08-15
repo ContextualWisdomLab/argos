@@ -33,8 +33,9 @@ describe('OverviewStats disclosure accessibility', () => {
 
     expect(buttons).toHaveLength(2)
     expect(regions).toHaveLength(2)
-    expect(buttons[0]!.id).not.toBe(buttons[1]!.id)
-    expect(regions[0]!.id).not.toBe(regions[1]!.id)
+    const ids = [...buttons, ...regions].map(element => element.id)
+    expect(ids.every(id => id.length > 0)).toBe(true)
+    expect(new Set(ids).size).toBe(ids.length)
 
     buttons.forEach((button, index) => {
       const region = regions[index]!
