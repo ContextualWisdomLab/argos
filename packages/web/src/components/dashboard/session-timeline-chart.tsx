@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from 'recharts'
-import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
+import {
+  formatTokens,
+  formatCost,
+  formatRelativeTimeFromMs,
+} from '@/lib/format'
 import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
 
 interface SessionTimelineChartProps {
@@ -64,13 +68,13 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
  * Merge chronologically sorted usage and tool events into cumulative chart rows.
  *
  * Local copies are sorted in O(N log N + M log M). Each usage timestamp is
- * parsed once before sorting, and the forward cursor consumes every tool event
- * once instead of filtering all M events for every one of the N usage rows.
+ * parsed once before sorting, the session-start anchor is parsed by the caller
+ * once per prop value, and the forward cursor consumes every tool event once.
  */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
-  sessionStartedAt: string
+  sessionStartedAtMs: number,
 ): ChartDataItem[] {
   const sortedUsage: UsagePoint[] = usageTimeline
     .map((usage) => ({
@@ -99,7 +103,7 @@ function buildChartData(
     }
 
     return {
-      relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
+      relativeTime: formatRelativeTimeFromMs(parsedTimestamp, sessionStartedAtMs),
       input: usage.inputTokens,
       output: usage.outputTokens,
       cost: usage.estimatedCostUsd,
@@ -169,9 +173,13 @@ export function SessionTimelineChart({
       }))
   }, [messages])
 
+  const sessionStartedAtMs = useMemo(
+    () => Date.parse(sessionStartedAt),
+    [sessionStartedAt],
+  )
   const chartData = useMemo(
-    () => buildChartData(usageTimeline, toolCalls, sessionStartedAt),
-    [usageTimeline, sessionStartedAt, toolCalls]
+    () => buildChartData(usageTimeline, toolCalls, sessionStartedAtMs),
+    [usageTimeline, sessionStartedAtMs, toolCalls]
   )
 
   if (usageTimeline.length === 0) {
