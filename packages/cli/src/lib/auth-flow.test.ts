@@ -93,4 +93,18 @@ describe('auth-flow', () => {
 
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
   })
+
+  it('throws an error if the authUrl has an invalid protocol', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid protocol: file:')
+  })
+
+  it('throws an error if the authUrl is invalid', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not-a-url' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL: not-a-url')
+  })
 })
