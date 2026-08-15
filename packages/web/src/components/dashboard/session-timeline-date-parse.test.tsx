@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 describe('SessionTimelineChart timestamp parsing budget', () => {
-  it('parses each usage timestamp exactly once before sorting', () => {
+  it('parses each usage timestamp and the session anchor exactly once', () => {
     const timestamps = [
       '2026-08-14T09:05:00.000Z',
       '2026-08-14T09:01:00.000Z',
@@ -36,6 +36,7 @@ describe('SessionTimelineChart timestamp parsing budget', () => {
       '2026-08-14T09:02:00.000Z',
       '2026-08-14T09:03:00.000Z',
     ];
+    const sessionStartedAt = '2026-08-14T09:00:00.000Z';
     const usageTimeline: SessionTimelineUsage[] = timestamps.map(
       (timestamp, index) => ({
         timestamp,
@@ -52,7 +53,7 @@ describe('SessionTimelineChart timestamp parsing budget', () => {
       <SessionTimelineChart
         usageTimeline={usageTimeline}
         messages={[]}
-        sessionStartedAt="2026-08-14T09:00:00.000Z"
+        sessionStartedAt={sessionStartedAt}
       />,
     );
 
@@ -62,5 +63,9 @@ describe('SessionTimelineChart timestamp parsing budget', () => {
       );
       expect(matchingCalls).toHaveLength(1);
     }
+    const sessionAnchorCalls = parseSpy.mock.calls.filter(
+      ([candidate]) => candidate === sessionStartedAt,
+    );
+    expect(sessionAnchorCalls).toHaveLength(1);
   });
 });
