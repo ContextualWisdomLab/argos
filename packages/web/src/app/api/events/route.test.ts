@@ -92,7 +92,7 @@ vi.mock('@/lib/server/cost', () => ({
 
 import { requireAuth } from '@/lib/server/auth-helper'
 import { db } from '@/lib/server/db'
-import { POST } from './route'
+import { POST, derivePastUsageDateIsoStrings } from './route'
 
 // 최소 유효 IngestEventSchema payload
 const BASE_PAYLOAD = {
@@ -111,6 +111,60 @@ function makeRequest(body: object = BASE_PAYLOAD) {
     body: JSON.stringify(body),
   })
 }
+
+describe('derivePastUsageDateIsoStrings', () => {
+  const todayMs = Date.UTC(2026, 7, 15)
+
+  it('returns an empty list for empty usage input', () => {
+    expect(derivePastUsageDateIsoStrings([], todayMs)).toEqual([])
+  })
+
+  it('deduplicates multiple timestamps from the same past UTC day', () => {
+    expect(
+      derivePastUsageDateIsoStrings(
+        [
+          { timestamp: '2026-08-14T00:01:00.000Z' },
+          { timestamp: '2026-08-14T23:59:59.999Z' },
+        ],
+        todayMs,
+      ),
+    ).toEqual(['2026-08-14T00:00:00.000Z'])
+  })
+
+  it('uses UTC day boundaries for Korea-time timestamps', () => {
+    expect(
+      derivePastUsageDateIsoStrings(
+        [
+          { timestamp: '2026-08-14T23:30:00.000+09:00' },
+          { timestamp: '2026-08-15T00:30:00.000+09:00' },
+        ],
+        todayMs,
+      ),
+    ).toEqual(['2026-08-14T00:00:00.000Z'])
+  })
+
+  it('excludes today and future UTC days', () => {
+    expect(
+      derivePastUsageDateIsoStrings(
+        [
+          { timestamp: '2026-08-14T12:00:00.000Z' },
+          { timestamp: '2026-08-15T00:00:00.000Z' },
+          { timestamp: '2026-08-16T12:00:00.000Z' },
+        ],
+        todayMs,
+      ),
+    ).toEqual(['2026-08-14T00:00:00.000Z'])
+  })
+
+  it('preserves the route callback behavior of ignoring invalid timestamps', () => {
+    expect(
+      derivePastUsageDateIsoStrings(
+        [{ timestamp: 'not-a-timestamp' }],
+        todayMs,
+      ),
+    ).toEqual([])
+  })
+})
 
 describe('POST /api/events — WU-4 응답 shape', () => {
   beforeEach(() => {
