@@ -49,7 +49,7 @@ describe('CreateProjectModal pending feedback', () => {
     expect(screen.getByText('새 프로젝트 만들기')).toBeInTheDocument()
   })
 
-  it('shows a decorative spinner and disabled submit button while pending', () => {
+  it('shows reduced-motion-aware decoration and busy semantics while pending', () => {
     vi.mocked(useCreateProject).mockReturnValueOnce({
       mutate: mockMutate,
       reset: mockReset,
@@ -62,9 +62,11 @@ describe('CreateProjectModal pending feedback', () => {
 
     const submitButton = screen.getByRole('button', { name: /생성 중…/i })
     expect(submitButton).toBeDisabled()
+    expect(submitButton).toHaveAttribute('aria-busy', 'true')
 
     const spinner = submitButton.querySelector('svg')
-    expect(spinner).toHaveClass('animate-spin')
+    expect(spinner).toHaveClass('animate-spin', 'motion-reduce:animate-none')
     expect(spinner).toHaveAttribute('aria-hidden', 'true')
+    expect(spinner).toHaveAttribute('focusable', 'false')
   })
 })
