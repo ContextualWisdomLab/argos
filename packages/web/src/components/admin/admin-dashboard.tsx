@@ -30,6 +30,21 @@ type ResetLink = {
   expiresAt: string
 }
 
+export function resolveImpersonationNavigationTarget(candidate: unknown, origin: string) {
+  if (typeof candidate !== 'string' || candidate.length === 0) return null
+
+  try {
+    const trustedOrigin = new URL(origin)
+    const target = new URL(candidate, trustedOrigin)
+    if (target.origin !== trustedOrigin.origin) return null
+    if (target.pathname !== '/admin/impersonate') return null
+    if (target.username || target.password) return null
+    return target.href
+  } catch {
+    return null
+  }
+}
+
 export function AdminDashboard() {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -151,8 +166,16 @@ export function AdminDashboard() {
         return
       }
 
-      const data = (await res.json()) as { impersonationUrl: string }
-      window.location.assign(data.impersonationUrl)
+      const data = (await res.json()) as { impersonationUrl?: unknown }
+      const navigationTarget = resolveImpersonationNavigationTarget(
+        data.impersonationUrl,
+        window.location.origin
+      )
+      if (!navigationTarget) {
+        setError('Unable to open dashboard as selected user')
+        return
+      }
+      window.location.assign(navigationTarget)
     } catch {
       setError('Unable to open dashboard as selected user')
     } finally {
