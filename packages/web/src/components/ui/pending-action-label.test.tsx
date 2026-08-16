@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import React from 'react'
 import { render, screen } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
 import { describe, expect, it } from 'vitest'
