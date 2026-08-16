@@ -45,6 +45,11 @@ describe('resolveImpersonationNavigationTarget', () => {
     ).toBeNull()
     expect(resolveImpersonationNavigationTarget('/admin/impersonate', origin)).toBeNull()
     expect(resolveImpersonationNavigationTarget('/admin/impersonate?token=', origin)).toBeNull()
+    expect(resolveImpersonationNavigationTarget('/admin/impersonate?token=%20', origin)).toBeNull()
+    expect(resolveImpersonationNavigationTarget('/admin/impersonate?token=+', origin)).toBeNull()
+    expect(
+      resolveImpersonationNavigationTarget('/admin/impersonate?token=abc%20def', origin)
+    ).toBeNull()
   })
 
   it('rejects malformed or non-string response values', () => {

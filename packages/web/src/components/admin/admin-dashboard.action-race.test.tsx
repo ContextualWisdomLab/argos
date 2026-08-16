@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React, { type SVGProps } from 'react'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -154,5 +154,151 @@ describe('AdminDashboard pending admin-action races', () => {
     expect(
       screen.queryByText('Unable to open dashboard as selected user')
     ).not.toBeInTheDocument()
+  })
+
+  it('does not attach Alice reset link after search replaces the selected customer', async () => {
+    let resolveCreate!: (value: {
+      ok: boolean
+      json: () => Promise<{ url: string; path: string; expiresAt: string }>
+    }) => void
+    const createPending = new Promise<{
+      ok: boolean
+      json: () => Promise<{ url: string; path: string; expiresAt: string }>
+    }>((resolve) => {
+      resolveCreate = resolve
+    })
+    let listedUsers = users
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.includes('/api/admin/users?')) {
+          return { ok: true, json: async () => ({ users: listedUsers }) }
+        }
+        if (url === '/api/admin/password-reset-links') {
+          return createPending
+        }
+        throw new Error(`Unexpected request: ${url}`)
+      })
+    )
+
+    render(<AdminDashboard />)
+    await screen.findByRole('button', { name: /Alice Admin/ })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create reset link' }))
+    expect(screen.getByRole('button', { name: 'Creating...' })).toBeDisabled()
+
+    listedUsers = [users[1]]
+    fireEvent.change(screen.getByLabelText('Customers'), { target: { value: 'bob' } })
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Alice Admin/ })).not.toBeInTheDocument()
+    })
+    expect(screen.getByRole('button', { name: /Bob Buyer/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Create reset link' })).toBeEnabled()
+    expect(screen.queryByDisplayValue(/reset\/token/)).not.toBeInTheDocument()
+
+    await act(async () => {
+      resolveCreate({
+        ok: true,
+        json: async () => ({
+          url: 'https://example.com/reset/token-alice',
+          path: '/reset/token-alice',
+          expiresAt: '2026-01-03T00:00:00.000Z',
+        }),
+      })
+      await createPending
+    })
+
+    expect(screen.queryByDisplayValue('https://example.com/reset/token-alice')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Bob Buyer/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('still applies Alice reset link when search keeps Alice selected', async () => {
+    let resolveCreate!: (value: {
+      ok: boolean
+      json: () => Promise<{ url: string; path: string; expiresAt: string }>
+    }) => void
+    const createPending = new Promise<{
+      ok: boolean
+      json: () => Promise<{ url: string; path: string; expiresAt: string }>
+    }>((resolve) => {
+      resolveCreate = resolve
+    })
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.includes('/api/admin/users?')) {
+          return { ok: true, json: async () => ({ users }) }
+        }
+        if (url === '/api/admin/password-reset-links') {
+          return createPending
+        }
+        throw new Error(`Unexpected request: ${url}`)
+      })
+    )
+
+    render(<AdminDashboard />)
+    await screen.findByRole('button', { name: /Alice Admin/ })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create reset link' }))
+    fireEvent.change(screen.getByLabelText('Customers'), { target: { value: 'alice' } })
+    await screen.findByRole('button', { name: /Alice Admin/ })
+    expect(screen.getByRole('button', { name: 'Creating...' })).toBeDisabled()
+
+    await act(async () => {
+      resolveCreate({
+        ok: true,
+        json: async () => ({
+          url: 'https://example.com/reset/token-alice',
+          path: '/reset/token-alice',
+          expiresAt: '2026-01-03T00:00:00.000Z',
+        }),
+      })
+      await createPending
+    })
+
+    expect(screen.getByDisplayValue('https://example.com/reset/token-alice')).toBeInTheDocument()
+  })
+
+  it('navigates to the allow-listed impersonation URL for the selected customer', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('location', {
+      origin: 'https://admin.example.com',
+      href: 'https://admin.example.com/admin',
+      assign,
+    })
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input)
+        if (url.includes('/api/admin/users?')) {
+          return { ok: true, json: async () => ({ users }) }
+        }
+        if (url === '/api/admin/impersonation') {
+          return {
+            ok: true,
+            json: async () => ({
+              impersonationUrl: '/admin/impersonate?token=alice-token',
+            }),
+          }
+        }
+        throw new Error(`Unexpected request: ${url}`)
+      })
+    )
+
+    render(<AdminDashboard />)
+    await screen.findByRole('button', { name: /Alice Admin/ })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Open dashboard as user' }))
+    })
+
+    expect(assign).toHaveBeenCalledWith(
+      'https://admin.example.com/admin/impersonate?token=alice-token'
+    )
   })
 })

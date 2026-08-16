@@ -30,6 +30,25 @@ type ResetLink = {
   expiresAt: string
 }
 
+const UNABLE_TO_LOAD_USERS =
+  'Unable to load users. Retry the search or refresh the admin page.'
+const UNABLE_TO_CREATE_RESET_LINK =
+  'Unable to create reset link. Create the reset link again for the customer now selected.'
+const UNABLE_TO_OPEN_DASHBOARD =
+  'Unable to open dashboard as selected user. Start Open dashboard as user again from the customer now selected.'
+
+/**
+ * Map an API-supplied impersonation URL to a same-origin navigation target.
+ *
+ * The only accepted value is `/admin/impersonate` on the current origin with a
+ * single `token` query parameter. The token must be non-empty and must not
+ * contain whitespace after WHATWG decoding. Userinfo, hash, extra query keys,
+ * and any other origin or path are rejected.
+ *
+ * @param candidate - Value from `impersonationUrl` in the admin API response
+ * @param origin - Trusted `window.location.origin` of the admin page
+ * @returns Absolute href to assign, or `null` when the candidate is not allow-listed
+ */
 export function resolveImpersonationNavigationTarget(candidate: unknown, origin: string) {
   if (typeof candidate !== 'string' || candidate.length === 0) return null
 
@@ -43,7 +62,9 @@ export function resolveImpersonationNavigationTarget(candidate: unknown, origin:
 
     const searchKeys = [...target.searchParams.keys()]
     if (searchKeys.length !== 1 || searchKeys[0] !== 'token') return null
-    if (!target.searchParams.get('token')) return null
+
+    const token = target.searchParams.get('token')
+    if (!token || /\s/.test(token)) return null
 
     return target.href
   } catch {
@@ -64,6 +85,8 @@ export function AdminDashboard() {
   const [copied, setCopied] = useState(false)
   const copyResetTimer = useRef<number | null>(null)
   const actionGeneration = useRef(0)
+  const selectedUserIdRef = useRef<string | null>(null)
+  selectedUserIdRef.current = selectedUserId
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -86,6 +109,15 @@ export function AdminDashboard() {
     return actionGeneration.current === generation
   }
 
+  function discardInFlightAdminWork() {
+    bumpActionGeneration()
+    setResetLink(null)
+    setCopied(false)
+    setCreatingLink(false)
+    setOpeningDashboard(false)
+    setError('')
+  }
+
   useEffect(() => () => {
     bumpActionGeneration()
   }, [])
@@ -103,18 +135,23 @@ export function AdminDashboard() {
           signal: controller.signal,
         })
         if (!res.ok) {
-          setError('Unable to load users')
+          setError(UNABLE_TO_LOAD_USERS)
           return
         }
         const data = (await res.json()) as { users: AdminUser[] }
+        const current = selectedUserIdRef.current
+        const nextSelectedUserId =
+          current && data.users.some((user) => user.id === current)
+            ? current
+            : (data.users[0]?.id ?? null)
+        if (nextSelectedUserId !== current) {
+          discardInFlightAdminWork()
+        }
         setUsers(data.users)
-        setSelectedUserId((current) => {
-          if (current && data.users.some((user) => user.id === current)) return current
-          return data.users[0]?.id ?? null
-        })
+        setSelectedUserId(nextSelectedUserId)
       } catch (err) {
         if ((err as { name?: string }).name !== 'AbortError') {
-          setError('Unable to load users')
+          setError(UNABLE_TO_LOAD_USERS)
         }
       } finally {
         setLoadingUsers(false)
@@ -149,7 +186,7 @@ export function AdminDashboard() {
       })
       if (!isCurrentAction(generation)) return
       if (!res.ok) {
-        setError('Unable to create reset link')
+        setError(UNABLE_TO_CREATE_RESET_LINK)
         return
       }
 
@@ -158,7 +195,7 @@ export function AdminDashboard() {
       setResetLink(data)
     } catch {
       if (!isCurrentAction(generation)) return
-      setError('Unable to create reset link')
+      setError(UNABLE_TO_CREATE_RESET_LINK)
     } finally {
       if (isCurrentAction(generation)) {
         setCreatingLink(false)
@@ -181,7 +218,7 @@ export function AdminDashboard() {
       })
       if (!isCurrentAction(generation)) return
       if (!res.ok) {
-        setError('Unable to open dashboard as selected user')
+        setError(UNABLE_TO_OPEN_DASHBOARD)
         return
       }
 
@@ -192,13 +229,13 @@ export function AdminDashboard() {
       )
       if (!isCurrentAction(generation)) return
       if (!navigationTarget) {
-        setError('Unable to open dashboard as selected user')
+        setError(UNABLE_TO_OPEN_DASHBOARD)
         return
       }
       window.location.assign(navigationTarget)
     } catch {
       if (!isCurrentAction(generation)) return
-      setError('Unable to open dashboard as selected user')
+      setError(UNABLE_TO_OPEN_DASHBOARD)
     } finally {
       if (isCurrentAction(generation)) {
         setOpeningDashboard(false)
@@ -292,12 +329,8 @@ export function AdminDashboard() {
                         aria-pressed={selected}
                         className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
-                          bumpActionGeneration()
+                          discardInFlightAdminWork()
                           setSelectedUserId(user.id)
-                          setResetLink(null)
-                          setCopied(false)
-                          setCreatingLink(false)
-                          setOpeningDashboard(false)
                         }}
                       >
                         <span className="min-w-0">
