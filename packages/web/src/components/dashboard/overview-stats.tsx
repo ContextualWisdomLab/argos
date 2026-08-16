@@ -1,4 +1,5 @@
 'use client'
+import React from 'react';
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -88,6 +89,7 @@ export function OverviewStats({
         id="overview-stats-explanation-toggle"
         aria-expanded={expanded}
         aria-controls="overview-stats-explanation"
+        aria-label={expanded ? "통계 의미 설명 닫기" : "통계 의미 설명 열기"}
         className="mt-4 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors rounded-sm"
       >
         <span

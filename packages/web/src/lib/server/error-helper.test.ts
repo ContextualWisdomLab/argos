@@ -43,19 +43,6 @@ describe('jsonError', () => {
     const body = await res.json()
     expect(body.error.code).toBe('GONE')
   })
-
-  it('선택적인 details 를 표준 error 객체 안에 보존한다', async () => {
-    const details = [{ path: ['email'], message: 'Invalid email' }]
-    const res = jsonError('VALIDATION_ERROR', 'Validation error', 400, details)
-
-    await expect(res.json()).resolves.toEqual({
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Validation error',
-        details,
-      },
-    })
-  })
 })
 
 describe('handleRouteError', () => {

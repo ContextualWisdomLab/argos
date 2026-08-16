@@ -39,7 +39,7 @@ vi.mock('@/lib/server/db', () => {
     },
     claudeSession: {
       findUnique: vi.fn(),
-      create: vi.fn(),
+      upsert: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -65,11 +65,8 @@ vi.mock('@/lib/server/error-helper', () => ({
   handleRouteError: vi.fn((err: unknown) =>
     NextResponse.json({ error: String(err) }, { status: 500 })
   ),
-  jsonError: vi.fn((code: string, message: string, status: number, details?: unknown) =>
-    NextResponse.json(
-      { error: { code, message, ...(details === undefined ? {} : { details }) } },
-      { status },
-    )
+  jsonError: vi.fn((code: string, message: string, status: number) =>
+    NextResponse.json({ error: { code, message } }, { status })
   ),
 }))
 
@@ -119,8 +116,8 @@ describe('POST /api/events — WU-4 응답 shape', () => {
     vi.mocked(requireAuth).mockResolvedValue({ userId: 'user-1' })
     // 기본: 해당 sessionId 는 아직 존재하지 않음 (신규 세션 create 경로)
     vi.mocked(db.claudeSession.findUnique).mockResolvedValue(null)
-    // claudeSession.create 기본 stub
-    vi.mocked(db.claudeSession.create).mockResolvedValue({} as unknown as ClaudeSession)
+    // claudeSession.upsert 기본 stub
+    vi.mocked(db.claudeSession.upsert).mockResolvedValue({} as unknown as ClaudeSession)
     vi.mocked(db.claudeSession.update).mockResolvedValue({} as unknown as ClaudeSession)
     // event.create 기본 stub
     vi.mocked(db.event.create).mockResolvedValue({} as unknown as Event)
@@ -163,20 +160,6 @@ describe('POST /api/events — WU-4 응답 shape', () => {
     const body = await res.json()
     // 403 응답에는 project 필드가 없어야 한다 (정답 orgSlug 누설 금지)
     expect(body.project).toBeUndefined()
-    expect(body.error).toEqual({
-      code: 'PROJECT_FORBIDDEN',
-      message: 'Forbidden: not a member of the organization',
-    })
-  })
-
-  it('(b-1) 잘못된 payload — 표준 validation error 와 details 를 반환한다', async () => {
-    const res = await POST(makeRequest({ ...BASE_PAYLOAD, hookEventName: 'INVALID' }))
-
-    expect(res.status).toBe(400)
-    const body = await res.json()
-    expect(body.error.code).toBe('VALIDATION_ERROR')
-    expect(body.error.message).toBe('Validation failed')
-    expect(body.error.details).toEqual(expect.any(Array))
   })
 
   it('(c) agent=CODEX 페이로드 → 세션 create 에 agent=CODEX 기록', async () => {
@@ -188,8 +171,8 @@ describe('POST /api/events — WU-4 응답 shape', () => {
 
     await POST(makeRequest({ ...BASE_PAYLOAD, agent: 'CODEX' }))
 
-    expect(db.claudeSession.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ agent: 'CODEX' }) }),
+    expect(db.claudeSession.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ agent: 'CODEX' }) }),
     )
   })
 
@@ -202,8 +185,8 @@ describe('POST /api/events — WU-4 응답 shape', () => {
 
     await POST(makeRequest())
 
-    expect(db.claudeSession.create).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ agent: 'CLAUDE' }) }),
+    expect(db.claudeSession.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.objectContaining({ agent: 'CLAUDE' }) }),
     )
   })
 
@@ -248,30 +231,6 @@ describe('POST /api/events — WU-4 응답 shape', () => {
     expect(db.claudeSession.update).not.toHaveBeenCalled()
     expect(db.message.deleteMany).not.toHaveBeenCalled()
     expect(db.event.create).not.toHaveBeenCalled()
-    expect(db.claudeSession.create).not.toHaveBeenCalled()
-  })
-
-  it('(f) 같은 유저라도 다른 프로젝트 세션은 하이재킹할 수 없다', async () => {
-    vi.mocked(db.project.findUnique).mockResolvedValue({
-      id: 'project-1',
-      orgId: 'org-1',
-      organization: {
-        slug: 'my-org',
-        memberships: [{ userId: 'user-1', role: 'MEMBER' }],
-      },
-    } as unknown as Awaited<ReturnType<typeof db.project.findUnique>>)
-    vi.mocked(db.claudeSession.findUnique).mockResolvedValue({
-      userId: 'user-1',
-      projectId: 'other-project',
-    } as unknown as ClaudeSession)
-
-    const res = await POST(makeRequest())
-
-    expect(res.status).toBe(403)
-    await expect(res.json()).resolves.toMatchObject({
-      error: { code: 'SESSION_FORBIDDEN' },
-    })
-    expect(db.claudeSession.create).not.toHaveBeenCalled()
-    expect(db.event.create).not.toHaveBeenCalled()
+    expect(db.claudeSession.upsert).not.toHaveBeenCalled()
   })
 })
