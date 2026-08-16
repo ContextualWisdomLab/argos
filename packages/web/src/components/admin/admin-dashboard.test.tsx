@@ -29,6 +29,7 @@ const users = [
 describe('AdminDashboard accessibility feedback', () => {
   beforeEach(() => {
     vi.stubGlobal('React', React)
+    writeText.mockReset()
     writeText.mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
@@ -56,6 +57,13 @@ describe('AdminDashboard accessibility feedback', () => {
     else Reflect.deleteProperty(navigator, 'clipboard')
   })
 
+  async function renderGeneratedResetLink() {
+    render(<AdminDashboard />)
+    await screen.findByRole('button', { name: /Alice Admin/ })
+    fireEvent.click(screen.getByRole('button', { name: 'Create reset link' }))
+    return screen.findByRole('button', { name: 'Copy reset link' })
+  }
+
   it('exposes selection and changes the copy icon while feedback is active', async () => {
     render(<AdminDashboard />)
 
@@ -70,7 +78,8 @@ describe('AdminDashboard accessibility feedback', () => {
     expect(bob).toHaveClass('focus-visible:ring-2')
 
     fireEvent.click(screen.getByRole('button', { name: 'Create reset link' }))
-    const copyButton = await screen.findByRole('button', { name: 'Copy link' })
+    const copyButton = await screen.findByRole('button', { name: 'Copy reset link' })
+    expect(copyButton).toHaveTextContent('Copy link')
     expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
 
     vi.useFakeTimers()
@@ -80,24 +89,45 @@ describe('AdminDashboard accessibility feedback', () => {
     })
 
     expect(writeText).toHaveBeenCalledWith('https://example.com/reset/token')
-    const copiedButton = screen.getByRole('button', { name: 'Copied' })
-    expect(copiedButton).toBeInTheDocument()
+    expect(copyButton).toHaveAccessibleName('Copy reset link')
+    expect(copyButton).toHaveTextContent('Copied')
+    expect(screen.getByRole('status')).toHaveTextContent('Reset link copied.')
     expect(screen.getByTestId('check-icon')).toBeInTheDocument()
     expect(screen.queryByTestId('copy-icon')).not.toBeInTheDocument()
 
     act(() => vi.advanceTimersByTime(1000))
     await act(async () => {
-      fireEvent.click(copiedButton)
+      fireEvent.click(copyButton)
       await Promise.resolve()
     })
     expect(writeText).toHaveBeenCalledTimes(2)
 
     act(() => vi.advanceTimersByTime(1000))
-    expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
+    expect(copyButton).toHaveTextContent('Copied')
+    expect(screen.getByRole('status')).toHaveTextContent('Reset link copied.')
 
     act(() => vi.advanceTimersByTime(1000))
-    expect(screen.getByRole('button', { name: 'Copy link' })).toBeInTheDocument()
+    expect(copyButton).toHaveTextContent('Copy link')
     expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
     expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+  })
+
+  it('keeps the action retryable and gives a next step when clipboard access fails', async () => {
+    writeText.mockRejectedValueOnce(new Error('clipboard denied'))
+    const copyButton = await renderGeneratedResetLink()
+
+    await act(async () => {
+      fireEvent.click(copyButton)
+      await Promise.resolve()
+    })
+
+    expect(copyButton).toBeEnabled()
+    expect(copyButton).toHaveAccessibleName('Copy reset link')
+    expect(copyButton).toHaveTextContent('Copy link')
+    expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
+    expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument()
+    expect(screen.getByText('Unable to copy reset link. Select the generated link and copy it manually.')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 })
