@@ -10,9 +10,11 @@ already invalidates stale clipboard completions now also invalidates in-flight
 password-reset and impersonation requests when the selected customer changes.
 
 If an administrator starts a reset-link or impersonation request for Alice and
-then selects Bob, Alice's later response must not populate Bob's panel, must not
-leave Bob's actions stuck in a busy state, and must not navigate the browser
-into Alice's session.
+then selects Bob — by clicking Bob or by searching until Alice drops out of the
+list — Alice's later response must not populate Bob's panel, must not leave
+Bob's actions stuck in a busy state, and must not navigate the browser into
+Alice's session. A search that still includes Alice must not cancel Alice's
+in-flight work.
 
 ## Threat model
 
@@ -48,11 +50,16 @@ The regression suite covers:
 
 - same-origin relative and absolute `/admin/impersonate?token=...` acceptance;
 - rejection of cross-origin, protocol-relative, credentialed, `javascript:`,
-  extra-query, hash, missing-token, empty-token, and non-string values;
+  extra-query, hash, missing-token, empty-token, whitespace-only token,
+  plus-as-space token, and non-string values;
 - delayed reset-link success after a customer switch does not attach Alice's
   link to Bob;
+- delayed reset-link success after search replaces Alice with Bob does not
+  attach Alice's link to Bob;
+- delayed reset-link success still applies when search keeps Alice selected;
 - delayed impersonation success after a customer switch does not call
-  `location.assign`.
+  `location.assign`;
+- current-customer impersonation assigns the allow-listed same-origin URL.
 
 The exact pull-request head must additionally pass repository type checking,
 full tests, coverage, build, dependency review, SAST, and security checks
@@ -65,6 +72,8 @@ before an independent approval and merge.
   selected user." Recreate the impersonation from the current customer row.
 - After switching customers, ignore any still-running create-link or
   impersonation work. Start the action again on the customer now selected.
+- If search results no longer include the previous customer, treat that as a
+  customer switch. Recreate the action on the customer now selected.
 - Copy, create-link, and impersonation share one generation counter. Starting
   any of them cancels UI completion of the others.
 

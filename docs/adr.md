@@ -1013,13 +1013,15 @@ different customer, attaching the wrong secret to the visible panel.
 
 ### 결정
 1. `resolveImpersonationNavigationTarget` accepts only a same-origin
-   `/admin/impersonate` URL with a single non-empty `token` query parameter and
-   no userinfo or hash.
+   `/admin/impersonate` URL with a single non-empty `token` query parameter,
+   no whitespace in the decoded token, and no userinfo or hash.
 2. Copy, create-link, and impersonation share one `actionGeneration` counter.
-   Customer selection, unmount, and a new action increment it. Post-`await`
-   state and `location.assign` run only when the captured generation is current.
-3. Customer selection immediately clears busy flags and any displayed reset
-   link so the newly selected customer is actionable.
+   Customer selection, unmount, search-driven selection change, and a new
+   action increment it. Post-`await` state and `location.assign` run only when
+   the captured generation is current.
+3. Customer selection immediately clears busy flags, errors, and any displayed
+   reset link so the newly selected customer is actionable. A search that keeps
+   the same customer does not cancel in-flight work.
 
 ### 근거
 - OWASP unvalidated-redirects guidance requires an allow-list, not a denylist.
