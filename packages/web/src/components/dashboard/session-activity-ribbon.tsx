@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useMemo, useCallback } from 'react'
 import {
   formatSlashCommandText,
   type TimelineEvent,
