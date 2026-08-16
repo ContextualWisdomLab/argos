@@ -73,15 +73,22 @@ function renderRibbon(selectedIdx: number | null, onToggleGroup = vi.fn()) {
   )
 }
 
+function currentEventButtons() {
+  return screen
+    .getAllByRole('button')
+    .filter((button) => button.getAttribute('aria-current') === 'true')
+}
+
 describe('SessionActivityRibbon accessibility semantics', () => {
   afterEach(cleanup)
 
-  it('identifies the visually current event without turning event actions into toggle buttons', () => {
+  it('identifies exactly one visually current event without turning event actions into toggle buttons', () => {
     const { rerender } = renderRibbon(0)
 
     const firstEvent = screen.getByRole('button', { name: 'Event 1' })
     expect(firstEvent).toHaveAttribute('aria-current', 'true')
     expect(firstEvent).not.toHaveAttribute('aria-pressed')
+    expect(currentEventButtons()).toEqual([firstEvent])
 
     rerender(
       <SessionActivityRibbon
@@ -95,8 +102,10 @@ describe('SessionActivityRibbon accessibility semantics', () => {
       />
     )
 
+    const secondEvent = screen.getByRole('button', { name: 'Event 2' })
     expect(screen.getByRole('button', { name: 'Event 1' })).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('button', { name: 'Event 2' })).toHaveAttribute('aria-current', 'true')
+    expect(secondEvent).toHaveAttribute('aria-current', 'true')
+    expect(currentEventButtons()).toEqual([secondEvent])
   })
 
   it('names a collapsed tool run by the next action instead of claiming a persistent disclosure state', () => {
