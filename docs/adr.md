@@ -995,3 +995,42 @@ skill 호출의 row-level 정의 자체를 **`Prisma.Sql` relation expression** 
 ### 참고
 - docs/tasks/2026-05-14-overview-skill-frequency-bug/03-plan.md §Decision-3, §Decision-9, §WU-3, §WU-10
 - 사용자 발언 인용: "가장 가벼운 전략" (clarify 의 백필 비용 가이드라인)
+
+---
+
+## ADR-035: Admin impersonation navigation is a same-origin token allow-list
+
+**상태**: 확정  
+**날짜**: 2026-08-16  
+**태그**: `area:admin`, `pattern:url-allowlist`, `pattern:stale-action-generation`
+
+### 컨텍스트
+Admin dashboard can open a customer session and issue a 24-hour password reset
+link. The impersonation API returns a URL that the browser then assigns. A
+cross-origin or extra-parameter value is an open redirect. In-flight create-link
+and impersonation responses can also complete after the operator selects a
+different customer, attaching the wrong secret to the visible panel.
+
+### 결정
+1. `resolveImpersonationNavigationTarget` accepts only a same-origin
+   `/admin/impersonate` URL with a single non-empty `token` query parameter and
+   no userinfo or hash.
+2. Copy, create-link, and impersonation share one `actionGeneration` counter.
+   Customer selection, unmount, and a new action increment it. Post-`await`
+   state and `location.assign` run only when the captured generation is current.
+3. Customer selection immediately clears busy flags and any displayed reset
+   link so the newly selected customer is actionable.
+
+### 근거
+- OWASP unvalidated-redirects guidance requires an allow-list, not a denylist.
+- Password-reset and impersonation tokens are customer-bound secrets; a stale
+  success is an operator-facing mix-up, not a cosmetic race.
+- The clipboard path already proved the generation-counter pattern.
+
+### 트레이드오프
+- Starting any admin action cancels UI completion of the others. The operator
+  must retry the action they still want.
+- Client allow-listing does not replace server-side token issuance.
+
+### 참고
+- `docs/doctoring/admin-impersonation-navigation-allowlist.md`
