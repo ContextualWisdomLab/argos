@@ -13,7 +13,7 @@ afterEach(() => {
 })
 
 describe('dashboard summary accessibility labels', () => {
-  it('names the overview toggle by the action it will perform', async () => {
+  it('keeps the visible overview label in the accessible name while aria-expanded exposes state', async () => {
     const user = userEvent.setup()
     render(
       <OverviewStats
@@ -28,21 +28,21 @@ describe('dashboard summary accessibility labels', () => {
       />,
     )
 
-    const showButton = screen.getByRole('button', {
-      name: 'Show overview statistics explanation',
+    const toggle = screen.getByRole('button', {
+      name: 'What do these numbers mean?',
     })
-    expect(showButton).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
-    await user.click(showButton)
+    await user.click(toggle)
 
     expect(
       screen.getByRole('button', {
-        name: 'Hide overview statistics explanation',
+        name: 'What do these numbers mean?',
       }),
     ).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('names both file summary actions without relying on icons', async () => {
+  it('keeps each visible file-summary label in its accessible action name', async () => {
     const user = userEvent.setup()
     const onOpenFilesTab = vi.fn()
     const files: SessionFiles = {
@@ -73,8 +73,18 @@ describe('dashboard summary accessibility labels', () => {
       />,
     )
 
-    await user.click(screen.getByRole('button', { name: 'View modified files' }))
-    await user.click(screen.getByRole('button', { name: 'View read files' }))
+    const modified = screen.getByRole('button', {
+      name: '1 file modified, view modified files',
+    })
+    const read = screen.getByRole('button', {
+      name: '1 file read, view read files',
+    })
+
+    expect(modified).toHaveTextContent('1file modified')
+    expect(read).toHaveTextContent('1file read')
+
+    await user.click(modified)
+    await user.click(read)
 
     expect(onOpenFilesTab).toHaveBeenCalledTimes(2)
   })
