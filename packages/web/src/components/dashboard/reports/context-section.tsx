@@ -28,13 +28,12 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         )}
         aria-expanded={open}
         aria-controls={contentId}
-        aria-label={`${open ? 'Collapse' : 'Expand'} ${title} section`}
       >
         <h2 className="text-base font-medium">{title}</h2>
         {open ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         )}
       </button>
       {open && (
