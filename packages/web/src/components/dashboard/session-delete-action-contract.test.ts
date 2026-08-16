@@ -1,10 +1,10 @@
 /** @vitest-environment node */
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const sessionsPage = readFileSync(
-  fileURLToPath(new URL('../../app/dashboard/[orgSlug]/sessions/page.tsx', import.meta.url)),
+  resolve(process.cwd(), 'src/app/dashboard/[orgSlug]/sessions/page.tsx'),
   'utf-8',
 )
 
