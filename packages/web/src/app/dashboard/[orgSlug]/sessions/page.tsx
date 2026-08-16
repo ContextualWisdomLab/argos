@@ -18,6 +18,7 @@ import { formatSlashCommandText } from '@/lib/timeline-events'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { Pagination } from '@/components/ui/pagination'
 import {
   AlertDialog,
@@ -415,6 +416,7 @@ function SessionsContent({
               variant="destructive"
               size="sm"
               disabled={deleteMutation.isPending}
+              aria-busy={deleteMutation.isPending}
               onClick={() => {
                 if (!sessionToDelete) return
                 deleteMutation.mutate(sessionToDelete.id, {
@@ -424,7 +426,11 @@ function SessionsContent({
                 })
               }}
             >
-              {deleteMutation.isPending ? '삭제 중…' : '삭제'}
+              <PendingActionLabel
+                pending={deleteMutation.isPending}
+                idleLabel="삭제"
+                pendingLabel="삭제 중…"
+              />
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

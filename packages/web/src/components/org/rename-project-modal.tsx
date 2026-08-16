@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { useUpdateProject } from '@/hooks/use-update-project'
 
 interface RenameProjectModalProps {
@@ -90,10 +91,16 @@ export function RenameProjectModal({
               disabled={mutation.isPending}
               autoComplete="off"
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "rename-project-error" : undefined}
+              aria-describedby={errorMessage ? 'rename-project-error' : undefined}
             />
             {errorMessage && (
-              <p id="rename-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p
+                id="rename-project-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errorMessage}
+              </p>
             )}
           </div>
 
@@ -107,8 +114,17 @@ export function RenameProjectModal({
             >
               취소
             </Button>
-            <Button type="submit" size="sm" disabled={!canSubmit}>
-              {mutation.isPending ? '변경 중…' : '변경'}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!canSubmit}
+              aria-busy={mutation.isPending}
+            >
+              <PendingActionLabel
+                pending={mutation.isPending}
+                idleLabel="변경"
+                pendingLabel="변경 중…"
+              />
             </Button>
           </AlertDialogFooter>
         </form>

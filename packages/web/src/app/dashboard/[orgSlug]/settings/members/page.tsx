@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -185,8 +186,13 @@ function MembersTable({
                 ownerLocked ||
                 isLastAdmin
               }
+              aria-busy={removeMember.isPending}
             >
-              제거
+              <PendingActionLabel
+                pending={removeMember.isPending}
+                idleLabel="제거"
+                pendingLabel="제거 중…"
+              />
             </Button>
           </div>
         )
