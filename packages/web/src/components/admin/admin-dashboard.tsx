@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React from "react";
+import { useEffect, useMemo, useState } from 'react'
 import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -41,21 +42,20 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  const copyResetTimer = useRef<number | null>(null)
+  const [copyTimer, setCopyTimer] = useState<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
   )
 
-  useEffect(
-    () => () => {
-      if (copyResetTimer.current !== null) {
-        window.clearTimeout(copyResetTimer.current)
+  useEffect(() => {
+    return () => {
+      if (copyTimer !== null) {
+        window.clearTimeout(copyTimer)
       }
-    },
-    []
-  )
+    }
+  }, [copyTimer])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -105,6 +105,10 @@ export function AdminDashboard() {
     setCreatingLink(true)
     setResetLink(null)
     setCopied(false)
+    if (copyTimer !== null) {
+      window.clearTimeout(copyTimer)
+      setCopyTimer(null)
+    }
     setError('')
 
     try {
@@ -155,15 +159,20 @@ export function AdminDashboard() {
 
   async function handleCopy() {
     if (!resetLink) return
-    await navigator.clipboard.writeText(resetLink.url)
-    setCopied(true)
-    if (copyResetTimer.current !== null) {
-      window.clearTimeout(copyResetTimer.current)
+    if (copyTimer !== null) {
+      window.clearTimeout(copyTimer)
     }
-    copyResetTimer.current = window.setTimeout(() => {
-      setCopied(false)
-      copyResetTimer.current = null
-    }, 2000)
+
+    try {
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API unavailable')
+      }
+      await navigator.clipboard.writeText(resetLink.url)
+      setCopied(true)
+      setCopyTimer(window.setTimeout(() => setCopied(false), 2000))
+    } catch {
+      setError('Unable to copy link. Please select and copy the generated link manually.')
+    }
   }
 
   return (
@@ -232,6 +241,10 @@ export function AdminDashboard() {
                           setSelectedUserId(user.id)
                           setResetLink(null)
                           setCopied(false)
+                          setCopyTimer((prev) => {
+                            if (prev !== null) window.clearTimeout(prev)
+                            return null
+                          })
                         }}
                       >
                         <span className="min-w-0">
@@ -302,8 +315,15 @@ export function AdminDashboard() {
                         ) : (
                           <Copy className="size-4" aria-hidden="true" />
                         )}
-                        <span aria-live="polite">{copied ? 'Copied' : 'Copy link'}</span>
+                        Copy link
                       </Button>
+                      <span
+                        role="status"
+                        aria-atomic="true"
+                        className="sr-only"
+                      >
+                        {copied ? 'Link copied to clipboard.' : ''}
+                      </span>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
                       </p>
