@@ -39,6 +39,12 @@ export function resolveImpersonationNavigationTarget(candidate: unknown, origin:
     if (target.origin !== trustedOrigin.origin) return null
     if (target.pathname !== '/admin/impersonate') return null
     if (target.username || target.password) return null
+    if (target.hash) return null
+
+    const searchKeys = [...target.searchParams.keys()]
+    if (searchKeys.length !== 1 || searchKeys[0] !== 'token') return null
+    if (!target.searchParams.get('token')) return null
+
     return target.href
   } catch {
     return null
@@ -57,7 +63,7 @@ export function AdminDashboard() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const copyResetTimer = useRef<number | null>(null)
-  const copyAttemptVersion = useRef(0)
+  const actionGeneration = useRef(0)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -71,12 +77,18 @@ export function AdminDashboard() {
     }
   }
 
-  function invalidateCopyFeedback() {
-    copyAttemptVersion.current += 1
+  function bumpActionGeneration() {
     clearCopyResetTimer()
+    return ++actionGeneration.current
   }
 
-  useEffect(() => () => invalidateCopyFeedback(), [])
+  function isCurrentAction(generation: number) {
+    return actionGeneration.current === generation
+  }
+
+  useEffect(() => () => {
+    bumpActionGeneration()
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -123,7 +135,7 @@ export function AdminDashboard() {
   async function handleCreateLink() {
     if (!selectedUserId) return
 
-    invalidateCopyFeedback()
+    const generation = bumpActionGeneration()
     setCreatingLink(true)
     setResetLink(null)
     setCopied(false)
@@ -135,23 +147,29 @@ export function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUserId }),
       })
+      if (!isCurrentAction(generation)) return
       if (!res.ok) {
         setError('Unable to create reset link')
         return
       }
 
       const data = (await res.json()) as ResetLink
+      if (!isCurrentAction(generation)) return
       setResetLink(data)
     } catch {
+      if (!isCurrentAction(generation)) return
       setError('Unable to create reset link')
     } finally {
-      setCreatingLink(false)
+      if (isCurrentAction(generation)) {
+        setCreatingLink(false)
+      }
     }
   }
 
   async function handleOpenDashboardAsUser() {
     if (!selectedUserId) return
 
+    const generation = bumpActionGeneration()
     setOpeningDashboard(true)
     setError('')
 
@@ -161,6 +179,7 @@ export function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUserId }),
       })
+      if (!isCurrentAction(generation)) return
       if (!res.ok) {
         setError('Unable to open dashboard as selected user')
         return
@@ -171,29 +190,32 @@ export function AdminDashboard() {
         data.impersonationUrl,
         window.location.origin
       )
+      if (!isCurrentAction(generation)) return
       if (!navigationTarget) {
         setError('Unable to open dashboard as selected user')
         return
       }
       window.location.assign(navigationTarget)
     } catch {
+      if (!isCurrentAction(generation)) return
       setError('Unable to open dashboard as selected user')
     } finally {
-      setOpeningDashboard(false)
+      if (isCurrentAction(generation)) {
+        setOpeningDashboard(false)
+      }
     }
   }
 
   async function handleCopy() {
     if (!resetLink) return
 
-    clearCopyResetTimer()
-    const attemptVersion = ++copyAttemptVersion.current
+    const generation = bumpActionGeneration()
     setError('')
 
     try {
       if (!navigator.clipboard) throw new Error('Clipboard API unavailable')
       await navigator.clipboard.writeText(resetLink.url)
-      if (copyAttemptVersion.current !== attemptVersion) return
+      if (!isCurrentAction(generation)) return
 
       setCopied(true)
       copyResetTimer.current = window.setTimeout(() => {
@@ -201,7 +223,7 @@ export function AdminDashboard() {
         copyResetTimer.current = null
       }, 2000)
     } catch {
-      if (copyAttemptVersion.current !== attemptVersion) return
+      if (!isCurrentAction(generation)) return
       setCopied(false)
       setError('Unable to copy reset link. Select the generated link and copy it manually.')
     }
@@ -270,10 +292,12 @@ export function AdminDashboard() {
                         aria-pressed={selected}
                         className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
-                          invalidateCopyFeedback()
+                          bumpActionGeneration()
                           setSelectedUserId(user.id)
                           setResetLink(null)
                           setCopied(false)
+                          setCreatingLink(false)
+                          setOpeningDashboard(false)
                         }}
                       >
                         <span className="min-w-0">

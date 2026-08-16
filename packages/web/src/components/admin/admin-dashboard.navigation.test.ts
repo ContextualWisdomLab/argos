@@ -34,6 +34,17 @@ describe('resolveImpersonationNavigationTarget', () => {
     ).toBeNull()
     expect(resolveImpersonationNavigationTarget('/dashboard', origin)).toBeNull()
     expect(resolveImpersonationNavigationTarget('javascript:alert(1)', origin)).toBeNull()
+    expect(
+      resolveImpersonationNavigationTarget(
+        '/admin/impersonate?token=abc123&next=https://attacker.example',
+        origin
+      )
+    ).toBeNull()
+    expect(
+      resolveImpersonationNavigationTarget('/admin/impersonate?token=abc123#/phishing', origin)
+    ).toBeNull()
+    expect(resolveImpersonationNavigationTarget('/admin/impersonate', origin)).toBeNull()
+    expect(resolveImpersonationNavigationTarget('/admin/impersonate?token=', origin)).toBeNull()
   })
 
   it('rejects malformed or non-string response values', () => {
