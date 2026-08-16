@@ -21,6 +21,6 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
-- 개요 설명 토글, 보고서 섹션 토글, 세션 파일 요약 버튼에 현재 동작을 설명하는 접근 가능한 이름을 추가했습니다.
+- 개요·보고서 disclosure는 화면에 보이는 제목을 접근 가능한 이름으로 유지하고 `aria-expanded`로 상태를 전달하도록 정리했습니다. 세션 파일 요약 버튼은 보이는 파일 수·상태 문구를 이름에 그대로 보존하면서 스크린 리더 전용 다음 행동 안내를 덧붙였습니다.
 
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
