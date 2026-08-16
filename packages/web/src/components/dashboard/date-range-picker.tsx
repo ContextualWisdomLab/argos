@@ -2,19 +2,20 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { subDays, format, differenceInDays } from 'date-fns'
-import React, { Suspense } from 'react'
+import React, { Suspense, useId } from 'react'
 import { cn } from '@/lib/utils'
 
 const PRESETS = [
-  { days: 7, label: '7d' },
-  { days: 30, label: '30d' },
-  { days: 90, label: '90d' },
-  { days: 3650, label: 'ALL' },
+  { days: 7, label: '7d', description: 'Last 7 days' },
+  { days: 30, label: '30d', description: 'Last 30 days' },
+  { days: 90, label: '90d', description: 'Last 90 days' },
+  { days: 3650, label: 'ALL', description: 'All available history' },
 ] as const
 
 function DateRangePickerContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const descriptionPrefix = useId()
 
   const currentFrom = searchParams.get('from')
   const currentTo = searchParams.get('to')
@@ -57,24 +58,36 @@ function DateRangePickerContent() {
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-      <div className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5">
-        {PRESETS.map((preset) => (
-          <button
-            key={preset.days}
-            type="button"
-            aria-pressed={activePreset === preset.days}
-            onClick={() => handlePreset(preset.days)}
-            className={cn(
-              'px-3 py-1 text-xs font-medium rounded-md transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              activePreset === preset.days
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-            )}
-          >
-            {preset.label}
-          </button>
-        ))}
+      <div
+        className="inline-flex rounded-lg bg-card ring-1 ring-border p-0.5"
+        role="group"
+        aria-label="Date range presets"
+      >
+        {PRESETS.map((preset) => {
+          const descriptionId = `${descriptionPrefix}-${preset.days}-description`
+          return (
+            <React.Fragment key={preset.days}>
+              <button
+                type="button"
+                aria-pressed={activePreset === preset.days}
+                aria-describedby={descriptionId}
+                onClick={() => handlePreset(preset.days)}
+                className={cn(
+                  'px-3 py-1 text-xs font-medium rounded-md transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  activePreset === preset.days
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                )}
+              >
+                {preset.label}
+              </button>
+              <span id={descriptionId} className="sr-only">
+                {preset.description}
+              </span>
+            </React.Fragment>
+          )
+        })}
       </div>
       <span className="text-xs text-muted-foreground tabular-nums">
         {format(fromDate, 'MMM d')} ~ {format(toDate, 'MMM d')}
