@@ -174,7 +174,6 @@ export function AdminDashboard() {
 
       setCopied(true)
       copyResetTimer.current = window.setTimeout(() => {
-        if (copyAttemptVersion.current !== attemptVersion) return
         setCopied(false)
         copyResetTimer.current = null
       }, 2000)
