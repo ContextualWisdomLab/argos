@@ -995,3 +995,42 @@ skill 호출의 row-level 정의 자체를 **`Prisma.Sql` relation expression** 
 ### 참고
 - docs/tasks/2026-05-14-overview-skill-frequency-bug/03-plan.md §Decision-3, §Decision-9, §WU-3, §WU-10
 - 사용자 발언 인용: "가장 가벼운 전략" (clarify 의 백필 비용 가이드라인)
+
+---
+
+## ADR-035: Mutation pending feedback 은 `PendingActionLabel` 단일 primitive
+
+**상태**: 확정
+**날짜**: 2026-08-16
+**태그**: `area:web-ui`, `pattern:pending-action`, `a11y:wcag-4-1-2`
+
+### 컨텍스트
+
+조직 생성/삭제, 프로젝트 생성/삭제/이름 변경, 세션 삭제, 조직 설정 저장, 프로젝트 이전, 멤버 추가/제거 버튼이 각각 대기 문구를 인라인으로 바꿨다. 시각 대기 단서, `aria-busy`, reduced-motion 처리가 사이트마다 달라 구매자가 같은 작업을 다른 화면에서 반복할 때 피드백이 일관되지 않았다.
+
+### 결정
+
+대기 문구와 장식용 스피너는 `PendingActionLabel` 한 객체로 렌더한다. 소유 native button 이 `disabled` 와 `aria-busy` 를 유지한다. Select-only mutation (역할 변경, Claude 요금제) 은 버튼 라벨이 없으므로 이 객체의 범위 밖이다.
+
+### 근거
+
+- WAI-ARIA 1.3 의 `aria-busy` 는 요소가 수정 중임을 알리는 상태이지, 완료/실패 발표를 보장하지 않는다 (World Wide Web Consortium, 2026).
+- WCAG 2.2 Success Criterion 4.1.2 는 이름·역할·상태·값을 프로그램으로 노출할 것을 요구한다 (World Wide Web Consortium, 2023).
+- 반복 웹 객체를 한 primitive 로 모으면 이후 Storybook 인벤토리와 토큰 변경이 한 곳에서 끝난다.
+
+### 트레이드오프
+
+- 버튼마다 live region 을 넣지 않는다. 중첩 live region 은 중복 발표를 만들 수 있어, 완료/실패 발표는 별도 브라우저·AT 연구 후에 추가한다.
+- Storybook 툴체인을 이 결정에 묶지 않는다. `*.stories.tsx` 가 `@storybook/react` 를 import 하면 현재 `tsc` 가 실패한다.
+
+### 대안
+
+- Button 에 `loading` prop 을 추가: shadcn Button 계약을 넓히고 아이콘-only 버튼과 의미가 섞인다.
+- 각 화면에 스피너를 복사: #421 이전 상태이며 접근성 계약이 다시 갈라진다.
+
+### 참고
+
+- docs/doctoring/async-action-feedback.md
+- docs/storybook-inventory.md
+- World Wide Web Consortium. (2023, October 5). *Web Content Accessibility Guidelines (WCAG) 2.2*. https://www.w3.org/TR/WCAG22/
+- World Wide Web Consortium. (2026, June 4). *Accessible Rich Internet Applications (WAI-ARIA) 1.3* (Working Draft). https://www.w3.org/TR/2026/WD-wai-aria-1.3-20260604/
