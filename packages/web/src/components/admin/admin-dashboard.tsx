@@ -42,6 +42,7 @@ export function AdminDashboard() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const copyResetTimer = useRef<number | null>(null)
+  const copyAttemptVersion = useRef(0)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
@@ -55,7 +56,12 @@ export function AdminDashboard() {
     }
   }
 
-  useEffect(() => () => clearCopyResetTimer(), [])
+  function invalidateCopyFeedback() {
+    copyAttemptVersion.current += 1
+    clearCopyResetTimer()
+  }
+
+  useEffect(() => () => invalidateCopyFeedback(), [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -102,7 +108,7 @@ export function AdminDashboard() {
   async function handleCreateLink() {
     if (!selectedUserId) return
 
-    clearCopyResetTimer()
+    invalidateCopyFeedback()
     setCreatingLink(true)
     setResetLink(null)
     setCopied(false)
@@ -158,17 +164,22 @@ export function AdminDashboard() {
     if (!resetLink) return
 
     clearCopyResetTimer()
+    const attemptVersion = ++copyAttemptVersion.current
     setError('')
 
     try {
       if (!navigator.clipboard) throw new Error('Clipboard API unavailable')
       await navigator.clipboard.writeText(resetLink.url)
+      if (copyAttemptVersion.current !== attemptVersion) return
+
       setCopied(true)
       copyResetTimer.current = window.setTimeout(() => {
+        if (copyAttemptVersion.current !== attemptVersion) return
         setCopied(false)
         copyResetTimer.current = null
       }, 2000)
     } catch {
+      if (copyAttemptVersion.current !== attemptVersion) return
       setCopied(false)
       setError('Unable to copy reset link. Select the generated link and copy it manually.')
     }
@@ -237,7 +248,7 @@ export function AdminDashboard() {
                         aria-pressed={selected}
                         className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
-                          clearCopyResetTimer()
+                          invalidateCopyFeedback()
                           setSelectedUserId(user.id)
                           setResetLink(null)
                           setCopied(false)
