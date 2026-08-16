@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from "react";
-import { render, screen, fireEvent, within } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DateRangePicker } from "./date-range-picker";
@@ -71,20 +71,22 @@ describe("DateRangePicker", () => {
     expect(button7d.hasAttribute("aria-pressed")).toBe(true);
   });
 
-  it("names the preset group and keeps each visible abbreviation in its accessible name", () => {
+  it("names the preset group and describes abbreviations without replacing visible button names", () => {
     render(<DateRangePicker />);
 
-    const group = screen.getByRole("group", { name: "Date range presets" });
-    const expectedNames = [
-      [/^7d\b.*last 7 days/i, "7d"],
-      [/^30d\b.*last 30 days/i, "30d"],
-      [/^90d\b.*last 90 days/i, "90d"],
-      [/^ALL\b.*all available history/i, "ALL"],
+    expect(screen.getByRole("group", { name: "Date range presets" })).toBeDefined();
+    const expectedDescriptions = [
+      ["7d", "Last 7 days"],
+      ["30d", "Last 30 days"],
+      ["90d", "Last 90 days"],
+      ["ALL", "All available history"],
     ] as const;
 
-    for (const [name, visibleLabel] of expectedNames) {
-      const button = within(group).getByRole("button", { name });
-      expect(button.textContent).toContain(visibleLabel);
+    for (const [name, description] of expectedDescriptions) {
+      const button = screen.getByRole("button", { name });
+      const descriptionId = button.getAttribute("aria-describedby");
+      expect(descriptionId).toBeTruthy();
+      expect(document.getElementById(descriptionId!)?.textContent).toBe(description);
     }
   });
 });
