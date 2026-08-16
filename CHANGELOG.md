@@ -21,4 +21,5 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
+- 날짜 범위 프리셋을 `Date range presets` 그룹으로 묶고, `7d`·`30d`·`90d`·`ALL`의 보이는 이름을 유지한 채 별도 설명을 연결했습니다. 세션 목록의 아이콘 전용 삭제 액션은 제목이 있는 경우 `세션 삭제: <제목>`으로 대상을 식별하고, 제목이 없으면 기존의 간결한 이름으로 안전하게 폴백합니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
