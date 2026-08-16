@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -41,11 +41,21 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyResetTimer = useRef<number | null>(null)
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
   )
+
+  function clearCopyResetTimer() {
+    if (copyResetTimer.current !== null) {
+      window.clearTimeout(copyResetTimer.current)
+      copyResetTimer.current = null
+    }
+  }
+
+  useEffect(() => () => clearCopyResetTimer(), [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -92,6 +102,7 @@ export function AdminDashboard() {
   async function handleCreateLink() {
     if (!selectedUserId) return
 
+    clearCopyResetTimer()
     setCreatingLink(true)
     setResetLink(null)
     setCopied(false)
@@ -145,8 +156,22 @@ export function AdminDashboard() {
 
   async function handleCopy() {
     if (!resetLink) return
-    await navigator.clipboard.writeText(resetLink.url)
-    setCopied(true)
+
+    clearCopyResetTimer()
+    setError('')
+
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard API unavailable')
+      await navigator.clipboard.writeText(resetLink.url)
+      setCopied(true)
+      copyResetTimer.current = window.setTimeout(() => {
+        setCopied(false)
+        copyResetTimer.current = null
+      }, 2000)
+    } catch {
+      setCopied(false)
+      setError('Unable to copy reset link. Select the generated link and copy it manually.')
+    }
   }
 
   return (
@@ -209,8 +234,10 @@ export function AdminDashboard() {
                       <button
                         key={user.id}
                         type="button"
-                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
+                        aria-pressed={selected}
+                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
+                          clearCopyResetTimer()
                           setSelectedUserId(user.id)
                           setResetLink(null)
                           setCopied(false)
@@ -278,10 +305,22 @@ export function AdminDashboard() {
                         <Label htmlFor="reset-link">Generated link</Label>
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
-                      <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        <Copy className="size-4" aria-hidden="true" />
-                        {copied ? 'Copied' : 'Copy link'}
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        aria-label="Copy reset link"
+                        onClick={handleCopy}
+                      >
+                        {copied ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-4" aria-hidden="true" />
+                        )}
+                        <span aria-hidden="true">Copy link</span>
                       </Button>
+                      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                        {copied ? 'Reset link copied.' : ''}
+                      </span>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
                       </p>
