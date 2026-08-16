@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DateRangePicker } from "./date-range-picker";
@@ -69,5 +69,22 @@ describe("DateRangePicker", () => {
 
     const button7d = screen.getByRole("button", { name: "7d" });
     expect(button7d.hasAttribute("aria-pressed")).toBe(true);
+  });
+
+  it("names the preset group and keeps each visible abbreviation in its accessible name", () => {
+    render(<DateRangePicker />);
+
+    const group = screen.getByRole("group", { name: "Date range presets" });
+    const expectedNames = [
+      [/^7d\b.*last 7 days/i, "7d"],
+      [/^30d\b.*last 30 days/i, "30d"],
+      [/^90d\b.*last 90 days/i, "90d"],
+      [/^ALL\b.*all available history/i, "ALL"],
+    ] as const;
+
+    for (const [name, visibleLabel] of expectedNames) {
+      const button = within(group).getByRole("button", { name });
+      expect(button.textContent).toContain(visibleLabel);
+    }
   });
 });
