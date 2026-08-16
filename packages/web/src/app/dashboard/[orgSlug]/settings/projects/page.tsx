@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -52,8 +53,13 @@ function MemberRow({
         size="sm"
         onClick={onRemove}
         disabled={isPending}
+        aria-busy={isPending}
       >
-        제거
+        <PendingActionLabel
+          pending={isPending}
+          idleLabel="제거"
+          pendingLabel="제거 중…"
+        />
       </Button>
     </div>
   )
@@ -107,8 +113,13 @@ function AddMemberRow({
         size="sm"
         onClick={handleAdd}
         disabled={!selectedUserId || isPending}
+        aria-busy={isPending}
       >
-        추가
+        <PendingActionLabel
+          pending={isPending}
+          idleLabel="추가"
+          pendingLabel="추가 중…"
+        />
       </Button>
     </div>
   )
@@ -325,8 +336,13 @@ function TransferProjectPanel({
           size="sm"
           onClick={handleTransfer}
           disabled={!targetOrgSlug || transfer.isPending}
+          aria-busy={transfer.isPending}
         >
-          {transfer.isPending ? '이동 중…' : '이동'}
+          <PendingActionLabel
+            pending={transfer.isPending}
+            idleLabel="이동"
+            pendingLabel="이동 중…"
+          />
         </Button>
       </div>
     </div>

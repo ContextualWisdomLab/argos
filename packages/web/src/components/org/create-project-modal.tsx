@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { useCreateProject } from '@/hooks/use-create-project'
 
 interface CreateProjectModalProps {
@@ -83,10 +84,16 @@ export function CreateProjectModal({
               autoFocus
               disabled={mutation.isPending}
               aria-invalid={!!errorMessage || undefined}
-              aria-describedby={errorMessage ? "create-project-error" : undefined}
+              aria-describedby={errorMessage ? 'create-project-error' : undefined}
             />
             {errorMessage && (
-              <p id="create-project-error" role="alert" className="text-xs text-destructive">{errorMessage}</p>
+              <p
+                id="create-project-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
+                {errorMessage}
+              </p>
             )}
           </div>
 
@@ -104,8 +111,13 @@ export function CreateProjectModal({
               type="submit"
               size="sm"
               disabled={!name.trim() || mutation.isPending}
+              aria-busy={mutation.isPending}
             >
-              {mutation.isPending ? '생성 중…' : '생성'}
+              <PendingActionLabel
+                pending={mutation.isPending}
+                idleLabel="생성"
+                pendingLabel="생성 중…"
+              />
             </Button>
           </AlertDialogFooter>
         </form>

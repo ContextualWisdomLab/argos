@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { PendingActionLabel } from '@/components/ui/pending-action-label'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -149,8 +150,16 @@ function OrgSettingsForm({
             </div>
 
             <div className="flex justify-end pt-2">
-              <Button type="submit" disabled={!canSubmit}>
-                {mutation.isPending ? '저장 중...' : '저장'}
+              <Button
+                type="submit"
+                disabled={!canSubmit}
+                aria-busy={mutation.isPending}
+              >
+                <PendingActionLabel
+                  pending={mutation.isPending}
+                  idleLabel="저장"
+                  pendingLabel="저장 중…"
+                />
               </Button>
             </div>
           </CardContent>

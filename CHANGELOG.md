@@ -22,3 +22,4 @@
 ### 🎨 변경 사항 (UX / 접근성)
 
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
+- 조직·프로젝트·세션·멤버 mutation 버튼이 하나의 `PendingActionLabel`을 사용합니다. 진행 중에는 기존 한글 대기 문구가 버튼 이름으로 남고, `aria-busy`와 장식용 스피너가 붙으며, 동작 줄이기 설정에서는 스피너 회전이 멈춥니다. 저장 중인 조직 설정 버튼의 말줄임표도 다른 대기 문구와 같은 `…`로 맞췄습니다.

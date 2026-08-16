@@ -75,6 +75,7 @@ Argos 웹 대시보드의 UI/디자인 시스템 가이드. 대시보드 UI 화�
 | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `components/ui/tabs.tsx` | 미니멀 탭 (active만 브랜드 하이라이트) |
 | `DateRangePicker` | `components/dashboard/date-range-picker.tsx` | pill 그룹 프리셋 + 현재 범위 라벨 |
 | `Card` (+ 서브컴포넌트) | `components/ui/card.tsx` | `rounded-xl bg-card ring-1 ring-foreground/10` 자동 적용 |
+| `PendingActionLabel` | `components/ui/pending-action-label.tsx` | mutation 버튼의 idle/pending 라벨 + 장식용 스피너. 소유 버튼이 `disabled`와 `aria-busy`를 유지 |
 
 **직접 카드/메트릭/리스트 DOM 만들지 말 것.** 필요한 패턴이 위 표에 없으면 새 컴포넌트를 만들고 이 표에 추가한다.
 
