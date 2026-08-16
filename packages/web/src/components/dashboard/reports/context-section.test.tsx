@@ -11,7 +11,7 @@ describe('ContextSection', () => {
     cleanup()
   })
 
-  it('renders title and toggles content', async () => {
+  it('keeps the visible section title as the disclosure name while aria-expanded exposes state', async () => {
     const user = userEvent.setup()
     render(
       <ContextSection title="Test Title">
@@ -19,33 +19,40 @@ describe('ContextSection', () => {
       </ContextSection>
     )
 
-    // Initially closed
-    expect(screen.getByRole('button', { name: 'Expand Test Title section' })).toHaveAttribute('aria-expanded', 'false')
+    const toggle = screen.getByRole('button', { name: 'Test Title' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
-    // Click to open
-    await user.click(screen.getByRole('button', { name: 'Expand Test Title section' }))
-    expect(screen.getByRole('button', { name: 'Collapse Test Title section' })).toHaveAttribute('aria-expanded', 'true')
+    await user.click(toggle)
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
 
-    const region = screen.getByRole('region', { name: 'Collapse Test Title section' })
+    const region = screen.getByRole('region', { name: 'Test Title' })
     expect(region).toBeInTheDocument()
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
 
-    // Click to close
-    await user.click(screen.getByRole('button', { name: 'Collapse Test Title section' }))
-    expect(screen.getByRole('button', { name: 'Expand Test Title section' })).toHaveAttribute('aria-expanded', 'false')
+    await user.click(screen.getByRole('button', { name: 'Test Title' }))
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    )
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
-  it('renders open by default if defaultOpen is true', () => {
+  it('keeps the region name stable when open by default', () => {
     render(
       <ContextSection title="Test Title" defaultOpen>
         <div data-testid="test-content">Content</div>
       </ContextSection>
     )
 
-    expect(screen.getByRole('button', { name: 'Collapse Test Title section' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Collapse Test Title section' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Test Title' })).toBeInTheDocument()
   })
 })
