@@ -28,11 +28,44 @@ const users = [
     createdAt: '2026-01-01T00:00:00.000Z',
     memberships: [],
   },
+  {
+    id: 'bob',
+    email: 'bob@example.com',
+    name: 'Bob Buyer',
+    createdAt: '2026-01-02T00:00:00.000Z',
+    memberships: [],
+  },
 ]
+
+function installFetch() {
+  let generatedLinkCount = 0
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes('/api/admin/users?')) {
+        return { ok: true, json: async () => ({ users }) }
+      }
+      if (url === '/api/admin/password-reset-links') {
+        generatedLinkCount += 1
+        return {
+          ok: true,
+          json: async () => ({
+            url: `https://example.com/reset/token-${generatedLinkCount}`,
+            path: `/reset/token-${generatedLinkCount}`,
+            expiresAt: '2026-01-03T00:00:00.000Z',
+          }),
+        }
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    })
+  )
+}
 
 describe('AdminDashboard clipboard race handling', () => {
   beforeEach(() => {
     vi.stubGlobal('React', React)
+    installFetch()
   })
 
   afterEach(() => {
@@ -55,29 +88,6 @@ describe('AdminDashboard clipboard race handling', () => {
       configurable: true,
       value: { writeText },
     })
-
-    let generatedLinkCount = 0
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async (input: RequestInfo | URL) => {
-        const url = String(input)
-        if (url.includes('/api/admin/users?')) {
-          return { ok: true, json: async () => ({ users }) }
-        }
-        if (url === '/api/admin/password-reset-links') {
-          generatedLinkCount += 1
-          return {
-            ok: true,
-            json: async () => ({
-              url: `https://example.com/reset/token-${generatedLinkCount}`,
-              path: `/reset/token-${generatedLinkCount}`,
-              expiresAt: '2026-01-03T00:00:00.000Z',
-            }),
-          }
-        }
-        throw new Error(`Unexpected request: ${url}`)
-      })
-    )
 
     render(<AdminDashboard />)
     await screen.findByRole('button', { name: /Alice Admin/ })
@@ -102,5 +112,42 @@ describe('AdminDashboard clipboard race handling', () => {
     expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(screen.getByTestId('copy-icon')).toBeInTheDocument()
     expect(screen.queryByTestId('check-icon')).not.toBeInTheDocument()
+  })
+
+  it('does not apply an old clipboard error after the selected customer changes', async () => {
+    let rejectClipboard!: (reason: Error) => void
+    const clipboardPending = new Promise<void>((_resolve, reject) => {
+      rejectClipboard = reject
+    })
+    const writeText = vi.fn(() => clipboardPending)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+
+    render(<AdminDashboard />)
+    await screen.findByRole('button', { name: /Alice Admin/ })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create reset link' }))
+    const copyButton = await screen.findByRole('button', { name: 'Copy reset link' })
+    fireEvent.click(copyButton)
+    expect(writeText).toHaveBeenCalledWith('https://example.com/reset/token-1')
+
+    fireEvent.click(screen.getByRole('button', { name: /Bob Buyer/ }))
+    expect(screen.queryByRole('button', { name: 'Copy reset link' })).not.toBeInTheDocument()
+
+    await act(async () => {
+      rejectClipboard(new Error('clipboard denied'))
+      try {
+        await clipboardPending
+      } catch {
+        // The rejected provider Promise is expected; the UI must ignore its stale result.
+      }
+    })
+
+    expect(
+      screen.queryByText('Unable to copy reset link. Select the generated link and copy it manually.')
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })
