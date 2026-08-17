@@ -1,26 +1,34 @@
 /**
  * @vitest-environment jsdom
  */
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { useRouter, useSearchParams } from "next/navigation";
-import { DateRangePicker } from "./date-range-picker";
-import { cleanup } from "@testing-library/react";
+import React from 'react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-// Mock next/navigation
-vi.mock("next/navigation", () => {
-  return {
-    useRouter: vi.fn(),
-    useSearchParams: vi.fn(),
-  };
-});
+import { DateRangePicker } from './date-range-picker'
 
-describe("DateRangePicker", () => {
-  let mockPush: ReturnType<typeof vi.fn>;
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(),
+  useSearchParams: vi.fn(),
+}))
+
+const TODAY = new Date(2026, 7, 17, 12, 0, 0)
+
+const PRESET_EXPECTATIONS = [
+  { name: '7d', description: 'Last 7 days', from: '2026-08-11', to: '2026-08-17' },
+  { name: '30d', description: 'Last 30 days', from: '2026-07-19', to: '2026-08-17' },
+  { name: '90d', description: 'Last 90 days', from: '2026-05-20', to: '2026-08-17' },
+  { name: 'ALL', description: 'Last 3,650 days', from: '2016-08-20', to: '2026-08-17' },
+] as const
+
+describe('DateRangePicker', () => {
+  let mockPush: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
-    mockPush = vi.fn();
+    vi.useFakeTimers()
+    vi.setSystemTime(TODAY)
+    mockPush = vi.fn()
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
       replace: vi.fn(),
@@ -28,65 +36,72 @@ describe("DateRangePicker", () => {
       back: vi.fn(),
       forward: vi.fn(),
       refresh: vi.fn(),
-    } as unknown as ReturnType<typeof useRouter>);
+    } as unknown as ReturnType<typeof useRouter>)
 
-    // Default search params
-    const mockSearchParams = new URLSearchParams();
     vi.mocked(useSearchParams).mockReturnValue(
-      mockSearchParams as unknown as ReturnType<typeof useSearchParams>,
-    );
-  });
+      new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>,
+    )
+  })
 
   afterEach(() => {
-    cleanup();
-  });
+    cleanup()
+    vi.useRealTimers()
+  })
 
-  it("renders presets", () => {
-    render(<DateRangePicker />);
+  it('renders presets with a truthful default seven-day range', () => {
+    render(<DateRangePicker />)
 
-    expect(screen.getByRole("button", { name: "7d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "30d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "90d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "ALL" })).toBeDefined();
-  });
+    expect(screen.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: '90d' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByRole('button', { name: 'ALL' })).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.getByText('Aug 11 ~ Aug 17')).toBeInTheDocument()
+  })
 
-  it("updates URL when a preset is clicked", () => {
-    render(<DateRangePicker />);
+  it.each(PRESET_EXPECTATIONS)(
+    'maps $name to the exact inclusive range advertised by its description',
+    ({ name, from, to }) => {
+      render(<DateRangePicker />)
 
-    const button30d = screen.getByRole("button", { name: "30d" });
-    fireEvent.click(button30d);
+      fireEvent.click(screen.getByRole('button', { name }))
 
-    expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledTimes(1)
+      const calledUrl = mockPush.mock.calls[0][0] as string
+      const params = new URLSearchParams(calledUrl.slice(calledUrl.indexOf('?') + 1))
+      expect(params.get('from')).toBe(from)
+      expect(params.get('to')).toBe(to)
+      expect(params.has('page')).toBe(false)
+    },
+  )
 
-    // Check if the URL contains from and to parameters
-    const calledUrl = mockPush.mock.calls[0][0];
-    expect(calledUrl).toContain("from=");
-    expect(calledUrl).toContain("to=");
-  });
+  it.each(PRESET_EXPECTATIONS)(
+    'recognizes the exact $name URL range as pressed',
+    ({ name, from, to }) => {
+      vi.mocked(useSearchParams).mockReturnValue(
+        new URLSearchParams({ from, to }) as unknown as ReturnType<typeof useSearchParams>,
+      )
 
-  it("has aria-pressed set correctly based on active state", () => {
-    render(<DateRangePicker />);
+      render(<DateRangePicker />)
 
-    const button7d = screen.getByRole("button", { name: "7d" });
-    expect(button7d.hasAttribute("aria-pressed")).toBe(true);
-  });
+      for (const preset of PRESET_EXPECTATIONS) {
+        expect(screen.getByRole('button', { name: preset.name })).toHaveAttribute(
+          'aria-pressed',
+          preset.name === name ? 'true' : 'false',
+        )
+      }
+    },
+  )
 
-  it("names the preset group and describes abbreviations without replacing visible button names", () => {
-    render(<DateRangePicker />);
+  it('names the preset group and describes abbreviations without replacing visible button names', () => {
+    render(<DateRangePicker />)
 
-    expect(screen.getByRole("group", { name: "Date range presets" })).toBeDefined();
-    const expectedDescriptions = [
-      ["7d", "Last 7 days"],
-      ["30d", "Last 30 days"],
-      ["90d", "Last 90 days"],
-      ["ALL", "All available history"],
-    ] as const;
+    expect(screen.getByRole('group', { name: 'Date range presets' })).toBeDefined()
 
-    for (const [name, description] of expectedDescriptions) {
-      const button = screen.getByRole("button", { name });
-      const descriptionId = button.getAttribute("aria-describedby");
-      expect(descriptionId).toBeTruthy();
-      expect(document.getElementById(descriptionId!)?.textContent).toBe(description);
+    for (const { name, description } of PRESET_EXPECTATIONS) {
+      const button = screen.getByRole('button', { name })
+      const descriptionId = button.getAttribute('aria-describedby')
+      expect(descriptionId).toBeTruthy()
+      expect(document.getElementById(descriptionId!)?.textContent).toBe(description)
     }
-  });
-});
+  })
+})
