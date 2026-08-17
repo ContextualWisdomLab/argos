@@ -35,8 +35,9 @@ export function NoOrganizationState({
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{email}</span>
             <button
+              type="button"
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-sm text-destructive hover:underline"
+              className="rounded-sm px-1 text-sm text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Log out of your account"
             >
               Log out
@@ -85,7 +86,7 @@ export function NoOrganizationState({
             CLI 없이 먼저 조직만 만들고 싶다면?
           </div>
           <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
-            <PlusIcon />
+            <PlusIcon aria-hidden="true" />
             조직 수동 생성
           </Button>
         </div>
