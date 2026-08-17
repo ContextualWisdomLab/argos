@@ -10,6 +10,7 @@ import {
   truncateToolResponse,
 } from '@/lib/server/events'
 import { calculateCost } from '@/lib/server/cost'
+import { collectPastUtcDates } from '@/lib/server/usage-date-buckets'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -162,27 +163,12 @@ export async function POST(req: Request) {
 
             // Invalidate DailyProjectStat cache for any past dates in the inserted records.
             // Ensures late-arriving per-turn data is reflected on next dashboard load.
-            const todayMs = Date.UTC(
-              new Date().getUTCFullYear(),
-              new Date().getUTCMonth(),
-              new Date().getUTCDate(),
-            )
-            const pastDates = [
-              ...new Set(
-                payload.usagePerTurn
-                  .map((u) => {
-                    const d = new Date(u.timestamp)
-                    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
-                  })
-                  .filter((ms) => ms < todayMs)
-                  .map((ms) => new Date(ms).toISOString()),
-              ),
-            ]
+            const pastDates = collectPastUtcDates(payload.usagePerTurn)
             if (pastDates.length > 0) {
               await db.dailyProjectStat.deleteMany({
                 where: {
                   projectId: payload.projectId,
-                  date: { in: pastDates.map((iso) => new Date(iso)) },
+                  date: { in: pastDates },
                 },
               })
             }
