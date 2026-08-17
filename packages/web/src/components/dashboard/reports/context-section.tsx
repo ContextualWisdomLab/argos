@@ -28,13 +28,12 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         )}
         aria-expanded={open}
         aria-controls={contentId}
-        aria-label={`${title} 섹션 ${open ? "닫기" : "열기"}`}
       >
         <h2 className="text-base font-medium">{title}</h2>
         {open ? (
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         )}
       </button>
       {open && (
