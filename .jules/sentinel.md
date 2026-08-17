@@ -35,3 +35,8 @@
 **Vulnerability:** The CLI `openBrowser` logic spawned the OS default browser using an untrusted URL (`authUrl`) from the server without validating the protocol. A compromised server or MITM attack could return a `file://` URL (potentially executing local files) or a custom protocol handler to exploit the local system.
 **Learning:** When using `spawn` with `windowsVerbatimArguments: true` or native open commands like `open`/`xdg-open` on URLs fetched from external sources, strictly validate the URL protocol.
 **Prevention:** Always parse URLs via `new URL(url)` and verify `protocol === 'http:' || protocol === 'https:'` before passing them to OS-level spawn commands.
+
+## 2026-08-17 - [Fix vulnerable dependencies via pnpm overrides]
+**Vulnerability:** Known high-severity vulnerability discovered by the audit in the `deepmerge-ts` package.
+**Learning:** Deeply nested transitive dependencies can expose the application to known vulnerabilities.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
