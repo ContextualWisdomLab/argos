@@ -6,6 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CliAuthClient } from './client'
 
+// This repository's Vitest JSX transform expects React on the global object.
+global.React = React
+
 const fetchMock = vi.fn()
 
 function renderClient() {
