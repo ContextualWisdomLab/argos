@@ -21,5 +21,6 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
+- 세션 활동 리본은 시각적으로 현재인 이벤트를 토글 버튼으로 오인시키지 않고 `aria-current`로 노출하며, 병합된 도구 실행은 `Expand … group` 다음 행동과 포함 이벤트 수를 명확히 안내합니다.
 - `OverviewStats` 설명 disclosure가 React `useId`에서 파생된 고유 toggle/content ID를 사용하도록 변경했습니다. 같은 화면에 여러 인스턴스가 있어도 `aria-controls`와 `aria-labelledby`가 서로 충돌하지 않으며, 실제 두 인스턴스의 독립적인 확장 상태와 연결 관계를 DOM 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
