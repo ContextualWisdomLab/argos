@@ -11,7 +11,11 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from 'recharts'
-import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
+import {
+  formatTokens,
+  formatCost,
+  formatRelativeTimeFromMs,
+} from '@/lib/format'
 import type { SessionTimelineUsage, SessionDetail } from '@argos/shared'
 
 interface SessionTimelineChartProps {
@@ -22,6 +26,11 @@ interface SessionTimelineChartProps {
 
 interface ToolCallPoint {
   toolName: string
+  parsedTimestamp: number
+}
+
+interface UsagePoint {
+  usage: SessionTimelineUsage
   parsedTimestamp: number
 }
 
@@ -58,18 +67,21 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
 /**
  * Merge chronologically sorted usage and tool events into cumulative chart rows.
  *
- * Local copies are sorted in O(N log N + M log M). The forward cursor then
- * consumes every tool event once instead of filtering all M events for every
- * one of the N usage rows.
+ * Local copies are sorted in O(N log N + M log M). Each usage timestamp is
+ * parsed once before sorting, the session-start anchor is parsed by the caller
+ * once per prop value, and the forward cursor consumes every tool event once.
  */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
-  sessionStartedAt: string
+  sessionStartedAtMs: number,
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  const sortedUsage: UsagePoint[] = usageTimeline
+    .map((usage) => ({
+      usage,
+      parsedTimestamp: Date.parse(usage.timestamp),
+    }))
+    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,12 +89,10 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
-
+  return sortedUsage.map(({ usage, parsedTimestamp }) => {
     while (
       toolIndex < sortedTools.length &&
-      sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
+      sortedTools[toolIndex]!.parsedTimestamp <= parsedTimestamp
     ) {
       const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
       cumulativeToolCounts.set(
@@ -93,7 +103,7 @@ function buildChartData(
     }
 
     return {
-      relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
+      relativeTime: formatRelativeTimeFromMs(parsedTimestamp, sessionStartedAtMs),
       input: usage.inputTokens,
       output: usage.outputTokens,
       cost: usage.estimatedCostUsd,
@@ -163,9 +173,13 @@ export function SessionTimelineChart({
       }))
   }, [messages])
 
+  const sessionStartedAtMs = useMemo(
+    () => Date.parse(sessionStartedAt),
+    [sessionStartedAt],
+  )
   const chartData = useMemo(
-    () => buildChartData(usageTimeline, toolCalls, sessionStartedAt),
-    [usageTimeline, sessionStartedAt, toolCalls]
+    () => buildChartData(usageTimeline, toolCalls, sessionStartedAtMs),
+    [usageTimeline, sessionStartedAtMs, toolCalls]
   )
 
   if (usageTimeline.length === 0) {
