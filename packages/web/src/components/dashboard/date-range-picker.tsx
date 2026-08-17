@@ -1,16 +1,25 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { subDays, format, differenceInDays } from 'date-fns'
+import { differenceInCalendarDays, format, isValid, parse, subDays } from 'date-fns'
 import React, { Suspense, useId } from 'react'
 import { cn } from '@/lib/utils'
 
+const DATE_PARAM_FORMAT = 'yyyy-MM-dd'
 const PRESETS = [
   { days: 7, label: '7d', description: 'Last 7 days' },
   { days: 30, label: '30d', description: 'Last 30 days' },
   { days: 90, label: '90d', description: 'Last 90 days' },
   { days: 3650, label: 'ALL', description: 'Last 3,650 days' },
 ] as const
+
+function parseCalendarDate(value: string | null): Date | null {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+
+  const parsed = parse(value, DATE_PARAM_FORMAT, new Date(2000, 0, 1))
+  if (!isValid(parsed) || format(parsed, DATE_PARAM_FORMAT) !== value) return null
+  return parsed
+}
 
 function DateRangePickerContent() {
   const router = useRouter()
@@ -22,15 +31,18 @@ function DateRangePickerContent() {
 
   const today = new Date()
   const defaultFromDate = subDays(today, 6)
+  const requestedFromDate = parseCalendarDate(currentFrom)
+  const requestedToDate = parseCalendarDate(currentTo)
+  const hasValidRequestedRange =
+    requestedFromDate !== null &&
+    requestedToDate !== null &&
+    differenceInCalendarDays(requestedToDate, requestedFromDate) >= 0
 
-  const defaultFrom = currentFrom || format(defaultFromDate, 'yyyy-MM-dd')
-  const defaultTo = currentTo || format(today, 'yyyy-MM-dd')
+  const fromDate = hasValidRequestedRange ? requestedFromDate : defaultFromDate
+  const toDate = hasValidRequestedRange ? requestedToDate : today
+  const daysDiff = differenceInCalendarDays(toDate, fromDate)
 
-  const fromDate = new Date(defaultFrom)
-  const toDate = new Date(defaultTo)
-  const daysDiff = differenceInDays(toDate, fromDate)
-
-  const isToday = format(toDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
+  const isToday = format(toDate, DATE_PARAM_FORMAT) === format(today, DATE_PARAM_FORMAT)
   const activePreset = isToday
     ? daysDiff === 6
       ? 7
@@ -44,8 +56,8 @@ function DateRangePickerContent() {
     : null
 
   const handlePreset = (days: number) => {
-    const to = format(today, 'yyyy-MM-dd')
-    const from = format(subDays(today, days - 1), 'yyyy-MM-dd')
+    const to = format(today, DATE_PARAM_FORMAT)
+    const from = format(subDays(today, days - 1), DATE_PARAM_FORMAT)
 
     const newParams = new URLSearchParams(searchParams.toString())
     newParams.set('from', from)
