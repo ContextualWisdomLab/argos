@@ -58,6 +58,21 @@ describe('DateRangePicker', () => {
     expect(screen.getByText('Aug 11 ~ Aug 17').textContent).toBe('Aug 11 ~ Aug 17')
   })
 
+  it.each([
+    { from: 'not-a-date', to: '2026-08-17' },
+    { from: '2026-02-30', to: '2026-08-17' },
+    { from: '2026-08-18', to: '2026-08-17' },
+  ])('falls back to the safe default range for invalid URL dates: $from to $to', ({ from, to }) => {
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams({ from, to }) as unknown as ReturnType<typeof useSearchParams>,
+    )
+
+    render(<DateRangePicker />)
+
+    expect(screen.getByRole('button', { name: '7d' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByText('Aug 11 ~ Aug 17').textContent).toBe('Aug 11 ~ Aug 17')
+  })
+
   it.each(PRESET_EXPECTATIONS)(
     'maps $name to the exact inclusive range advertised by its description',
     ({ name, from, to }) => {
