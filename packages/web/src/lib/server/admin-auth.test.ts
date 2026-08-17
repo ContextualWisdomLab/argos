@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { NextRequest } from 'next/server'
 
 vi.mock('server-only', () => ({}))
 
@@ -117,5 +118,18 @@ describe('verifyAdminCredentials', () => {
     ).resolves.toBe(false)
 
     expect(createHash).not.toHaveBeenCalled()
+  })
+})
+
+describe('requireAdmin', () => {
+  it('returns the standard unauthorized error without an admin session', async () => {
+    const { requireAdmin } = await importAdminAuth()
+    const response = requireAdmin(new NextRequest('https://argos.example/api/admin/users'))
+
+    expect(response).not.toBeNull()
+    expect(response?.status).toBe(401)
+    await expect(response?.json()).resolves.toEqual({
+      error: { code: 'UNAUTHORIZED', message: 'Unauthorized' },
+    })
   })
 })
