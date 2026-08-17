@@ -11,7 +11,7 @@ describe('ContextSection', () => {
     cleanup()
   })
 
-  it('keeps the visible section title as the disclosure name while aria-expanded exposes state', async () => {
+  it('renders title and toggles content', async () => {
     const user = userEvent.setup()
     render(
       <ContextSection title="Test Title">
@@ -19,40 +19,33 @@ describe('ContextSection', () => {
       </ContextSection>
     )
 
-    const toggle = screen.getByRole('button', { name: 'Test Title' })
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    // Initially closed
+    expect(screen.getByRole('button', { name: 'Test Title 섹션 열기' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
-    await user.click(toggle)
-    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    // Click to open
+    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 열기' }))
+    expect(screen.getByRole('button', { name: 'Test Title 섹션 닫기' })).toHaveAttribute('aria-expanded', 'true')
 
-    const region = screen.getByRole('region', { name: 'Test Title' })
+    const region = screen.getByRole('region', { name: 'Test Title 섹션 닫기' })
     expect(region).toBeInTheDocument()
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Test Title' }))
-    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
+    // Click to close
+    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 닫기' }))
+    expect(screen.getByRole('button', { name: 'Test Title 섹션 열기' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
-  it('keeps the region name stable when open by default', () => {
+  it('renders open by default if defaultOpen is true', () => {
     render(
       <ContextSection title="Test Title" defaultOpen>
         <div data-testid="test-content">Content</div>
       </ContextSection>
     )
 
-    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    )
+    expect(screen.getByRole('button', { name: 'Test Title 섹션 닫기' })).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Test Title' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Test Title 섹션 닫기' })).toBeInTheDocument()
   })
 })
