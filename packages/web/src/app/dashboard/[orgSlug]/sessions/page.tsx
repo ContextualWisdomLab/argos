@@ -15,6 +15,7 @@ import {
 } from '@/hooks/use-dashboard-sessions'
 import { formatTokens, formatCost, formatDateTimeFull } from '@/lib/format'
 import { formatSlashCommandText } from '@/lib/timeline-events'
+import { buildSessionDeleteLabel } from '@/lib/session-action-labels'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -77,9 +78,9 @@ function SessionsContent({
   const searchParams = useSearchParams()
   const { data: authSession } = useSession()
   const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
+  const defaultFromDate = subDays(today, 6)
 
-  const from = searchParams.get('from') || format(sevenDaysAgo, 'yyyy-MM-dd')
+  const from = searchParams.get('from') || format(defaultFromDate, 'yyyy-MM-dd')
   const to = searchParams.get('to') || format(today, 'yyyy-MM-dd')
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const pageSize = Number(searchParams.get('pageSize')) || DEFAULT_PAGE_SIZE
@@ -299,56 +300,59 @@ function SessionsContent({
                   </td>
                 </tr>
               ) : (
-                items.map((session) => (
-                  <tr
-                    key={session.id}
-                    onClick={() => handleRowClick(session.id)}
-                    className="group border-b border-border last:border-b-0 hover:bg-muted/40 cursor-pointer transition-colors"
-                  >
-                    <td className="py-3 px-4 whitespace-nowrap">{session.userName}</td>
-                    {showProjectColumn && (
-                      <td className="py-3 px-4 whitespace-nowrap text-muted-foreground">
-                        {session.project?.name ?? '—'}
+                items.map((session) => {
+                  const deleteLabel = buildSessionDeleteLabel(session.title)
+                  return (
+                    <tr
+                      key={session.id}
+                      onClick={() => handleRowClick(session.id)}
+                      className="group border-b border-border last:border-b-0 hover:bg-muted/40 cursor-pointer transition-colors"
+                    >
+                      <td className="py-3 px-4 whitespace-nowrap">{session.userName}</td>
+                      {showProjectColumn && (
+                        <td className="py-3 px-4 whitespace-nowrap text-muted-foreground">
+                          {session.project?.name ?? '—'}
+                        </td>
+                      )}
+                      <td className="py-3 px-4 max-w-md">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">
+                            {session.title ? (
+                              formatSlashCommandText(session.title)
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </span>
+                          {session.agent === 'CODEX' && <AgentBadge agent={session.agent} className="shrink-0" />}
+                        </div>
                       </td>
-                    )}
-                    <td className="py-3 px-4 max-w-md">
-                      <div className="flex items-center gap-2">
-                        <span className="truncate">
-                          {session.title ? (
-                            formatSlashCommandText(session.title)
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
+                      <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatTokens(session.inputTokens)}</td>
+                      <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatTokens(session.outputTokens)}</td>
+                      <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatCost(session.estimatedCostUsd)}</td>
+                      <td className="py-3 px-4 whitespace-nowrap tabular-nums text-muted-foreground">
+                        {formatDateTimeFull(session.startedAt)}
+                      </td>
+                      <td className="py-3 px-2 w-10">
+                        <button
+                          type="button"
+                          aria-label={deleteLabel}
+                          title={deleteLabel}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSessionToDelete(session)
+                          }}
+                          className={cn(
+                            'inline-flex size-7 items-center justify-center rounded-md text-muted-foreground',
+                            'hover:bg-destructive/10 hover:text-destructive transition-colors',
+                            'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
                           )}
-                        </span>
-                        {session.agent === 'CODEX' && <AgentBadge agent={session.agent} className="shrink-0" />}
-                      </div>
-                    </td>
-                    <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatTokens(session.inputTokens)}</td>
-                    <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatTokens(session.outputTokens)}</td>
-                    <td className="text-right py-3 px-4 whitespace-nowrap tabular-nums">{formatCost(session.estimatedCostUsd)}</td>
-                    <td className="py-3 px-4 whitespace-nowrap tabular-nums text-muted-foreground">
-                      {formatDateTimeFull(session.startedAt)}
-                    </td>
-                    <td className="py-3 px-2 w-10">
-                      <button
-                        type="button"
-                        aria-label={session.title ? `세션 삭제: ${formatSlashCommandText(session.title)}` : '세션 삭제'}
-                        title={session.title ? `세션 삭제: ${formatSlashCommandText(session.title)}` : '세션 삭제'}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSessionToDelete(session)
-                        }}
-                        className={cn(
-                          'inline-flex size-7 items-center justify-center rounded-md text-muted-foreground',
-                          'hover:bg-destructive/10 hover:text-destructive transition-colors',
-                          'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
-                        )}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
