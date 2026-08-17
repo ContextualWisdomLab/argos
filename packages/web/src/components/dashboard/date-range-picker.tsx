@@ -9,7 +9,7 @@ const PRESETS = [
   { days: 7, label: '7d', description: 'Last 7 days' },
   { days: 30, label: '30d', description: 'Last 30 days' },
   { days: 90, label: '90d', description: 'Last 90 days' },
-  { days: 3650, label: 'ALL', description: 'All available history' },
+  { days: 3650, label: 'ALL', description: 'Last 3,650 days' },
 ] as const
 
 function DateRangePickerContent() {
@@ -21,9 +21,9 @@ function DateRangePickerContent() {
   const currentTo = searchParams.get('to')
 
   const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
+  const defaultFromDate = subDays(today, 6)
 
-  const defaultFrom = currentFrom || format(sevenDaysAgo, 'yyyy-MM-dd')
+  const defaultFrom = currentFrom || format(defaultFromDate, 'yyyy-MM-dd')
   const defaultTo = currentTo || format(today, 'yyyy-MM-dd')
 
   const fromDate = new Date(defaultFrom)
@@ -38,14 +38,14 @@ function DateRangePickerContent() {
         ? 30
         : daysDiff === 89
           ? 90
-          : daysDiff >= 3649
+          : daysDiff === 3649
             ? 3650
             : null
     : null
 
   const handlePreset = (days: number) => {
     const to = format(today, 'yyyy-MM-dd')
-    const from = format(subDays(today, days), 'yyyy-MM-dd')
+    const from = format(subDays(today, days - 1), 'yyyy-MM-dd')
 
     const newParams = new URLSearchParams(searchParams.toString())
     newParams.set('from', from)
