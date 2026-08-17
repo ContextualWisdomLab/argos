@@ -87,6 +87,17 @@ describe('auth-flow', () => {
     expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://example.com/url'], { detached: true, stdio: 'ignore' })
   })
 
+  it('ignores invalid URL protocols', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' })
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' })
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } })
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  })
+
   it('throws an error if step 1 fails', async () => {
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockRejectedValueOnce(new Error('Network error'))
