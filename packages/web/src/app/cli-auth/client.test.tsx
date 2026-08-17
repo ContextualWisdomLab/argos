@@ -62,6 +62,9 @@ describe('CliAuthClient actions', () => {
       body: JSON.stringify({ state: 'state-token', denied: true }),
     })
     expect(screen.getByRole('heading', { name: '오류 발생' })).toBeInTheDocument()
+    expect(
+      screen.getByText('CLI로 돌아가 로그인 요청을 새로 시작하세요.'),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: '로그인 거부됨' })).not.toBeInTheDocument()
   })
 
