@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   state: string
@@ -11,10 +12,10 @@ interface Props {
 
 export function CliAuthClient({ state, userName, userEmail, argosToken }: Props) {
   const [status, setStatus] = useState<'pending' | 'approved' | 'denied' | 'error'>('pending')
-  const [loading, setLoading] = useState(false)
+  const [loadingAction, setLoadingAction] = useState<'allow' | 'deny' | null>(null)
 
   async function handleAllow() {
-    setLoading(true)
+    setLoadingAction('allow')
     try {
       const res = await fetch(`/api/auth/cli-callback`, {
         method: 'POST',
@@ -29,12 +30,12 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
     } catch {
       setStatus('error')
     } finally {
-      setLoading(false)
+      setLoadingAction(null)
     }
   }
 
   async function handleDeny() {
-    setLoading(true)
+    setLoadingAction('deny')
     try {
       await fetch(`/api/auth/cli-callback`, {
         method: 'POST',
@@ -48,7 +49,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
     } catch {
       setStatus('error')
     } finally {
-      setLoading(false)
+      setLoadingAction(null)
     }
   }
 
@@ -92,20 +93,20 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
       </div>
 
       <div className="flex gap-3">
-        <button
+        <Button
           onClick={handleAllow}
-          disabled={loading}
-          className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          disabled={loadingAction !== null}
+          variant="default"
         >
-          허용
-        </button>
-        <button
+          {loadingAction === 'allow' ? '처리 중...' : '허용'}
+        </Button>
+        <Button
           onClick={handleDeny}
-          disabled={loading}
-          className="px-6 py-2 rounded-md border border-border bg-background text-foreground font-medium hover:bg-muted disabled:opacity-50 transition-colors"
+          disabled={loadingAction !== null}
+          variant="outline"
         >
-          거부
-        </button>
+          {loadingAction === 'deny' ? '처리 중...' : '거부'}
+        </Button>
       </div>
     </div>
   )
