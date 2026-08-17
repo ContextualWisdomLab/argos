@@ -51,11 +51,11 @@ describe('DateRangePicker', () => {
   it('renders presets with a truthful default seven-day range', () => {
     render(<DateRangePicker />)
 
-    expect(screen.getByRole('button', { name: '7d' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: '30d' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: '90d' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByRole('button', { name: 'ALL' })).toHaveAttribute('aria-pressed', 'false')
-    expect(screen.getByText('Aug 11 ~ Aug 17')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '7d' }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: '30d' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('button', { name: '90d' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByRole('button', { name: 'ALL' }).getAttribute('aria-pressed')).toBe('false')
+    expect(screen.getByText('Aug 11 ~ Aug 17').textContent).toBe('Aug 11 ~ Aug 17')
   })
 
   it.each(PRESET_EXPECTATIONS)(
@@ -84,10 +84,9 @@ describe('DateRangePicker', () => {
       render(<DateRangePicker />)
 
       for (const preset of PRESET_EXPECTATIONS) {
-        expect(screen.getByRole('button', { name: preset.name })).toHaveAttribute(
-          'aria-pressed',
-          preset.name === name ? 'true' : 'false',
-        )
+        expect(
+          screen.getByRole('button', { name: preset.name }).getAttribute('aria-pressed'),
+        ).toBe(preset.name === name ? 'true' : 'false')
       }
     },
   )
