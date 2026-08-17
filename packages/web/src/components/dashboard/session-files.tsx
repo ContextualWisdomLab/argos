@@ -1,4 +1,3 @@
-import React from 'react'
 import { Eye, Pencil, FileText } from 'lucide-react'
 import type { FileEntry, SessionFiles } from '@/lib/session-files'
 

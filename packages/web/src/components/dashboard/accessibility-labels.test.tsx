@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import userEvent from '@testing-library/user-event'
@@ -8,8 +8,13 @@ import { OverviewStats } from './overview-stats'
 import { SessionFilesSummary } from './session-files'
 import type { SessionFiles } from '@/lib/session-files'
 
+beforeEach(() => {
+  vi.stubGlobal('React', React)
+})
+
 afterEach(() => {
   cleanup()
+  vi.unstubAllGlobals()
 })
 
 describe('dashboard summary accessibility labels', () => {
