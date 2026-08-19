@@ -1,0 +1,6 @@
+🎨 Palette: 기본 button 태그를 디자인 시스템 Button 컴포넌트로 교체하여 접근성 향상
+
+💡 What: `no-organization-state.tsx` 및 `org-sidebar.tsx` 내 로그아웃(Log out) 동작에 사용된 기본 `<button>` HTML 태그를 `@/components/ui/button`의 `<Button>` 컴포넌트로 교체했습니다.
+🎯 Why: 기존에는 기본 HTML `<button>`이 사용되어 키보드 내비게이션 사용자(Tab 이동)에게 초점이 맞을 때 `focus-visible` 상태가 명확하게 보이지 않거나 앱 내 다른 UI 컴포넌트와 일관되지 않는 접근성 문제가 있었습니다. 이를 공용 컴포넌트로 변경함으로써 일관된 디자인과 키보드 접근성을 확보했습니다.
+📸 Before/After: Playwright를 사용해 시각적 검증을 완료했으며, 로그아웃 버튼이 탭으로 포커스되었을 때 디자인 시스템 기준에 맞게 나타납니다.
+♿ Accessibility: 버튼 포커스 상태(focus-visible)를 명확히 하여 스크린 리더 및 키보드 네비게이션 사용성을 개선했습니다.

@@ -34,13 +34,15 @@ export function NoOrganizationState({
           <h1 className="text-xl font-semibold">Argos</h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{email}</span>
-            <button
+            <Button
+              variant="link"
+              size="sm"
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-sm text-destructive hover:underline"
+              className="text-destructive hover:text-destructive p-0 h-auto font-normal"
               aria-label="Log out of your account"
             >
               Log out
-            </button>
+            </Button>
           </div>
         </div>
 
