@@ -44,7 +44,7 @@ describe('auth-flow', () => {
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/login' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
@@ -52,9 +52,29 @@ describe('auth-flow', () => {
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
+      ['/c', 'start', '""', 'http://example.com/login'],
       { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
     )
+  })
+
+  it('rejects URLs with invalid protocols (e.g., file://)', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    console.error = vi.fn()
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL protocol')
+    expect(console.error).toHaveBeenCalled()
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  })
+
+  it('rejects URLs containing shell metacharacters', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+
+    console.error = vi.fn()
+    await expect(runLoginFlow('http://api')).rejects.toThrow('URL contains unsafe characters')
+    expect(console.error).toHaveBeenCalled()
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {

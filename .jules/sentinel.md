@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-10-31 - [Fix Command Injection in CLI Browser Opener]
+**Vulnerability:** The CLI opened a browser using `spawn` with `windowsVerbatimArguments: true` combined with an unsanitized remote URL, which bypassed normal Node.js escaping and allowed command injection (e.g., via `file://` protocols or chained ampersands).
+**Learning:** When using `spawn` with `windowsVerbatimArguments: true` or shell-like arguments, standard Node.js escaping is disabled. Without strict URL protocol validation, arbitrary commands could be executed on the user's machine by opening malicious URLs.
+**Prevention:** Always strictly validate the URL protocol (e.g., parsing with `new URL(url)` and ensuring it is `http:` or `https:`) prior to spawning to prevent command injection or local file execution risks.
