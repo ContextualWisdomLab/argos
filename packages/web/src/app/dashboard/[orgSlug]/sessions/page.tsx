@@ -4,7 +4,6 @@ import { Suspense, useEffect, useState } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useOrgs } from '@/hooks/use-orgs'
-import { subDays, format } from 'date-fns'
 import { Download, Trash2 } from 'lucide-react'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
 import { AgentBadge } from '@/components/dashboard/agent-badge'
@@ -16,6 +15,7 @@ import {
 import { formatTokens, formatCost, formatDateTimeFull } from '@/lib/format'
 import { formatSlashCommandText } from '@/lib/timeline-events'
 import { buildSessionDeleteLabel } from '@/lib/session-action-labels'
+import { resolveSessionDateRange } from '@/lib/session-date-range'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -77,11 +77,10 @@ function SessionsContent({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { data: authSession } = useSession()
-  const today = new Date()
-  const defaultFromDate = subDays(today, 6)
-
-  const from = searchParams.get('from') || format(defaultFromDate, 'yyyy-MM-dd')
-  const to = searchParams.get('to') || format(today, 'yyyy-MM-dd')
+  const { from, to } = resolveSessionDateRange(
+    searchParams.get('from'),
+    searchParams.get('to'),
+  )
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const pageSize = Number(searchParams.get('pageSize')) || DEFAULT_PAGE_SIZE
   const sort: SessionSort = searchParams.get('sort') === 'cost' ? 'cost' : 'recent'
