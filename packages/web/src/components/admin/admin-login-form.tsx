@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -76,6 +77,7 @@ export function AdminLoginForm() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
