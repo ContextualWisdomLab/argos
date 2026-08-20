@@ -46,12 +46,14 @@ export function resolveSessionDateRange(
     }
   }
 
-  const fallbackFromDate = subDays(today, 6)
+  const fallbackTo = format(today, SESSION_DATE_PARAM_FORMAT)
+  const fallbackToDate = parse(fallbackTo, SESSION_DATE_PARAM_FORMAT, today)
+  const fallbackFromDate = subDays(fallbackToDate, 6)
   return {
     from: format(fallbackFromDate, SESSION_DATE_PARAM_FORMAT),
-    to: format(today, SESSION_DATE_PARAM_FORMAT),
+    to: fallbackTo,
     fromDate: fallbackFromDate,
-    toDate: today,
+    toDate: fallbackToDate,
     usedFallback: true,
   }
 }
