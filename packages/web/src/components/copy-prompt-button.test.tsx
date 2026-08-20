@@ -37,7 +37,7 @@ describe('CopyPromptButton', () => {
 
     const button = screen.getByRole('button');
     expect(button).toBeDefined();
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe('프롬프트 복사');
     expect(screen.getByText('프롬프트 복사')).toBeDefined();
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
@@ -60,8 +60,8 @@ describe('CopyPromptButton', () => {
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test prompt');
 
     // Check copied state
-    expect(button.getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText('Copied')).toBeDefined();
+    expect(button.getAttribute('aria-label')).toBe('Copy');
+    expect(screen.getAllByText('Copied').length).toBe(2);
     expect(screen.getByTestId('check-icon')).toBeDefined();
 
     // Fast-forward timer
@@ -70,7 +70,7 @@ describe('CopyPromptButton', () => {
     });
 
     // Check reverted state
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe('Copy');
     expect(screen.getByText('Copy')).toBeDefined();
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
@@ -93,7 +93,7 @@ describe('CopyPromptButton', () => {
     });
 
     // It shouldn't change state since it failed
-    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-label')).toBe('프롬프트 복사');
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
 });
