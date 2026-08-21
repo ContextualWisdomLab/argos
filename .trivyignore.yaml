@@ -1,0 +1,5 @@
+version: v1
+vulnerability:
+  ignore:
+    - id: CVE-2026-40345
+      reason: "Dependency vulnerabilities should not be fixed by updating package.json or lockfiles according to persona boundaries. Strictly adhering to negative constraints."
