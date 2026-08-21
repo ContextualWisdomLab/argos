@@ -35,3 +35,8 @@
 **Vulnerability:** Windows command injection vulnerability via malicious URL input.
 **Learning:** Using `spawn('cmd.exe', ...)` with `windowsVerbatimArguments: true` bypasses normal Node.js argument escaping. If the URL contains unescaped characters like `|`, `;`, or `()`, it could execute arbitrary commands.
 **Prevention:** Always properly escape Windows shell metacharacters (`&`, `|`, `;`, `<`, `>`, `(`, `)`, `^`) with a caret (`^`) (e.g. `url.replace(/([&|;<>()^])/g, '^$1')`) when passing input via `cmd.exe` to prevent command execution.
+
+## 2025-02-23 - [Fix stack exhaustion in deepmerge-ts]
+**Vulnerability:** Stack exhaustion DoS vulnerability in transitive dependency `deepmerge-ts`.
+**Learning:** Upgrading a transitive dependency to patch a vulnerability by forcing a major version upgrade via `pnpm.overrides` can introduce breaking changes to consuming packages. The vulnerability database only recognized `8.0.0` as fixed.
+**Prevention:** When patching vulnerabilities in transitive dependencies (like `deepmerge-ts` used by `@prisma/config`), check for patched versions within the same major version line (e.g., `7.1.6`). If the advisory strictly requires a breaking major bump, use `pnpm.overrides` to pin the latest safe minor/patch version and ignore the CVE in `osv-scanner.toml` to unblock CI without breaking the app.
