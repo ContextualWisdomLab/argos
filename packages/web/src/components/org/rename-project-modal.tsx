@@ -26,19 +26,23 @@ export function RenameProjectModal({
   const [name, setName] = useState('')
   const mutation = useUpdateProject(project?.id ?? '')
 
-  useEffect(() => {
+  // project 객체가 바뀔 때 name 상태를 동기화하기 위해 key를 사용하는 방식으로 우회하거나,
+  // 모달이 열릴 때 name을 설정하도록 할 수도 있습니다.
+  // 여기서는 key를 사용하여 파생 상태를 강제 초기화하거나 Effect를 사용할 수 없으므로,
+  // 렌더링 중 상태를 업데이트하는 방식을 사용합니다.
+  const [prevProject, setPrevProject] = useState(project)
+  if (project !== prevProject) {
+    setPrevProject(project)
     if (project) {
       setName(project.name)
-    } else {
-      setName('')
-      mutation.reset()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project])
+  }
 
   const handleOpenChange = (next: boolean) => {
     if (next) return
     if (mutation.isPending) return
+    setName('')
+    mutation.reset()
     onClose()
   }
 
