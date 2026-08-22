@@ -78,7 +78,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
     return (
       <div className="flex flex-col items-center gap-4 text-center">
         <h1 className="text-2xl font-bold text-destructive">오류 발생</h1>
-        <p className="text-muted-foreground">요청이 만료되었거나 유효하지 않습니다.</p>
+        <p className="text-muted-foreground">CLI로 돌아가 로그인 요청을 새로 시작하세요.</p>
       </div>
     )
   }

@@ -23,7 +23,6 @@
     "@inquirer/prompts": "^7",
     "chalk": "^5",
     "commander": "^12",
-    "deepmerge-ts": "^8.0.0",
     "ora": "^8"
   },
   "devDependencies": {
