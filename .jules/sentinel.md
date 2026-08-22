@@ -39,3 +39,8 @@
 **Vulnerability:** A known high-severity vulnerability (CVE-2026-40345 / GHSA-ggr8-5vv4-36mx) existed in `deepmerge-ts` version 7.1.5, which was identified by GitHub CI using `trivy-fs` and `osv-scanner`.
 **Learning:** Transitive dependencies or direct dependencies can expose the application to vulnerabilities if not patched globally.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Injection Whitespace Bypass]
+**Vulnerability:** The regex used to sanitize CSV input for dangerous characters (`^[=+\-@\t\r]`) failed to account for leading whitespace. Attackers could bypass the filter by prefixing their payload with spaces or tabs (e.g., ` =cmd|'/C calc'!A0`).
+**Learning:** Input sanitization regexes must explicitly account for leading whitespace because spreadsheet parsers ignore leading spaces before evaluating formula triggers.
+**Prevention:** Always include `[\s]*` at the beginning of the regex (e.g., `/^[\s]*[=+\-@\t\r]/`) to ensure the formula trigger is matched correctly, even if padded.

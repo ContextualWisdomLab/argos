@@ -34,4 +34,9 @@ describe('csvField', () => {
     // \r\nmalicious contains a newline, so it is wrapped in double quotes
     expect(csvField('\r\nmalicious')).toBe("\"'\r\nmalicious\"")
   })
+
+  it('prepends a single quote for dangerous characters even with leading whitespace', () => {
+    expect(csvField(' =cmd|\'/C calc\'!A0')).toBe("' =cmd|'/C calc'!A0")
+    expect(csvField('   +1+1')).toBe("'   +1+1")
+  })
 })
