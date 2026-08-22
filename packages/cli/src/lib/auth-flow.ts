@@ -5,6 +5,17 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
+  // Validate URL scheme to prevent arbitrary protocol execution
+  try {
+    const parsedUrl = new URL(url)
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error(`Invalid protocol: ${parsedUrl.protocol}`)
+    }
+  } catch {
+    console.error(`Invalid URL provided to openBrowser: ${url}`)
+    return
+  }
+
   // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
