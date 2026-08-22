@@ -34,3 +34,8 @@
 **Vulnerability:** A CSV Injection (or Formula Injection) vulnerability existed in `packages/web/src/app/api/orgs/[orgSlug]/dashboard/sessions/route.ts` where unvalidated user input (like session titles or prompts) could start with dangerous characters (`=`, `+`, `-`, `@`, `\t`, `\r`) and be exported directly into a CSV file.
 **Learning:** Even internal admin dashboards are susceptible to CSV Injection if they export user-generated content without sanitization. Spreadsheet programs (like Excel) will execute formulas when a cell begins with specific trigger characters, which can lead to data exfiltration or remote code execution on the admin's machine.
 **Prevention:** Always sanitize data being exported to CSV formats by prepending a single quote (`'`) to strings that begin with dangerous characters (`=`, `+`, `-`, `@`, `\t`, `\r`). Centralize this logic (e.g., `csvField`) and thoroughly test it.
+
+## 2025-02-18 - [Fix vulnerable deepmerge-ts dependency via pnpm overrides]
+**Vulnerability:** A known high-severity vulnerability (CVE-2026-40345 / GHSA-ggr8-5vv4-36mx) existed in `deepmerge-ts` version 7.1.5, which was identified by GitHub CI using `trivy-fs` and `osv-scanner`.
+**Learning:** Transitive dependencies or direct dependencies can expose the application to vulnerabilities if not patched globally.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
