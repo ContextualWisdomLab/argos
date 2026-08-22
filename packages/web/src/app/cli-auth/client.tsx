@@ -78,13 +78,13 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
     return (
       <div className="flex flex-col items-center gap-4 text-center">
         <h1 className="text-2xl font-bold text-destructive">오류 발생</h1>
-        <p className="text-muted-foreground">CLI로 돌아가 로그인 요청을 새로 시작하세요.</p>
+        <p className="text-muted-foreground">요청이 만료되었거나 유효하지 않습니다.</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 text-center" aria-busy={loading}>
+    <div className="flex flex-col items-center gap-6 text-center">
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold">CLI 로그인 요청</h1>
         <p className="text-muted-foreground">
@@ -110,12 +110,6 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
           거부
         </Button>
       </div>
-
-      {loading && (
-        <p role="status" className="text-sm text-muted-foreground">
-          로그인 요청을 처리하고 있습니다. 결과가 표시될 때까지 이 창을 유지하세요.
-        </p>
-      )}
     </div>
   )
 }
