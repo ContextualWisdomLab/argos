@@ -45,6 +45,30 @@ describe('CliAuthClient actions', () => {
     expect(denyButton.className).toContain('focus-visible:ring-3')
   })
 
+  it('announces an actionable loading state while the callback is pending', async () => {
+    let resolveFetch!: (value: { ok: boolean }) => void
+    fetchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve
+      }),
+    )
+    renderClient()
+
+    fireEvent.click(screen.getByRole('button', { name: '허용' }))
+
+    expect(screen.getByRole('button', { name: '허용' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '거부' })).toBeDisabled()
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '로그인 요청을 처리하고 있습니다. 결과가 표시될 때까지 이 창을 유지하세요.',
+    )
+    expect(screen.getByRole('status').parentElement).toHaveAttribute('aria-busy', 'true')
+
+    await act(async () => {
+      resolveFetch({ ok: true })
+    })
+    expect(screen.getByRole('heading', { name: '로그인 완료' })).toBeInTheDocument()
+  })
+
   it('does not claim denial succeeded when the callback rejects it', async () => {
     fetchMock.mockResolvedValue({ ok: false })
     renderClient()
