@@ -84,7 +84,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 text-center">
+    <div className="flex flex-col items-center gap-6 text-center" aria-busy={loading}>
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold">CLI 로그인 요청</h1>
         <p className="text-muted-foreground">
@@ -110,6 +110,12 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
           거부
         </Button>
       </div>
+
+      {loading && (
+        <p role="status" className="text-sm text-muted-foreground">
+          로그인 요청을 처리하고 있습니다. 결과가 표시될 때까지 이 창을 유지하세요.
+        </p>
+      )}
     </div>
   )
 }
