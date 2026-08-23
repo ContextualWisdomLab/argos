@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Formula Injection (Spreadsheet Macro Injection)]
+**Vulnerability:** The inline `csvField` utility in the session export API properly escaped CSV quotes but failed to prevent CSV Formula Injection (Spreadsheet Macro Injection). If an attacker provided a session title or first prompt starting with `=, +, -, @, \t, or \r`, opening the resulting CSV in Microsoft Excel or Google Sheets could cause unintended macro/command execution.
+**Learning:** Normal CSV quote escaping (`""`) is insufficient to prevent formula execution in spreadsheet applications.
+**Prevention:** For string values exported to CSV, detect dangerous leading characters (`/^[=+\-@\t\r]/`) and prepend a single quote (`'`) to force the spreadsheet to interpret the cell as plain text. However, skip this sanitization for true numeric types to avoid breaking numerical formatting. Always extract CSV serialization utilities to a centralized, tested location rather than inlining them in API routes.
