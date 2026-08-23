@@ -1,3 +1,0 @@
-ignore:
-  vulnerabilities:
-    - CVE-2026-40345 # deepmerge-ts, ignored because Bolt persona is forbidden from modifying package.json
