@@ -44,3 +44,7 @@ reason = "brace-expansion 1.1.15 reachable only via dev-only ESLint toolchain (m
 id = "GHSA-ggr8-5vv4-36mx"
 ignoreUntil = 2026-10-28
 reason = "deepmerge-ts >8.0.0 forces a major breaking change but it is a transitive dependency (via @prisma/config -> tsup). The vulnerability only affects nested untrusted objects, but Prisma config merging uses local trusted inputs."
+[[IgnoredVulns]]
+id = "CVE-2026-40345"
+ignoreUntil = 2026-10-28
+reason = "Alias for GHSA-ggr8-5vv4-36mx. deepmerge-ts >8.0.0 forces a major breaking change but it is a transitive dependency (via @prisma/config -> tsup). The vulnerability only affects nested untrusted objects, but Prisma config merging uses local trusted inputs."
