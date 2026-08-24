@@ -34,3 +34,7 @@
 **Vulnerability:** User inputs (e.g., session titles or prompts) containing characters like `=`, `+`, `-`, `@`, `\t`, or `\r` at the start of a field could be executed as formulas or macros when the exported CSV was opened in spreadsheet software like Microsoft Excel or Google Sheets.
 **Learning:** Raw rendering of text into CSV without prepending a safe character (like `'`) can lead to formula execution, regardless of field quoting (`"..."`), which only prevents delimiter collision.
 **Prevention:** Always prepend a single quote (`'`) to string fields starting with dangerous characters before building the CSV string. Exclude raw numbers to preserve proper numeric formatting in spreadsheets.
+## 2024-08-25 - Fix Trivy Vulnerability by Overriding deepmerge-ts
+**Vulnerability:** CVE-2026-40345 flagged in `deepmerge-ts` by Trivy CI scanner.
+**Learning:** Monorepo package managers like pnpm might resolve older, vulnerable subdependencies even if not directly specified in `package.json`. Vulnerabilities found by Trivy or OSV-scanner often require manual overrides if an immediate update isn't available from the direct parent dependency.
+**Prevention:** Use `pnpm.overrides` block in the root `package.json` to enforce safe versions across the workspace and run `pnpm install` to apply the lockfile changes.
