@@ -26,7 +26,6 @@
       "@auth/core": "^0.41.3",
       "sharp": "^0.35.3",
       "postcss": "^8.5.18",
-      "deepmerge-ts": "8.0.0",
       "brace-expansion@1": "1.1.15",
       "brace-expansion@2": "2.1.2",
       "brace-expansion@>=3": "5.0.9",
