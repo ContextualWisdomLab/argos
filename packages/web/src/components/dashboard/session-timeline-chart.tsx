@@ -67,9 +67,19 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  // ⚡ Bolt Optimization:
+  // 병목 지점: Array.prototype.sort() 안에서 Date.parse()를 호출하여 O(N log N) 번의 문자열 파싱 오버헤드가 발생했습니다.
+  // 최적화 방법: Schwartzian Transform(Schwartzian 변환)을 적용하여 정렬 전 O(N) 단일 패스에서 파싱된 타임스탬프를 미리 계산한 후 정렬하고, 이후 매핑 단계에서도 재활용합니다.
+  // 기대 효과: 파싱 오버헤드를 크게 줄여 CPU 사용량과 GC 부하를 최소화합니다.
+  const mappedUsage = usageTimeline.map(usage => ({
+    usage,
+    parsedTimestamp: Date.parse(usage.timestamp)
+  }))
+
+  const sortedUsage = mappedUsage.sort(
+    (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
+
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,8 +87,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
+  return sortedUsage.map(({ usage, parsedTimestamp }) => {
+    const currentTimestamp = parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
