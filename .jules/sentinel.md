@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Formula Injection in Dashboard Exports]
+**Vulnerability:** 대시보드 세션 데이터를 CSV 포맷으로 내보낼 때(CSV Export), 필드 값에 수식 시작 문자(`=`, `+`, `-`, `@`, `\t`, `\r`)를 필터링하지 않고 원시 문자열로 출력하여 Spreadsheet Macro Injection(CSV Injection) 취약점이 발생했습니다.
+**Learning:** 사용자 입력값이나 생성된 제목 등이 Excel과 같은 스프레드시트 애플리케이션에서 처리될 때 악의적인 매크로나 명령어로 해석될 수 있는 문자열이 포함될 수 있습니다. 특히 대시보드의 CSV 내보내기 기능에서 이러한 문자가 포함된 데이터가 그대로 노출되면 심각한 보안 위협이 될 수 있습니다.
+**Prevention:** CSV 파일 생성 시, 숫자(Number) 타입이 아닌 경우 값이 `=, +, -, @, \t, \r` 로 시작한다면 앞에 단일 인용부호(`'`)를 추가하여 셀 값이 수식으로 해석되는 것을 강제로 방지해야 합니다. `typeof value !== 'number'` 조건을 추가하여 원본 숫자 포맷팅은 보존합니다.
