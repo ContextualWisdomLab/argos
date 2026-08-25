@@ -33,18 +33,12 @@ describe('dashboard summary accessibility labels', () => {
       />,
     )
 
-    const toggle = screen.getByRole('button', {
-      name: 'What do these numbers mean?',
-    })
+    const toggle = screen.getByRole('button', { name: /통계 의미 설명 열기/ })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
     await user.click(toggle)
 
-    expect(
-      screen.getByRole('button', {
-        name: 'What do these numbers mean?',
-      }),
-    ).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: /통계 의미 설명 닫기/ })).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('keeps each visible file-summary label in its accessible action name', async () => {
@@ -79,14 +73,14 @@ describe('dashboard summary accessibility labels', () => {
     )
 
     const modified = screen.getByRole('button', {
-      name: /^1 file modified.*view modified files$/i,
+      name: /수정된 파일 목록 보기/
     })
     const read = screen.getByRole('button', {
-      name: /^1 file read.*view read files$/i,
+      name: /읽은 파일 목록 보기/
     })
 
-    expect(modified).toHaveAccessibleName(/^1 file modified.*view modified files$/i)
-    expect(read).toHaveAccessibleName(/^1 file read.*view read files$/i)
+    expect(modified).toHaveAccessibleName(/수정된 파일 목록 보기/)
+    expect(read).toHaveAccessibleName(/읽은 파일 목록 보기/)
 
     await user.click(modified)
     await user.click(read)
