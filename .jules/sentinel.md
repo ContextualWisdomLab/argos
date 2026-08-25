@@ -35,3 +35,8 @@
 **Vulnerability:** CSV Injection (Formula Injection) vulnerability in the session export functionality where user-controlled data could start with formula triggers (`=`, `+`, `-`, `@`).
 **Learning:** When exporting user-generated content to CSV, spreadsheets like Excel evaluate cells starting with certain characters as formulas, potentially executing arbitrary commands. Leading whitespaces must also be accounted for, as parsers ignore them.
 **Prevention:** Always validate and sanitize fields being exported to CSV by checking against a regex like `/^[\s]*[=+\-@\t\r]/` and prepending a safe character (e.g., `'`) to neutralize formula execution.
+
+## 2026-08-25 - [Fix CSV Injection and Vulnerable Dependency]
+**Vulnerability:** Found CSV Injection vulnerability in `csvField` and High severity vulnerability in `deepmerge-ts` dependency.
+**Learning:** Adding a single quote (`'`) at the beginning of the CSV field neutralizes Formula Injection, but leading spaces should also be caught by the regex. For dependencies in a pnpm workspace, patching `package.json` with `pnpm.overrides` ensures all workspace packages use the safe version.
+**Prevention:** Apply a regex check like `/^[\s]*[=+\-@\t\r]/` for all CSV field exports. Regularly scan dependencies with Trivy/OSV-Scanner and use workspace overrides when necessary.
