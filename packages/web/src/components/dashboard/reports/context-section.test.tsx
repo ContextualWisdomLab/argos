@@ -21,6 +21,7 @@ describe('ContextSection', () => {
 
     const toggle = screen.getByRole('button', { name: 'Test Title' })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(toggle.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
     await user.click(toggle)
@@ -28,6 +29,7 @@ describe('ContextSection', () => {
       'aria-expanded',
       'true',
     )
+    expect(toggle.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
 
     const region = screen.getByRole('region', { name: 'Test Title' })
     expect(region).toBeInTheDocument()
@@ -38,6 +40,7 @@ describe('ContextSection', () => {
       'aria-expanded',
       'false',
     )
+    expect(toggle.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
@@ -50,6 +53,10 @@ describe('ContextSection', () => {
 
     expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute(
       'aria-expanded',
+      'true',
+    )
+    expect(screen.getByRole('button', { name: 'Test Title' }).querySelector('svg')).toHaveAttribute(
+      'aria-hidden',
       'true',
     )
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
