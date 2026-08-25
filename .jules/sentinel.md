@@ -38,3 +38,7 @@
 **Vulnerability:** CI system components (e.g. Strix penetration testing gate, organizational code-owner governance rules) may rely on the existence and contents of the repository's `AGENTS.md` file. Overwriting or destroying it unintentionally triggers check suite failures like "provider/backend was unavailable".
 **Learning:** `AGENTS.md` controls core AI agent guidelines and must be preserved intact.
 **Prevention:** If `AGENTS.md` is corrupted or modified by accident, restore it immediately using `git restore --source origin/main AGENTS.md` to prevent pipeline breakage.
+## 2024-08-25 - Handle Strix Flakiness
+**Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to provider infrastructure errors (e.g. 404 from upstream language model).
+**Learning:** Strix security gates rely on external AI inference APIs which can be unstable. This is an environmental flake, not a codebase vulnerability.
+**Prevention:** Re-trigger the workflow using an empty commit (`git commit --allow-empty`) to bypass the transient failure.
