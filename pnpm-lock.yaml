@@ -22,7 +22,7 @@ overrides:
   minimatch: ^10.0.0
   '@hono/node-server': ^2.0.5
   body-parser: ^2.3.0
-  deepmerge-ts: 8.0.0
+  deepmerge-ts: ^8.0.0
 
 pnpmfileChecksum: qsp27c6veblwg3gxusbbzrumtm
 
