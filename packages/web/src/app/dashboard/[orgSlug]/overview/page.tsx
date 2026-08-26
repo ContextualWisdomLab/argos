@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
-import { subDays, format, differenceInDays } from 'date-fns'
+import { format, differenceInDays } from 'date-fns'
 import { ChartCard } from '@/components/dashboard/chart-card'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
 import { OverviewStats } from '@/components/dashboard/overview-stats'
@@ -15,6 +15,7 @@ import { RecentSessionsList } from '@/components/dashboard/recent-sessions-list'
 import { useDashboardOverview } from '@/hooks/use-dashboard-overview'
 import { useDashboardUsers } from '@/hooks/use-dashboard-users'
 import { useDashboardSessions } from '@/hooks/use-dashboard-sessions'
+import { resolveSessionDateRange } from '@/lib/session-date-range'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -40,14 +41,12 @@ function OverviewContent({
 }) {
   const searchParams = useSearchParams()
   const today = new Date()
-  const sevenDaysAgo = format(subDays(today, 7), 'yyyy-MM-dd')
-  const todayStr = format(today, 'yyyy-MM-dd')
-
-  const from = searchParams.get('from') || sevenDaysAgo
-  const to = searchParams.get('to') || todayStr
-
-  const fromDate = new Date(from)
-  const toDate = new Date(to)
+  const { from, to, fromDate, toDate } = resolveSessionDateRange(
+    searchParams.get('from'),
+    searchParams.get('to'),
+    today,
+  )
+  const defaultRange = resolveSessionDateRange(null, null, today)
 
   const { data: overview, isLoading: overviewLoading, error: overviewError, refetch: refetchOverview } =
     useDashboardOverview(orgSlug, { projectId, from, to })
@@ -58,8 +57,8 @@ function OverviewContent({
   const { data: topUsersData, isLoading: usersLoading } =
     useDashboardUsers(orgSlug, {
       projectId,
-      from: sevenDaysAgo,
-      to: todayStr,
+      from: defaultRange.from,
+      to: defaultRange.to,
       page: 1,
       pageSize: 10,
       sort: 'tokens',
