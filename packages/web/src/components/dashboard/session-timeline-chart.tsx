@@ -80,11 +80,11 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map((usage) => {
-    const currentTimestamp = usage.timestamp
+    const currentTimestamp = Date.parse(usage.timestamp)
 
     while (
       toolIndex < sortedTools.length &&
-      sortedTools[toolIndex]!.timestamp <= currentTimestamp
+      Date.parse(sortedTools[toolIndex]!.timestamp) <= currentTimestamp
     ) {
       const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
       cumulativeToolCounts.set(
