@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useDeleteProject } from '@/hooks/use-delete-project'
@@ -113,6 +114,7 @@ export function DeleteProjectModal({
             disabled={!canDelete}
             onClick={handleDelete}
           >
+            {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
             {mutation.isPending ? '삭제 중…' : '삭제'}
           </Button>
         </AlertDialogFooter>
