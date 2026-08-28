@@ -4,6 +4,7 @@
 
 ### 🛡️ 보안 (Security)
 
+- 세션 CSV 내보내기의 Formula Injection 경계를 OWASP ASVS 5.0.0 및 최신 OWASP CSV Injection 가이드에 맞춰 보강했습니다. 문자열 필드의 `=`, `+`, `-`, `@`, 탭, CR, LF, NUL 및 전각 `＝`, `＋`, `－`, `＠` 시작값을 중립화하고, 실제 숫자값은 숫자 의미를 유지합니다. RFC 4180 구조 이스케이핑과 상호운용성 한계, RED→GREEN 회귀 근거는 `docs/doctoring/csv-formula-injection.md`에 기록했습니다.
 - 로그인, 회원가입, 비밀번호 재설정이 하나의 공유 비밀번호 계약을 사용하도록 통합했습니다. 입력 처리량을 1,024자로 먼저 제한하고, 현재 `bcryptjs`가 완전하게 검증할 수 있는 72 UTF-8 바이트를 초과하는 값은 조용히 잘라내지 않고 거부합니다. ASCII와 다중 바이트 Unicode 경계 회귀 테스트 및 운영·표준 근거 문서를 함께 추가했습니다.
 
 ### ⚡ 성능 (Performance)
