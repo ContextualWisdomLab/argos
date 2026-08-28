@@ -19,13 +19,22 @@ describe('csvField', () => {
     expect(csvField(0)).toBe('0')
   })
 
-  it('prevents formula injection for strings starting with dangerous characters', () => {
+  it('prevents formula injection for ASCII spreadsheet control prefixes', () => {
     expect(csvField('=cmd')).toBe("'=cmd")
     expect(csvField('+123')).toBe("'+123")
     expect(csvField('-123')).toBe("'-123")
-    expect(csvField('@sum(1,2)')).toBe('"\'@sum(1,2)"') // wrapped because of comma
+    expect(csvField('@sum(1,2)')).toBe('"\'@sum(1,2)"')
     expect(csvField('\ttest')).toBe("'\ttest")
-    expect(csvField('\rtest')).toBe('"\'\rtest"') // wrapped because of \r
+    expect(csvField('\rtest')).toBe('"\'\rtest"')
+    expect(csvField('\ntest')).toBe('"\'\ntest"')
+    expect(csvField('\0test')).toBe("'\0test")
+  })
+
+  it('prevents locale-equivalent full-width formula prefixes', () => {
+    expect(csvField('＝SUM(A1:A2)')).toBe("'＝SUM(A1:A2)")
+    expect(csvField('＋1')).toBe("'＋1")
+    expect(csvField('－1')).toBe("'－1")
+    expect(csvField('＠SUM(A1:A2)')).toBe("'＠SUM(A1:A2)")
   })
 
   it('wraps fields containing quotes, commas, or newlines in quotes and escapes internal quotes', () => {
@@ -33,7 +42,7 @@ describe('csvField', () => {
     expect(csvField('line1\nline2')).toBe('"line1\nline2"')
     expect(csvField('line1\r\nline2')).toBe('"line1\r\nline2"')
     expect(csvField('hello "world"')).toBe('"hello ""world"""')
-    expect(csvField('=hello, "world"')).toBe('"\'=hello, ""world"""') // Injection + quoting
+    expect(csvField('=hello, "world"')).toBe('"\'=hello, ""world"""')
   })
 })
 
