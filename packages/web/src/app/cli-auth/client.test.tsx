@@ -32,7 +32,7 @@ describe('CliAuthClient', () => {
     expect(screen.getByRole('button', { name: '거부' })).toBeDefined();
   });
 
-  it('handles allow action successfully', async () => {
+  it('handles allow action successfully and announces completion', async () => {
     let resolveFetch: (value: any) => void;
     const fetchPromise = new Promise((resolve) => {
       resolveFetch = resolve;
@@ -63,10 +63,11 @@ describe('CliAuthClient', () => {
       body: JSON.stringify({ state: 'mock-state' }),
     });
 
+    expect(screen.getByRole('status')).toBeDefined();
     expect(screen.getByText('로그인 완료')).toBeDefined();
   });
 
-  it('handles allow action failure with a recovery action', async () => {
+  it('handles allow action failure with an announced recovery action', async () => {
     (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
     render(<CliAuthClient {...defaultProps} />);
@@ -75,6 +76,7 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '허용' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
     expect(
       screen.getByText('터미널로 돌아가 CLI 로그인을 다시 시작하세요.', { exact: false }),
@@ -90,10 +92,11 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '허용' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
   });
 
-  it('handles deny action successfully', async () => {
+  it('handles deny action successfully and announces completion', async () => {
     let resolveFetch: (value: any) => void;
     const fetchPromise = new Promise((resolve) => {
       resolveFetch = resolve;
@@ -124,6 +127,7 @@ describe('CliAuthClient', () => {
       body: JSON.stringify({ state: 'mock-state', denied: true }),
     });
 
+    expect(screen.getByRole('status')).toBeDefined();
     expect(screen.getByText('로그인 거부됨')).toBeDefined();
   });
 
@@ -136,6 +140,7 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '거부' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
   });
 
@@ -148,6 +153,7 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '거부' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
     expect(screen.queryByText('로그인 거부됨')).toBeNull();
   });
