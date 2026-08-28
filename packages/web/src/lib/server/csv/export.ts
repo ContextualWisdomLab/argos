@@ -1,5 +1,20 @@
 import { Prisma } from '@prisma/client'
 
+const CSV_FORMULA_PREFIXES = new Set([
+  '=',
+  '+',
+  '-',
+  '@',
+  '\t',
+  '\r',
+  '\n',
+  '\0',
+  '＝',
+  '＋',
+  '－',
+  '＠',
+])
+
 export const sessionInclude = {
   user: { select: { id: true, name: true } },
   project: { select: { id: true, slug: true, name: true } },
@@ -32,12 +47,16 @@ export function getSessionTotals(session: SessionWithInclude) {
   return { inputTokens, outputTokens, estimatedCostUsd }
 }
 
+/**
+ * Serialize one CSV cell while neutralizing spreadsheet formula prefixes on
+ * caller-controlled strings. Numeric values remain numeric so analytics values
+ * keep their spreadsheet number semantics.
+ */
 export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
 
-  // Prevent CSV Formula Injection
-  if (typeof value !== 'number' && /^[=+\-@\t\r]/.test(text)) {
+  if (typeof value !== 'number' && CSV_FORMULA_PREFIXES.has(text[0] ?? '')) {
     text = "'" + text
   }
 
