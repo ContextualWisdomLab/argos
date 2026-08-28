@@ -32,6 +32,6 @@
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
 
 ## 2025-02-18 - [Fix CSV Formula Injection in Session Exports]
-**Vulnerability:** 사용자 입력이 포함된 세션 데이터를 CSV 파일로 추출할 때, Spreadsheet Macro Injection (CSV Injection)을 방지하기 위한 필터링이 누락되어 있었습니다. 세션 제목이 `=cmd|' /C calc'!A0` 와 같은 형태로 저장되면 다운로드 후 Excel 등에서 열람 시 임의의 코드가 실행될 수 있었습니다.
-**Learning:** 애플리케이션 내의 사용자 입력 데이터가 CSV와 같은 외부 형식으로 추출되는 모든 곳은 CSV Formula Injection 취약점에 노출됩니다.
-**Prevention:** CSV로 추출되는 모든 문자열 데이터에 대해 `=, +, -, @, \t, \r` 로 시작하는지 검사하고, 만약 해당된다면 앞에 단일 인용부호(`'`)를 추가하여 수식(Formula)으로 해석되지 않게 안전하게 처리해야 합니다. 단, 원본이 실제 `number` 타입인 경우에는 포맷 유지를 위해 예외를 허용해야 합니다.
+**Vulnerability:** 사용자 입력이 포함된 세션 데이터를 CSV 파일로 추출할 때, Spreadsheet Macro Injection (CSV Injection)을 방지하기 위한 필터링이 누락되어 있었습니다. 세션 제목이 `=cmd|' /C calc'!A0` 와 같은 형태로 저장되면 다운로드 후 Excel 등에서 열람 시 수식 실행이나 데이터 유출로 이어질 수 있습니다.
+**Learning:** CSV 구조 이스케이핑과 스프레드시트 수식 중립화는 별개의 경계입니다. 현재 OWASP CSV Injection 가이드는 ASCII `=`, `+`, `-`, `@`, 탭, CR, LF뿐 아니라 일부 로케일에서 해석될 수 있는 전각 `＝`, `＋`, `－`, `＠`도 경고하며, OWASP ASVS v5.0.0-1.2.10은 NUL도 첫 필드 특수 문자로 포함합니다. 또한 어떤 단일 방식도 모든 스프레드시트와 재저장 동작에 보편적으로 안전하다고 가정해서는 안 됩니다.
+**Prevention:** RFC 4180 방식으로 쉼표·따옴표·개행을 구조적으로 이스케이프하고, 문자열 필드의 첫 코드 포인트가 `=`, `+`, `-`, `@`, 탭, CR, LF, NUL 또는 전각 `＝`, `＋`, `－`, `＠`이면 단일 인용부호를 앞에 붙이는 ASVS 계약을 유지합니다. 실제 숫자 타입은 숫자 의미를 보존합니다. 새 export 경로가 생기면 공용 `csvField`를 재사용하고 `docs/doctoring/csv-formula-injection.md`의 상호운용성 한계와 회귀 테스트를 함께 갱신합니다.
