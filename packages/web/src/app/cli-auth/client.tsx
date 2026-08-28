@@ -37,7 +37,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
   async function handleDeny() {
     setLoadingAction('deny')
     try {
-      await fetch(`/api/auth/cli-callback`, {
+      const res = await fetch(`/api/auth/cli-callback`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${argosToken}`,
@@ -45,6 +45,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         },
         body: JSON.stringify({ state, denied: true }),
       })
+      if (!res.ok) throw new Error('Failed')
       setStatus('denied')
     } catch {
       setStatus('error')
@@ -55,8 +56,12 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
 
   if (status === 'approved') {
     return (
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="text-5xl">✓</div>
+      <div
+        className="flex flex-col items-center gap-4 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="text-5xl" aria-hidden="true">✓</div>
         <h1 className="text-2xl font-bold">로그인 완료</h1>
         <p className="text-muted-foreground">터미널로 돌아가세요. 이 창은 닫아도 됩니다.</p>
       </div>
@@ -65,8 +70,12 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
 
   if (status === 'denied') {
     return (
-      <div className="flex flex-col items-center gap-4 text-center">
-        <div className="text-5xl">✗</div>
+      <div
+        className="flex flex-col items-center gap-4 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="text-5xl" aria-hidden="true">✗</div>
         <h1 className="text-2xl font-bold">로그인 거부됨</h1>
         <p className="text-muted-foreground">이 창을 닫아도 됩니다.</p>
       </div>
@@ -75,9 +84,14 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
 
   if (status === 'error') {
     return (
-      <div className="flex flex-col items-center gap-4 text-center">
+      <div
+        className="flex flex-col items-center gap-4 text-center"
+        role="alert"
+      >
         <h1 className="text-2xl font-bold text-destructive">오류 발생</h1>
-        <p className="text-muted-foreground">요청이 만료되었거나 유효하지 않습니다.</p>
+        <p className="text-muted-foreground">
+          요청이 만료되었거나 유효하지 않습니다. 터미널로 돌아가 CLI 로그인을 다시 시작하세요.
+        </p>
       </div>
     )
   }
