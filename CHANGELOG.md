@@ -4,6 +4,7 @@
 
 ### 🛡️ 보안 (Security)
 
+- Prisma 구성 도구 체인을 통해 유입되는 `deepmerge-ts@7.1.5`의 HIGH `GHSA-ggr8-5vv4-36mx` / `CVE-2026-40345` 스택 고갈 취약점을 루트 pnpm override로 패치 버전 `8.0.0`에 고정했습니다. 취약점 ignore나 보안 게이트 완화 없이 잠금파일을 재생성하며, 호환성·OSV 근거와 override 제거 조건은 `docs/doctoring/deepmerge-ts-cve-2026-40345.md`에 기록했습니다.
 - 로그인, 회원가입, 비밀번호 재설정이 하나의 공유 비밀번호 계약을 사용하도록 통합했습니다. 입력 처리량을 1,024자로 먼저 제한하고, 현재 `bcryptjs`가 완전하게 검증할 수 있는 72 UTF-8 바이트를 초과하는 값은 조용히 잘라내지 않고 거부합니다. ASCII와 다중 바이트 Unicode 경계 회귀 테스트 및 운영·표준 근거 문서를 함께 추가했습니다.
 
 ### ⚡ 성능 (Performance)
