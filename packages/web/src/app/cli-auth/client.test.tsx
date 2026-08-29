@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /** @vitest-environment jsdom */
-import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CliAuthClient } from './client';
 import { cleanup } from '@testing-library/react';
-
-global.React = React;
 
 describe('CliAuthClient', () => {
   const defaultProps = {
@@ -35,8 +32,7 @@ describe('CliAuthClient', () => {
     expect(screen.getByRole('button', { name: '거부' })).toBeDefined();
   });
 
-  it('handles allow action successfully', async () => {
-    // Create a promise we can control to test loading state
+  it('handles allow action successfully and announces completion', async () => {
     let resolveFetch: (value: any) => void;
     const fetchPromise = new Promise((resolve) => {
       resolveFetch = resolve;
@@ -45,18 +41,15 @@ describe('CliAuthClient', () => {
 
     render(<CliAuthClient {...defaultProps} />);
 
-    const allowBtn = screen.getByRole('button', { name: '허용' });
-    const denyBtn = screen.getByRole('button', { name: '거부' });
+    const allowBtn = screen.getByRole('button', { name: '허용' }) as HTMLButtonElement;
+    const denyBtn = screen.getByRole('button', { name: '거부' }) as HTMLButtonElement;
 
-    // Initiate click (which sets loading state)
     fireEvent.click(allowBtn);
 
-    // Check loading state while promise is pending
     expect(allowBtn.textContent).toBe('처리 중...');
-    expect(allowBtn.hasAttribute('disabled')).toBe(true);
-    expect(denyBtn.hasAttribute('disabled')).toBe(true);
+    expect(allowBtn.disabled).toBe(true);
+    expect(denyBtn.disabled).toBe(true);
 
-    // Resolve promise
     await act(async () => {
       resolveFetch!({ ok: true });
     });
@@ -70,10 +63,11 @@ describe('CliAuthClient', () => {
       body: JSON.stringify({ state: 'mock-state' }),
     });
 
+    expect(screen.getByRole('status')).toBeDefined();
     expect(screen.getByText('로그인 완료')).toBeDefined();
   });
 
-  it('handles allow action failure', async () => {
+  it('handles allow action failure with an announced recovery action', async () => {
     (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
     render(<CliAuthClient {...defaultProps} />);
@@ -82,7 +76,11 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '허용' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
+    expect(
+      screen.getByText('터미널로 돌아가 CLI 로그인을 다시 시작하세요.', { exact: false }),
+    ).toBeDefined();
   });
 
   it('handles allow action non-ok response', async () => {
@@ -94,10 +92,11 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '허용' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
   });
 
-  it('handles deny action successfully', async () => {
+  it('handles deny action successfully and announces completion', async () => {
     let resolveFetch: (value: any) => void;
     const fetchPromise = new Promise((resolve) => {
       resolveFetch = resolve;
@@ -106,15 +105,14 @@ describe('CliAuthClient', () => {
 
     render(<CliAuthClient {...defaultProps} />);
 
-    const allowBtn = screen.getByRole('button', { name: '허용' });
-    const denyBtn = screen.getByRole('button', { name: '거부' });
+    const allowBtn = screen.getByRole('button', { name: '허용' }) as HTMLButtonElement;
+    const denyBtn = screen.getByRole('button', { name: '거부' }) as HTMLButtonElement;
 
     fireEvent.click(denyBtn);
 
-    // Check loading state while promise is pending
     expect(denyBtn.textContent).toBe('처리 중...');
-    expect(allowBtn.hasAttribute('disabled')).toBe(true);
-    expect(denyBtn.hasAttribute('disabled')).toBe(true);
+    expect(allowBtn.disabled).toBe(true);
+    expect(denyBtn.disabled).toBe(true);
 
     await act(async () => {
       resolveFetch!({ ok: true });
@@ -129,6 +127,7 @@ describe('CliAuthClient', () => {
       body: JSON.stringify({ state: 'mock-state', denied: true }),
     });
 
+    expect(screen.getByRole('status')).toBeDefined();
     expect(screen.getByText('로그인 거부됨')).toBeDefined();
   });
 
@@ -141,6 +140,21 @@ describe('CliAuthClient', () => {
       fireEvent.click(screen.getByRole('button', { name: '거부' }));
     });
 
+    expect(screen.getByRole('alert')).toBeDefined();
     expect(screen.getByText('오류 발생')).toBeDefined();
+  });
+
+  it('treats a deny non-ok response as an error instead of a successful denial', async () => {
+    (global.fetch as any).mockResolvedValueOnce({ ok: false });
+
+    render(<CliAuthClient {...defaultProps} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: '거부' }));
+    });
+
+    expect(screen.getByRole('alert')).toBeDefined();
+    expect(screen.getByText('오류 발생')).toBeDefined();
+    expect(screen.queryByText('로그인 거부됨')).toBeNull();
   });
 });
