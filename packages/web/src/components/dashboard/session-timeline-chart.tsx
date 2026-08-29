@@ -67,7 +67,7 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // ⚡ Bolt 최적화: 날짜 파싱 비용을 줄이기 위해 Schwartzian 변환을 사용하여 O(N)으로 한 번만 파싱 후 정렬합니다.
+  // ⚡ Bolt Optimization: Use Schwartzian transform to parse dates once in O(N) before sorting
   const sortedUsage = usageTimeline
     .map(usage => ({ usage, parsedTime: Date.parse(usage.timestamp) }))
     .sort((a, b) => a.parsedTime - b.parsedTime)
