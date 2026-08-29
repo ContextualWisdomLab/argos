@@ -29,6 +29,10 @@ pnpmfileChecksum: qsp27c6veblwg3gxusbbzrumtm
 importers:
 
   .:
+    dependencies:
+      deepmerge-ts:
+        specifier: 8.0.0
+        version: 8.0.0
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3

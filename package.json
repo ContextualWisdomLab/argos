@@ -37,5 +37,8 @@
       "body-parser": "^2.3.0",
       "deepmerge-ts": "8.0.0"
     }
+  },
+  "dependencies": {
+    "deepmerge-ts": "8.0.0"
   }
 }
