@@ -10,3 +10,7 @@
 ## 2024-08-30 - CI failure handling
 **Learning:** If a CI check (e.g., `noema-review`) fails due to external infrastructure, provider availability, or connection issues (like `request_too_large` or `review sidecar preflight failed`), and the workflow is not locally configured in the repository (e.g., missing from `.github/workflows`), this indicates a centrally managed or third-party infrastructure failure that cannot be fixed by modifying the local codebase.
 **Action:** Ignore these CI failures as they are out of the repository's control. Proceed to submit the changes.
+
+## 2024-08-30 - CI failure handling: OpenCode Review
+**Learning:** If the `opencode-review` CI check fails with a message like `No APPROVED or CHANGES_REQUESTED from opencode-agent on the current head.`, it means the OpenCode agent has not yet reviewed the PR. This check requires an asynchronous review from an external agent and cannot be bypassed or fixed by modifying code locally.
+**Action:** Ignore this CI failure. The PR needs to be reviewed by the OpenCode agent asynchronously. Proceed with submission.
