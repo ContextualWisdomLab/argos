@@ -9,3 +9,9 @@
 ## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
+## 2024-05-18 - Missing Loading State for Authentication Actions
+**Learning:** Adding loading spinners for non-instant authentication actions (login, register, sign out, password reset) improves UX drastically by providing visual feedback, and disables the buttons, preventing double submissions.
+**Action:** When implementing any forms or authentication actions, always include a loading state to the submit buttons.
+## 2024-05-18 - 인증 작업 시 로딩 상태 부재
+**Learning:** 비동기 인증 작업(로그인, 회원가입, 로그아웃, 비밀번호 초기화) 중에 버튼에 로딩 스피너를 추가하면 시각적 피드백이 제공되어 UX가 크게 향상되고, 버튼이 비활성화되어 중복 제출을 방지할 수 있습니다.
+**Action:** 양식(Form)이나 인증 관련 작업을 구현할 때는 항상 제출 버튼에 로딩 상태를 포함해야 합니다.
