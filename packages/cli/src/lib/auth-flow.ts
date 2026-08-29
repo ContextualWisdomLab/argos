@@ -5,30 +5,21 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  let parsedUrl: URL
-  try {
-    parsedUrl = new URL(url)
-  } catch {
-    throw new Error('인증 URL이 올바르지 않습니다.')
-  }
-  if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
-    throw new Error('인증 URL은 HTTP 또는 HTTPS만 사용할 수 있습니다.')
-  }
-
+  // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // Keep the server-provided URL out of cmd.exe entirely. Node's default
-    // Windows argument quoting remains enabled because windowsVerbatimArguments
-    // is intentionally omitted.
-    const child = spawn('explorer.exe', [url], {
+    // Windows: cmd.exe 빌트인 start 명령어 사용
+    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>()^])/g, '^$1')], {
+      windowsVerbatimArguments: true,
       detached: true,
-      stdio: 'ignore',
-      windowsHide: true,
+      stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
+    // macOS
     const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
+    // Linux 등
     const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   }
