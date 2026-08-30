@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-08-30 - CSV Injection 취약점 방지 (Spreadsheet Macro Injection)
+**Vulnerability:** CSV 추출 시 `csvField` 함수에서 사용자 입력값에 포함된 수식 문자(=, +, -, @ 등)를 처리하지 않아 CSV Injection(Macro Injection) 위험이 존재했습니다.
+**Learning:** Next.js 애플리케이션에서 CSV 다운로드를 제공할 때 Excel과 같은 스프레드시트 프로그램에서 수식으로 해석될 수 있는 문자로 시작하는 값은 단일 따옴표(')를 접두사로 붙여 평문으로 처리해야 합니다.
+**Prevention:** 새로운 CSV 추출 로직 작성 시, 반드시 검증된 `@/lib/server/csv/export` 유틸리티의 `csvField` 함수를 재사용하여 보안을 강화합니다.
