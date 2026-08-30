@@ -6,6 +6,9 @@ interface EmptyWeekStateProps {
   action?: React.ReactNode
 }
 
+/**
+ * Renders the weekly report empty state with an actionable message and optional action.
+ */
 export function EmptyWeekState({
   title = '데이터 없음',
   message,
