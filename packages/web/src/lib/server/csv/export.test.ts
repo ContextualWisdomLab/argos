@@ -22,7 +22,7 @@ describe('csvField', () => {
     expect(csvField('hello, world')).toBe('"hello, world"')
     expect(csvField('hello"world')).toBe('"hello""world"')
     expect(csvField('hello\nworld')).toBe('"hello\nworld"')
-    expect(csvField('hello\rworld')).toBe('"\hello\rworld"')
+    expect(csvField('hello\rworld')).toBe('"hello\rworld"')
   })
 
   it('prevents CSV injection by prepending a single quote for strings', () => {
