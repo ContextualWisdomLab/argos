@@ -38,4 +38,10 @@ describe('EmptyWeekState', () => {
 
     expect(screen.getByRole('button', { name: 'Test Action' })).toBeDefined()
   })
+
+  it('reserves vertical space for centered empty-state content', () => {
+    const { container } = render(<EmptyWeekState message="Test message" />)
+
+    expect(container.firstElementChild).toHaveClass('min-h-64')
+  })
 })
