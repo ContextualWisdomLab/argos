@@ -275,4 +275,36 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+
+  it('maintains stable sorting for equal timestamps', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 10,
+        outputTokens: 5,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 20,
+        outputTokens: 10,
+        estimatedCostUsd: 0.002,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    // The order of elements with the same timestamp should be preserved.
+    expect(readChartData().map((d) => d.input)).toEqual([10, 20])
+  })
 })
