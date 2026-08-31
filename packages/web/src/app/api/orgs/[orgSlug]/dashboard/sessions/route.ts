@@ -71,10 +71,10 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
+import { sanitizeCsvField } from '@/lib/server/csv'
+
 function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  return sanitizeCsvField(value)
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
