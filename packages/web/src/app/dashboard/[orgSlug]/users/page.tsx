@@ -44,7 +44,8 @@ function UsersContent({
 
   const setQuery = (updates: Record<string, string | null>) => {
     const params = new URLSearchParams(searchParams.toString())
-    for (const [key, value] of Object.entries(updates)) {
+    for (const key of Object.keys(updates)) {
+      const value = updates[key]
       if (value === null) params.delete(key)
       else params.set(key, value)
     }
