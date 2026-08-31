@@ -32,6 +32,6 @@
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
 
 ## 2025-02-19 - [Fix command injection in CLI Auth Flow (Windows)]
-**Vulnerability:** Command Injection in the CLI authentication flow on Windows via `spawn` with `cmd.exe` and `windowsVerbatimArguments: true`.
-**Learning:** When using `windowsVerbatimArguments: true` to bypass Node.js default escaping, merely validating URL protocols or escaping a single character (`&`) is insufficient. Shell metacharacters (`&`, `|`, `;`, `<`, `>`, `(`, `)`, `^`) can be used to execute arbitrary commands if unescaped.
-**Prevention:** When explicitly bypassing normal escaping mechanisms (e.g. `windowsVerbatimArguments: true`), always ensure all shell metacharacters are properly escaped (e.g., using a caret `^` for `cmd.exe`) rather than relying on partial sanitization.
+**Vulnerability:** Command injection in the CLI authentication flow on Windows via `spawn` with `cmd.exe` and `windowsVerbatimArguments: true`.
+**Learning:** Escaping the visible metacharacters in a URL is not a reliable `cmd.exe` security boundary. Command processing can perform environment or delayed expansion after textual escaping, so strings such as `%COMSPEC%` or `!PATH!` can change what the shell interprets.
+**Prevention:** Do not route untrusted URLs through a command shell. Invoke the platform URL protocol handler directly with the URL as an argv element so shell expansion and command-string parsing are absent.
