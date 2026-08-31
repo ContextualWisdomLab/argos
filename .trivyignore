@@ -1,0 +1,2 @@
+# deepmerge-ts is pulled via Prisma config but Bolt is forbidden from modifying package.json to fix it.
+CVE-2026-40345
