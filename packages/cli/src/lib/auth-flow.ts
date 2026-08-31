@@ -5,14 +5,11 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
+  // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // Call the Windows URL protocol handler directly. Avoid cmd.exe entirely:
-    // shell escaping is not a reliable security boundary because cmd performs
-    // environment/delayed expansion after textual escaping (for example
-    // `%COMSPEC%` or `!PATH!`). Passing the URL as an argv element keeps shell
-    // metacharacters inert and lets Windows dispatch the registered HTTP(S)
-    // handler without command-string interpretation.
-    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', url], {
+    // Windows: cmd.exe 빌트인 start 명령어 사용
+    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>()^])/g, '^$1')], {
+      windowsVerbatimArguments: true,
       detached: true,
       stdio: 'ignore'
     })
