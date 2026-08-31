@@ -1,7 +1,0 @@
-🛡️ Sentinel: [HIGH] Fix command injection in browser open on Windows
-
-This commit fixes a high-severity command injection vulnerability in the CLI authentication flow. When running on Windows, the `openBrowser` function uses `cmd.exe /c start ""` to open URLs. However, because it was launched with `windowsVerbatimArguments: true`, Node.js's normal argument escaping was bypassed. The code previously only escaped the `&` character, leaving it vulnerable to other shell metacharacters like `|`, `;`, `<`, `>`, `(`, `)`, and `^`.
-
-This fix comprehensively escapes all these shell metacharacters with a caret (`^`) when passing the URL to `cmd.exe`, effectively preventing attackers from executing arbitrary commands via specially crafted URLs containing embedded shell operators.
-
-It also overrides `deepmerge-ts` to v8.0.0 via `pnpm.overrides` in `package.json` to fix the CVE-2026-40345 (GHSA-ggr8-5vv4-36mx) vulnerability flagged by `trivy-fs` and `scan`.
