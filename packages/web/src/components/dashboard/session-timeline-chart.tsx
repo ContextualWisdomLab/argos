@@ -67,15 +67,14 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // [Bolt: Performance Optimization] Map timestamp upfront to avoid O(N log N) Date.parse calls in sort and reduce redundant parsing in map
-  const parsedUsage = usageTimeline.map(usage => ({
-    ...usage,
+  // [Bolt: Performance Optimization] Map timestamp upfront to avoid O(N log N) Date.parse calls in sort and reduce redundant parsing in map.
+  // We use a memory-efficient wrapper object { original, parsedTimestamp } to avoid spreading `...usage` which creates O(N) full shallow copies.
+  const wrappedUsage = usageTimeline.map(usage => ({
+    original: usage,
     parsedTimestamp: Date.parse(usage.timestamp)
   }))
 
-  const sortedUsage = parsedUsage.sort(
-    (a, b) => a.parsedTimestamp - b.parsedTimestamp
-  )
+  wrappedUsage.sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -83,8 +82,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = usage.parsedTimestamp
+  return wrappedUsage.map((usageWrapper) => {
+    const currentTimestamp = usageWrapper.parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
@@ -98,6 +97,7 @@ function buildChartData(
       toolIndex += 1
     }
 
+    const usage = usageWrapper.original
     return {
       relativeTime: formatRelativeTime(usage.timestamp, sessionStartedAt),
       input: usage.inputTokens,
