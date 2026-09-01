@@ -85,7 +85,7 @@ describe('SessionActivityRibbon accessibility semantics', () => {
   it('identifies exactly one visually current event without turning event actions into toggle buttons', () => {
     const { rerender } = renderRibbon(0)
 
-    const firstEvent = screen.getByRole('button', { name: 'Event 1' })
+    const firstEvent = screen.getByRole('button', { name: /User message 1:/ })
     expect(firstEvent).toHaveAttribute('aria-current', 'true')
     expect(firstEvent).not.toHaveAttribute('aria-pressed')
     expect(currentEventButtons()).toEqual([firstEvent])
@@ -102,8 +102,8 @@ describe('SessionActivityRibbon accessibility semantics', () => {
       />
     )
 
-    const secondEvent = screen.getByRole('button', { name: 'Event 2' })
-    expect(screen.getByRole('button', { name: 'Event 1' })).not.toHaveAttribute('aria-current')
+    const secondEvent = screen.getByRole('button', { name: /Tool Read 2/ })
+    expect(screen.getByRole('button', { name: /User message 1:/ })).not.toHaveAttribute('aria-current')
     expect(secondEvent).toHaveAttribute('aria-current', 'true')
     expect(currentEventButtons()).toEqual([secondEvent])
   })
