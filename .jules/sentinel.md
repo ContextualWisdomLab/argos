@@ -31,7 +31,7 @@
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
 
-## 2025-10-31 - [Fix Command Injection in CLI Browser Opener]
-**Vulnerability:** The CLI opened a browser using `spawn` with `windowsVerbatimArguments: true` combined with an unsanitized remote URL, which bypassed normal Node.js escaping and allowed command injection (e.g., via `file://` protocols or chained ampersands).
-**Learning:** When using `spawn` with `windowsVerbatimArguments: true` or shell-like arguments, standard Node.js escaping is disabled. Without strict URL protocol validation, arbitrary commands could be executed on the user's machine by opening malicious URLs.
-**Prevention:** Always strictly validate the URL protocol (e.g., parsing with `new URL(url)` and ensuring it is `http:` or `https:`) prior to spawning to prevent command injection or local file execution risks.
+## 2026-09-01 - [Fix Command Injection in CLI Browser Opener]
+**Vulnerability:** The Windows CLI browser launcher sent a server-provided authentication URL through `cmd.exe /c start` with `windowsVerbatimArguments: true`, leaving shell metacharacters and `%VAR%` expansion inside a command-interpreter boundary.
+**Learning:** URL protocol validation and ad-hoc shell escaping are separate controls. An `http:` or `https:` URL can still contain characters with command-shell meaning, so shell escaping must not be the primary security boundary for remote values.
+**Prevention:** Parse and allowlist the URL protocol, serialize the parsed URL, and launch it through a non-shell Windows URL handler (`rundll32.exe url.dll,FileProtocolHandler`) with the URL as a distinct process argument. Do not echo rejected remote URLs to the terminal.
