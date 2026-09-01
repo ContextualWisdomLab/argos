@@ -33,27 +33,53 @@ describe('auth-flow', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
     })
   })
 
-  it('opens browser using start on win32 safely with spawn, escaping shell metacharacters', async () => {
+  it('opens browser on win32 without passing the auth URL through cmd.exe', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/login?foo=bar&baz=qux|calc' }) // Step 1
+    const authUrl = 'http://example.com/login?foo=bar&baz=qux|calc%COMSPEC%'
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
+      'rundll32.exe',
+      ['url.dll,FileProtocolHandler', authUrl],
+      { detached: true, stdio: 'ignore' }
+    )
+    expect(childProcess.spawn).not.toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/login?foo=bar^&baz=qux^|calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      expect.anything(),
+      expect.anything()
+    )
+  })
+
+  it('normalizes a validated URL before launching it', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'https://example.com/a b?x="y"' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      'rundll32.exe',
+      ['url.dll,FileProtocolHandler', 'https://example.com/a%20b?x=%22y%22'],
+      { detached: true, stdio: 'ignore' }
     )
   })
 
@@ -61,9 +87,9 @@ describe('auth-flow', () => {
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
 
-    console.error = vi.fn()
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL protocol')
-    expect(console.error).toHaveBeenCalled()
+    expect(consoleError).toHaveBeenCalled()
     expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
