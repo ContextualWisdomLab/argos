@@ -5,11 +5,13 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
+  let safeUrl = url
   try {
     const parsedUrl = new URL(url)
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
       throw new Error('Invalid URL protocol')
     }
+    safeUrl = parsedUrl.href
   } catch (err) {
     console.error(chalk.red(`\n안전하지 않은 URL입니다: ${url}`))
     throw err
@@ -19,7 +21,7 @@ function openBrowser(url: string): void {
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
     // url 내부의 특수문자(&, |, ;, <, >, (, ), ^)를 ^ 로 이스케이프 처리
-    const escapedUrl = url.replace(/([&|;<>()^])/g, '^$1')
+    const escapedUrl = safeUrl.replace(/([&|;<>()^])/g, '^$1')
     const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
       windowsVerbatimArguments: true,
       detached: true,

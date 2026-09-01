@@ -31,7 +31,7 @@
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
 
-## 2025-10-31 - [Fix Command Injection in CLI Browser Opener]
-**Vulnerability:** The CLI opened a browser using `spawn` with `windowsVerbatimArguments: true` combined with an unsanitized remote URL, which bypassed normal Node.js escaping and allowed command injection (e.g., via `file://` protocols or chained ampersands).
-**Learning:** When using `spawn` with `windowsVerbatimArguments: true` or shell-like arguments, standard Node.js escaping is disabled. Without strict URL protocol validation, arbitrary commands could be executed on the user's machine by opening malicious URLs.
-**Prevention:** Always strictly validate the URL protocol (e.g., parsing with `new URL(url)` and ensuring it is `http:` or `https:`) prior to spawning to prevent command injection or local file execution risks.
+## 2025-10-31 - [CLI 브라우저 실행 시 커맨드 인젝션 수정]
+**Vulnerability:** CLI에서 `spawn` 함수를 `windowsVerbatimArguments: true` 옵션과 함께 사용할 때, 외부에서 주입된 검증되지 않은 URL이 Node.js의 기본 이스케이프 처리를 우회하여 커맨드 인젝션을 유발할 수 있었습니다 (예: `file://` 프로토콜 사용이나 `&` 문자를 이용한 명령어 연결).
+**Learning:** `spawn`에 `windowsVerbatimArguments: true`를 사용할 경우, 일반적인 이스케이프 처리가 비활성화됩니다. URL 프로토콜에 대한 엄격한 검증과 셸 특수문자에 대한 이스케이프 처리가 없으면 악의적인 URL을 통해 사용자의 시스템에서 임의의 명령어가 실행될 위험이 있습니다.
+**Prevention:** URL의 프로토콜이 `http:` 또는 `https:`인지 엄격히 검증하고, 셸에서 해석될 수 있는 특수문자들을 반드시 이스케이프 처리한 후 `spawn`을 실행하여 커맨드 인젝션 및 로컬 파일 실행 위험을 방지해야 합니다.
