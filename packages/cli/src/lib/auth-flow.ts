@@ -5,34 +5,30 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
+  let browserUrl: string
   try {
     const parsedUrl = new URL(url)
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
       throw new Error('Invalid URL protocol')
     }
+    browserUrl = parsedUrl.toString()
   } catch (err) {
-    console.error(chalk.red(`\n안전하지 않은 URL입니다: ${url}`))
+    console.error(chalk.red('\n브라우저 인증 URL을 열 수 없습니다. 다시 로그인하거나 서버 설정을 확인하세요.'))
     throw err
   }
 
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    // url 내부의 특수문자(&, |, ;, <, >, (, ), ^)를 ^ 로 이스케이프 처리
-    const escapedUrl = url.replace(/([&|;<>()^])/g, '^$1')
-    const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
-      windowsVerbatimArguments: true,
+    // Keep the remote auth URL out of cmd.exe entirely; shell escaping is not a stable security boundary.
+    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', browserUrl], {
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [browserUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [browserUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
