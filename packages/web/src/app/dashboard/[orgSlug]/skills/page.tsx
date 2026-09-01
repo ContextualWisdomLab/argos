@@ -91,7 +91,8 @@ function SkillsContent({
   }
 
   const skills = data?.skills ?? []
-  const totalInvocations = skills.reduce((sum, s) => sum + s.callCount, 0)
+  let totalInvocations = 0
+  for (const s of skills) totalInvocations += s.callCount
 
   if (skills.length === 0) {
     return (
