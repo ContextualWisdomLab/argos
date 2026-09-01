@@ -96,9 +96,7 @@ export function stripPii<T>(value: T): T {
   }
   if (typeof value === 'object') {
     const out: Record<string, unknown> = {}
-    const objValue = value as Record<string, unknown>
-    for (const k of Object.keys(objValue)) {
-      const v = objValue[k]
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (PII_KEYS.has(k)) continue
       out[k] = stripPii(v)
     }
