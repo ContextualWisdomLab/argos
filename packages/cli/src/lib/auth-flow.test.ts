@@ -63,6 +63,18 @@ describe('auth-flow', () => {
     )
   })
 
+  it('rejects non-HTTP auth URLs before launching an OS handler', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///C:/Windows/System32/calc.exe' })
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('지원하지 않는 인증 URL 프로토콜')
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  })
+
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'darwin',
