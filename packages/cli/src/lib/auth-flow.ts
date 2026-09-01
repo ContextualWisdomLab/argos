@@ -4,32 +4,55 @@ import ora from 'ora'
 import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
+/**
+ * Open a server-provided authentication URL with the platform browser launcher.
+ *
+ * The URL is treated as untrusted network data. Only HTTP(S) URLs are accepted,
+ * and the value is passed as a single argv element to a directly spawned program;
+ * it is never interpolated into a command shell. The function detaches the
+ * launcher process and does not wait for browser completion.
+ *
+ * @param url Authentication URL returned by the Argos API.
+ * @throws {Error} If the URL is malformed or uses a non-HTTP(S) protocol.
+ */
 function openBrowser(url: string): void {
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw new Error('유효하지 않은 인증 URL')
+  }
+
+  if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+    throw new Error('지원하지 않는 인증 URL 프로토콜')
+  }
+
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>()^])/g, '^$1')], {
-      windowsVerbatimArguments: true,
-      detached: true,
-      stdio: 'ignore'
-    })
+    // Avoid cmd.exe entirely: shell escaping is not a security boundary for untrusted URLs.
+    const child = spawn('explorer.exe', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
     const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
     const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
 
 /**
- * 브라우저 기반 CLI 인증 흐름
- * 1. API에서 state 토큰 발급
- * 2. 브라우저 즉시 열기
- * 3. 사용자가 웹에서 허용하면 토큰 수신
+ * Complete Argos CLI login through a browser-mediated authorization flow.
+ *
+ * The function obtains a server-generated state and authentication URL, opens
+ * only an HTTP(S) URL through the platform browser launcher, polls the API for
+ * authorization, and finally resolves the authenticated user. Polling tolerates
+ * transient API failures but fails when the authorization is denied or the
+ * bounded 15-minute polling window expires.
+ *
+ * @param apiUrl Base URL of the Argos API used for request, poll, and user calls.
+ * @returns The issued token and authenticated user after browser authorization.
+ * @throws {Error} When the initial request fails, the browser URL is invalid,
+ * authorization is denied, or the polling window expires.
  */
 export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
   // Step 1: state 발급
