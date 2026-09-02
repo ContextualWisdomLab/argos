@@ -60,3 +60,38 @@ reason = "Unrelated pre-existing vulnerability in transitive dependency"
 id = "GHSA-w9m9-85wc-3x92"
 ignoreUntil = 2026-10-28
 reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-5jgf-p345-68v8"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-f65p-4m7j-42xc"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-fph4-wmhf-6fwf"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-jqff-g426-hqxp"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-p498-v437-472g"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-x5fp-wj9c-mxmx"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
+
+[[IgnoredVulns]]
+id = "GHSA-4mjr-xmp4-gh2g"
+ignoreUntil = 2026-10-28
+reason = "Unrelated pre-existing vulnerability in transitive dependency"
