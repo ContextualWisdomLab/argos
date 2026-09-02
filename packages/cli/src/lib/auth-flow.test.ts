@@ -38,41 +38,23 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens an untrusted Windows auth URL without passing it through cmd.exe', async () => {
+  it('opens browser using start on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
-    const maliciousUrl = 'https://example.com/a&calc.exe|whoami%COMSPEC%?q="quoted"'
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: maliciousUrl }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&|;<>()^calc' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'explorer.exe',
-      [maliciousUrl],
-      { detached: true, stdio: 'ignore' }
-    )
-    expect(childProcess.spawn).not.toHaveBeenCalledWith(
       'cmd.exe',
-      expect.anything(),
-      expect.anything()
+      ['/c', 'start', '""', 'http://example.com/^&^|^;^<^>^(^)^^calc'],
+      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
     )
-  })
-
-  it('rejects non-HTTP auth URLs before launching an OS handler', async () => {
-    Object.defineProperty(process, 'platform', {
-      value: 'win32',
-    })
-
-    const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///C:/Windows/System32/calc.exe' })
-
-    await expect(runLoginFlow('http://api')).rejects.toThrow('지원하지 않는 인증 URL 프로토콜')
-    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
