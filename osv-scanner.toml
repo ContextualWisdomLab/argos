@@ -52,3 +52,18 @@ id = "GHSA-ggr8-5vv4-36mx"
 
 [[IgnoredVulns]]
 id = "GHSA-w9m9-85wc-3x92"
+
+[[IgnoredVulns]]
+id = "GHSA-p498-v437-472g"
+ignoreUntil = 2026-10-28
+reason = "Dev dependency @humanfs/node is only used via eslint."
+
+[[IgnoredVulns]]
+id = "GHSA-4mjr-xmp4-gh2g"
+ignoreUntil = 2026-10-28
+reason = "qs is deeply nested under CLI/dev dependencies."
+
+[[IgnoredVulns]]
+id = "GHSA-x5fp-wj9c-mxmx"
+ignoreUntil = 2026-10-28
+reason = "qs is deeply nested under CLI/dev dependencies."
