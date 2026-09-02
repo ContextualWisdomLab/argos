@@ -1,6 +1,8 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 
+import { PASSWORD_INPUT_MAX_CHARACTERS } from '@argos/shared'
+
 import { authConfig } from './auth.config'
 import { issueUserAuthResult, loginUser } from './lib/server/auth-actions'
 import { verifyAdminImpersonationToken } from './lib/server/admin-auth'
@@ -29,7 +31,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         const email = credentials?.email
         const password = credentials?.password
-        if (typeof email !== 'string' || typeof password !== 'string') {
+        if (
+          typeof email !== 'string' ||
+          typeof password !== 'string' ||
+          password.length > PASSWORD_INPUT_MAX_CHARACTERS
+        ) {
           return null
         }
 
