@@ -12,6 +12,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/argos-ai"><img src="https://img.shields.io/npm/v/argos-ai.svg" alt="npm"/></a>
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"/>
+  <a href="https://deepwiki.com/ContextualWisdomLab/argos"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"/></a>
 </p>
 
 ---
@@ -40,7 +41,7 @@ Claude Code · Codex · Cursor · Copilot 대화창에 아래 프롬프트를 �
 
 ```
 이 프로젝트에 Argos를 설치해줘. Argos는 Claude Code · Codex 팀을 위한 사용량 애널리틱스야.
-참고: https://github.com/vibemafiaclub/argos
+참고: https://github.com/ContextualWisdomLab/argos
 
 다음 3단계로 진행:
 
@@ -86,7 +87,7 @@ Codex 를 쓴다면, codex 실행 후 `/hooks` 에서 argos hook 들을 trust �
 요구사항: PostgreSQL 하나 + 앱 컨테이너 하나.
 
 ```bash
-git clone https://github.com/vibemafiaclub/argos
+git clone https://github.com/ContextualWisdomLab/argos
 cd argos
 docker compose up
 ```
@@ -119,10 +120,7 @@ argos --api-url https://your-instance.example.com
 - Privacy: https://argos-ai.xyz/privacy
 - Architecture: [docs/code-architecture.md](docs/code-architecture.md)
 - PRD: [docs/prd.md](docs/prd.md)
-
-## 자율 주행 하네스
-
-이 레포는 [`greatSumini/cc-system`](https://github.com/greatSumini/cc-system) 의 자율 주행 하네스를 이식해 쓴다. `scripts/run-server.py` 를 돌리면 ideation → plan-and-build → commit → check → rollback 루프가 반복되며, 이터레이션별 산출물은 `iterations/<N>-<timestamp>/` 아래에 남는다. 하네스가 spawn 하는 서브 세션에는 `HARNESS_HEADLESS=1` 이 주입돼 사용자 확인 단계가 자동 승인된다 — 쉘에서 이 변수를 직접 export 하지 말 것 (인터랙티브 세션이 무인 모드로 튄다). 트리거는 레포 관리자(메인테이너) 수동.
+- Ask DeepWiki: https://deepwiki.com/ContextualWisdomLab/argos
 
 ## License
 
