@@ -9,7 +9,7 @@
 ## 1. 개요
 
 ### 제품 한 줄 정의
-Argos는 Claude Code를 사용하는 개발팀이 팀 전체의 AI 사용 패턴을 추적하고 분석할 수 있는 오픈소스 옵저버빌리티 도구다.
+Argos는 Claude Code를 사용하는 개발팀이 팀 전체의 AI 사용 패턴을 추적하고 분석할 수 있도록 소스가 공개된 옵저버빌리티 도구다.
 
 ### 배경 및 문제 정의
 Claude Code를 적극적으로 사용하는 AI-native 팀에는 다음과 같은 문제가 존재한다.
@@ -30,10 +30,10 @@ Argos는 Claude Code의 hooks 시스템을 활용해 모든 tool 호출 이벤�
 - 팀 전체의 Claude Code 사용 이벤트(tool 호출, skill 호출, subagent 호출)를 수집하는 파이프라인을 구축한다.
 - 토큰 소모량 및 추정 비용을 사용자/프로젝트 단위로 집계한다.
 - skill/subagent의 호출 빈도를 추적해 활용되지 않는 항목을 식별한다.
-- 누구나 자신의 인프라에 배포해 사용할 수 있도록 오픈소스로 공개한다.
+- 누구나 자신의 인프라에서 평가하고 셀프호스팅할 수 있도록 공개 저장소로 제공한다.
 
 ### 성공 지표
-Argos는 현재 오픈소스로서만 배포되므로, 비즈니스 지표 대신 아래 기술적/실용적 지표를 성공 기준으로 삼는다.
+Argos는 현재 공개 소스/셀프호스팅 중심으로 제공되므로, 비즈니스 지표 대신 아래 기술적/실용적 지표를 성공 기준으로 삼는다.
 
 | 지표 | 목표 |
 |---|---|
@@ -56,7 +56,7 @@ Argos는 현재 오픈소스로서만 배포되므로, 비즈니스 지표 대�
 - `argos login` 한 번으로 설정이 완료되어야 하며, 이후 별도 행동이 필요하지 않아야 한다
 - 자신의 사용 패턴을 대시보드에서 확인할 수 있다
 
-### Tertiary User: 오픈소스 기여자 / 셀프호스팅 사용자
+### Tertiary User: 외부 기여자 / 셀프호스팅 사용자
 - Argos를 자신의 인프라에 배포해 사용하고 싶은 팀
 - Docker Compose 또는 Railway/Supabase 조합으로 배포 가능해야 한다
 
@@ -198,7 +198,7 @@ Argos는 현재 오픈소스로서만 배포되므로, 비즈니스 지표 대�
 | Claude 외 모델 지원 | v2로 이관 |
 | 데이터 보존 기간 설정 | v2로 이관 |
 | 역할 기반 권한 세분화 (RBAC) | OWNER/MEMBER 2단계만 지원 |
-| SaaS 호스팅 / 과금 | 현재 오픈소스 전용 |
+| SaaS 호스팅 / 과금 | 현재 공개 소스/셀프호스팅 중심; SaaS/과금은 MVP 범위 아님 |
 | 모바일 지원 | 데스크톱 전용 (1280px+) |
 
 ---
@@ -212,10 +212,12 @@ Argos는 현재 오픈소스로서만 배포되므로, 비즈니스 지표 대�
 
 ---
 
-## 9. 오픈소스 전략
+## 9. 소스 공개 및 배포 전략
 
-- 라이선스: MIT
-- 배포: GitHub 공개 저장소
-- CLI는 npm에 `argos-ai`로 배포
-- 셀프호스팅 가이드를 README에 포함
-- 환경 변수로 DB URL 및 OAuth 자격증명을 주입하는 방식으로 어느 클라우드에서도 배포 가능
+- 소스 권리/라이선스: **미확정**. 이 저장소는 `vibemafiaclub/argos`의 fork이며, 현재 확인된 upstream/root 및 CLI package metadata만으로 inherited source의 MIT 또는 다른 permissive grant를 입증할 수 없다.
+- 배포: GitHub 공개 저장소.
+- CLI는 npm에 `argos-ai`로 배포되지만, package publication 자체가 source-license 권리를 증명하지는 않는다.
+- 셀프호스팅 가이드를 README에 포함한다.
+- 환경 변수로 DB URL 및 인증 자격증명을 주입하는 방식으로 어느 클라우드에서도 배포 가능하도록 설계한다.
+
+상업 재배포나 다른 ContextualWisdomLab 제품으로의 소스 통합은 authoritative upstream rights 또는 contributor/copyright-holder evidence가 확인될 때까지 보류한다. 제3자 dependency license는 Argos 원저작 소스의 라이선스를 대신하지 않는다.
