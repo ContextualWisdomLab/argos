@@ -80,6 +80,108 @@ function currentEventButtons() {
 }
 
 describe('SessionActivityRibbon accessibility semantics', () => {
+
+  it('identifies Agent message aria label', () => {
+    const agentEvents = [
+      {
+        kind: 'message',
+        role: 'ASSISTANT',
+        content: 'I will list the files',
+        timestamp: '2026-08-16T00:00:10.000Z',
+        sequence: 2,
+        inputTokens: 10,
+        outputTokens: 20,
+        estimatedCostUsd: 0.0001,
+        model: 'claude',
+      },
+    ];
+    const agentGroups = [
+      {
+        kind: 'single',
+        event: agentEvents[0],
+        idx: 0,
+      }
+    ];
+    const { getByRole } = render(
+      <SessionActivityRibbon
+        events={agentEvents as unknown as TimelineEvent[]}
+        groups={agentGroups as unknown as TimelineGroup[]}
+        selectedIdx={null}
+        onSelect={vi.fn()}
+        sessionStartedAt="2026-08-16T00:00:00.000Z"
+        expandedGroups={new Set()}
+        onToggleGroup={vi.fn()}
+      />
+    )
+    expect(getByRole('button', { name: 'Agent message 1' })).toBeInTheDocument();
+  })
+
+  it('identifies Skill and Subagent aria label', () => {
+    const toolEvents = [
+      {
+        kind: 'tool',
+        toolName: 'Skill',
+        isSkillCall: true,
+        skillName: 'list_files',
+        isAgentCall: false,
+        agentType: null,
+        durationMs: 100,
+        timestamp: '2026-08-16T00:00:15.000Z',
+      },
+      {
+        kind: 'tool',
+        toolName: 'Agent',
+        isSkillCall: false,
+        skillName: null,
+        isAgentCall: true,
+        agentType: 'coder',
+        durationMs: 100,
+        timestamp: '2026-08-16T00:00:16.000Z',
+      },
+      {
+        kind: 'tool',
+        toolName: 'read_file',
+        isSkillCall: false,
+        skillName: null,
+        isAgentCall: false,
+        agentType: null,
+        durationMs: 100,
+        timestamp: '2026-08-16T00:00:17.000Z',
+      }
+    ];
+    const toolGroups = [
+      {
+        kind: 'single',
+        event: toolEvents[0],
+        idx: 0,
+      },
+      {
+        kind: 'single',
+        event: toolEvents[1],
+        idx: 1,
+      },
+      {
+        kind: 'single',
+        event: toolEvents[2],
+        idx: 2,
+      }
+    ];
+    const { getByRole } = render(
+      <SessionActivityRibbon
+        events={toolEvents as unknown as TimelineEvent[]}
+        groups={toolGroups as unknown as TimelineGroup[]}
+        selectedIdx={null}
+        onSelect={vi.fn()}
+        sessionStartedAt="2026-08-16T00:00:00.000Z"
+        expandedGroups={new Set()}
+        onToggleGroup={vi.fn()}
+      />
+    )
+    expect(getByRole('button', { name: 'Skill list_files 1' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Subagent coder 2' })).toBeInTheDocument();
+    expect(getByRole('button', { name: 'Tool read_file 3' })).toBeInTheDocument();
+  })
+
   afterEach(cleanup)
 
   it('identifies exactly one visually current event without turning event actions into toggle buttons', () => {

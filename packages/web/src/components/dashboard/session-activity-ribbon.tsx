@@ -34,7 +34,7 @@ type HoverState =
 function getEventAriaLabel(event: TimelineEvent, idx: number): string {
   const num = idx + 1;
   if (event.kind === 'message' && event.role === 'HUMAN') {
-    const preview = formatSlashCommandText(event.content).slice(0, 50);
+    const preview = (event.content ? formatSlashCommandText(event.content) : '').slice(0, 50);
     return `User message ${num}: ${preview}`;
   }
   if (event.kind === 'message') {
