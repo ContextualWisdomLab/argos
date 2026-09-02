@@ -5,6 +5,11 @@ export interface AdmittedPasswordLoginCredentials {
   password: string
 }
 
+export interface RawPasswordLoginCredentials {
+  email?: unknown
+  password?: unknown
+}
+
 /**
  * Admit password credentials through the shared bcrypt-compatible contract.
  *
@@ -14,7 +19,7 @@ export interface AdmittedPasswordLoginCredentials {
  * comparison is attempted.
  */
 export function admitPasswordLoginCredentials(
-  credentials: Record<string, unknown> | undefined,
+  credentials: RawPasswordLoginCredentials | null | undefined,
 ): AdmittedPasswordLoginCredentials | null {
   const parsed = LoginRequestSchema.safeParse({
     email: credentials?.email,
