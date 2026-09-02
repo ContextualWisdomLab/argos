@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+import { Loader2 } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -110,7 +111,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             </Alert>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Updating...' : 'Update password'}
+            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> Updating...</> : 'Update password'}
           </Button>
         </form>
       </CardContent>
