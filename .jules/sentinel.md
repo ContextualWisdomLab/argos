@@ -42,3 +42,7 @@
 **Vulnerability:** Known medium-severity vulnerabilities discovered by Trivy in `qs` (GHSA-4mjr-xmp4-gh2g, GHSA-x5fp-wj9c-mxmx) and `@humanfs/node` (GHSA-p498-v437-472g).
 **Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
 **Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
+## 2026-09-02 - [Fix insecure Random Number Generation in temp file creation]
+**Vulnerability:** The temporary file name for atomic updates (`atomicTmp`) was generated using `Math.random().toString(36).slice(2)`.
+**Learning:** `Math.random()` does not provide cryptographically secure random numbers and its outputs can be predicted. When used in temporary file names, this can make the application vulnerable to race conditions, insecure temporary file creation, or file-system-based attacks if an attacker guesses the filename.
+**Prevention:** Use `crypto.randomUUID()` (or a similarly secure PRNG from the `crypto` module) instead of `Math.random()` to generate safe, unpredictable random strings for temporary or atomic file names.
