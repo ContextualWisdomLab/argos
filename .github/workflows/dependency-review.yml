@@ -4,24 +4,13 @@ on:
   pull_request:
     branches: [main, developmental]
 
-permissions:
-  contents: read
-  pull-requests: read
+concurrency:
+  group: dependency-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   dependency-review:
-    name: dependency-review
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Dependency review
-        continue-on-error: true
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: moderate
-      - name: Dependency review availability note
-        if: always()
-        run: |
-          echo "Dependency Review requires GitHub Dependency Graph to be enabled for this repository."
-          echo "OSV-Scanner remains the blocking dependency vulnerability gate."
+    uses: ContextualWisdomLab/.github/.github/workflows/dependency-review.yml@main
+    with:
+      fail_on_severity: moderate
+      continue_on_error: true
