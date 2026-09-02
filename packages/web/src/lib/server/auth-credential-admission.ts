@@ -1,10 +1,12 @@
 import { LoginRequestSchema } from '@argos/shared'
 
+/** Credentials that have passed the shared login admission contract. */
 export interface AdmittedPasswordLoginCredentials {
   email: string
   password: string
 }
 
+/** Untrusted credential fields received from an authentication adapter. */
 export interface RawPasswordLoginCredentials {
   email?: unknown
   password?: unknown
