@@ -38,3 +38,7 @@
 **Vulnerability:** Known medium-severity vulnerabilities discovered by Trivy in `postcss-selector-parser` (CVE-2026-40345 / GHSA-w9m9-85wc-3x92).
 **Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
 **Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
+## 2026-09-02 - [Fix vulnerable dependencies via pnpm overrides (qs, @humanfs/node)]
+**Vulnerability:** Known medium-severity vulnerabilities discovered by Trivy in `qs` (GHSA-4mjr-xmp4-gh2g, GHSA-x5fp-wj9c-mxmx) and `@humanfs/node` (GHSA-p498-v437-472g).
+**Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
+**Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
