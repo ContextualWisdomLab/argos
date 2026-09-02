@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-05-18 - CSV Injection (Formula Injection) in Exports
+**Vulnerability:** The application was vulnerable to CSV Injection in the session data export functionality because user-controlled strings (e.g., chat messages) were being written directly to CSV cells without sanitization for spreadsheet formulas.
+**Learning:** Developers often forget that CSVs are parsed by spreadsheet tools (like Excel) which will evaluate cells starting with `=`, `+`, `-`, or `@` as formulas, potentially leading to arbitrary code execution or data exfiltration on the administrator's machine. Leading whitespace (like `\t` or `\r`) must also be checked as parsers ignore it.
+**Prevention:** Always sanitize data intended for CSV exports. Specifically, check if the string begins with dangerous formula characters (including accounting for leading whitespace) and prefix the field with a single quote (`'`) to force the spreadsheet application to treat the cell as plain text.
