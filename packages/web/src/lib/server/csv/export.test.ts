@@ -9,6 +9,7 @@ describe('csvField', () => {
 
   it('handles normal strings and numbers', () => {
     expect(csvField('hello')).toBe('hello')
+    expect(csvField('  hello')).toBe('  hello')
     expect(csvField(123)).toBe('123')
     expect(csvField(0)).toBe('0')
     expect(csvField(-10)).toBe('-10')
@@ -23,7 +24,23 @@ describe('csvField', () => {
     expect(csvField('\tdata')).toBe("'\tdata")
     // \rdata contains \r, so it will be wrapped in quotes
     expect(csvField('\rdata')).toBe("\"'\rdata\"")
+    // \ndata contains \n, so it will be wrapped in quotes
+    expect(csvField('\ndata')).toBe("\"'\ndata\"")
     // numbers shouldn't be escaped even if they start with - or + (though + doesn't normally happen in JS numbers without string conversion, - does)
+  })
+
+  it('blocks formula markers hidden behind leading spaces and locale variants', () => {
+    expect(csvField(' =1+2')).toBe("' =1+2")
+    expect(csvField('   +1+2')).toBe("'   +1+2")
+    expect(csvField(' -1+2')).toBe("' -1+2")
+    expect(csvField(' @SUM(A1:A2)')).toBe("' @SUM(A1:A2)")
+    expect(csvField(' \t=1+2')).toBe("' \t=1+2")
+    expect(csvField(' \r=1+2')).toBe("\"' \r=1+2\"")
+    expect(csvField(' \n=1+2')).toBe("\"' \n=1+2\"")
+    expect(csvField('＝1+2')).toBe("'＝1+2")
+    expect(csvField(' ＋1+2')).toBe("' ＋1+2")
+    expect(csvField('－1+2')).toBe("'－1+2")
+    expect(csvField(' ＠SUM(A1:A2)')).toBe("' ＠SUM(A1:A2)")
   })
 
   it('wraps fields with quotes and escapes internal quotes', () => {
