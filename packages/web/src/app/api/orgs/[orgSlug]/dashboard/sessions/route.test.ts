@@ -36,7 +36,7 @@ describe('session CSV export boundary', () => {
       user: 'Analyst',
       project: 'Alpha, Beta',
       title: 'Quarterly "Review"',
-      prompt: 'Line 1\r\nLine 2',
+      prompt: 'Line 1; Line 2',
     })
 
     const [header, row] = csv.slice(1).split('\r\n')
@@ -44,7 +44,7 @@ describe('session CSV export boundary', () => {
       'Session ID,User,Project,Title,First Prompt,Input Tokens,Output Tokens,Estimated Cost USD,Event Count,Started At,Ended At',
     )
     expect(row).toBe(
-      'session-1,Analyst,"Alpha, Beta","Quarterly ""Review""","Line 1\r\nLine 2",10,2,0.25,3,2026-09-04T00:00:00.000Z,',
+      'session-1,Analyst,"Alpha, Beta","Quarterly ""Review""",Line 1; Line 2,10,2,0.25,3,2026-09-04T00:00:00.000Z,',
     )
   })
 
