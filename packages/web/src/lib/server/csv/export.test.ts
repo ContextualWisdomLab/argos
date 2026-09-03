@@ -35,6 +35,12 @@ describe('csvField', () => {
     expect(csvField(100)).toBe('100')
   })
 
+  it('blocks formula markers hidden behind leading spaces and locale variants', () => {
+    expect(csvField(' =1+2')).toBe("' =1+2")
+    expect(csvField('   +1+2')).toBe("'   +1+2")
+    expect(csvField(' -1+2')).toBe("' -1+2")
+  })
+
   it('escapes formula characters with leading spaces', () => {
     expect(csvField(' =cmd|')).toBe("' =cmd|")
     expect(csvField('\t +1')).toBe("'\t +1")
