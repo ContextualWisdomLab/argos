@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
 // Create a stable reference to track NextAuth config
-const capturedConfig: any = { value: null }
+const capturedConfig: { value: unknown } = { value: null }
 
 vi.mock('server-only', () => ({}))
 vi.mock('@/lib/server/db', () => ({
@@ -36,22 +36,22 @@ vi.mock('next-auth/providers/credentials', () => ({
 }))
 
 describe('NextAuth Configuration Security', () => {
-  let authorize: any
-  let loginUser: any
-  let verifyAdminImpersonationToken: any
-  let issueUserAuthResult: any
+  let authorize: (...args: unknown[]) => Promise<unknown>
+  let loginUser: import("vitest").Mock
+  let verifyAdminImpersonationToken: import("vitest").Mock
+  let issueUserAuthResult: import("vitest").Mock
 
   beforeEach(async () => {
     vi.resetModules()
-    const authActions = await import('./lib/server/auth-actions')
+    const authActions = await import('./lib/server/auth-actions.js')
     loginUser = vi.mocked(authActions.loginUser)
     issueUserAuthResult = vi.mocked(authActions.issueUserAuthResult)
 
-    const adminAuth = await import('./lib/server/admin-auth')
+    const adminAuth = await import('./lib/server/admin-auth.js')
     verifyAdminImpersonationToken = vi.mocked(adminAuth.verifyAdminImpersonationToken)
 
-    await import('./auth')
-    const config = capturedConfig.value
+    await import('./auth.js')
+    const config = capturedConfig.value as { providers: [{ authorize: (...args: unknown[]) => Promise<unknown> }] }
     if (!config) {
         throw new Error('Config missing from mock')
     }
@@ -107,8 +107,8 @@ describe('NextAuth Configuration Security', () => {
 
     const result = await authorize({ impersonationToken: 'valid-token' })
     expect(result).not.toBeNull()
-    expect(result.id).toBe('user-1')
-    expect(result.argosToken).toBe('impersonation-token')
+    expect((result as { id: string }).id).toBe('user-1')
+    expect((result as { argosToken: string }).argosToken).toBe('impersonation-token')
   })
 
   it('rejects invalid admin impersonation tokens', async () => {
