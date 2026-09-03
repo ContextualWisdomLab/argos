@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { Copy, Link2, LogIn, LogOut, Search, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -259,7 +259,14 @@ export function AdminDashboard() {
                     disabled={openingDashboard}
                   >
                     <LogIn className="size-4" aria-hidden="true" />
-                    {openingDashboard ? 'Opening...' : 'Open dashboard as user'}
+                    {openingDashboard ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                        Opening...
+                      </>
+                    ) : (
+                      'Open dashboard as user'
+                    )}
                   </Button>
 
                   <Button
@@ -269,7 +276,14 @@ export function AdminDashboard() {
                     disabled={creatingLink}
                   >
                     <Link2 className="size-4" aria-hidden="true" />
-                    {creatingLink ? 'Creating...' : 'Create reset link'}
+                    {creatingLink ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                        Creating...
+                      </>
+                    ) : (
+                      'Create reset link'
+                    )}
                   </Button>
 
                   {resetLink && (
