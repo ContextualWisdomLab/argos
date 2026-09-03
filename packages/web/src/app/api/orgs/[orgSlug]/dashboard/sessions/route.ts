@@ -75,8 +75,9 @@ function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
 
-  // 🛡️ Sentinel: Prevent CSV Injection (Formula Injection) by prefixing potentially dangerous leading characters
-  if (/^[\s]*[=+\-@\t\r]/.test(text)) {
+  // OWASP guidance: No universal sanitizer is reliable across all apps.
+  // This mitigates standard Excel CSV formula injection at the cost of mutating data.
+  if (/^[\s\x00-\x1F]*[=+\-@\t\r＝＋－＠]/.test(text)) {
     text = "'" + text
   }
 
