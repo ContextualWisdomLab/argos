@@ -6,4 +6,4 @@
 
 ## 2023-11-20 - [Avoid Date.parse inside Array.prototype.sort]
 **Learning:** Parsing timestamps inside Array.prototype.sort via Date.parse creates an O(N log N) performance bottleneck, as the parse happens every time two items are compared.
-**Action:** Use a Schwartzian transform (map to pre-parse the date, sort, and map back) to perform the parsing in a single O(N) pass before sorting.
+**Action:** Use a Schwartzian transform (map to pre-parse the date, sort, and map back) to perform the parsing in a single O(N) pass before sorting. Ensure the pre-parsed value is kept for later use if applicable to avoid redundant parsing.

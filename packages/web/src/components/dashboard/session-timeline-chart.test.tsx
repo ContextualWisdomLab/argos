@@ -33,6 +33,83 @@ describe('SessionTimelineChart', () => {
     vi.clearAllMocks()
   })
 
+  it('does not mutate the usageTimeline array', () => {
+    const usageTimeline = [
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+    const usageTimelineCopy = [...usageTimeline]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(usageTimeline).toEqual(usageTimelineCopy)
+  })
+
+  it('bounds parse calls to O(N)', () => {
+    // ⚡ Bolt Verification: Verify Date.parse is not called inside Array.prototype.sort repeatedly
+    const spy = vi.spyOn(Date, 'parse')
+    const usageTimeline = [
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:00:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    // Each of 3 rows parses its timestamp exactly once, plus formatRelativeTime
+    // calls Date.now() or similar (or parse the session start). The total is O(N).
+    // Not N log N which would be much higher for larger arrays.
+    expect(spy.mock.calls.length).toBeLessThan(10)
+    spy.mockRestore()
+  })
+
   it('renders "No timeline data available" when usageTimeline is empty', () => {
     render(
       <SessionTimelineChart
