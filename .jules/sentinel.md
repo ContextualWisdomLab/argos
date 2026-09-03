@@ -34,3 +34,7 @@
 **Vulnerability:** CSV 내보내기 기능에서 사용자의 입력값이 검증 없이 엑셀 등의 스프레드시트에서 수식으로 해석될 수 있는 문자(`=`, `+`, `-`, `@`, `\t`, `\r`)로 시작할 때, 매크로 주입(CSV Formula Injection) 공격이 발생할 수 있었습니다.
 **Learning:** 엑셀 등 외부 프로그램에서 열리는 CSV 파일은 자체적인 보안 위협(매크로 실행 등)을 가질 수 있습니다. 단순히 특수문자를 이스케이프하는 것 이상으로, 스프레드시트 수식 문자에 대한 보호가 필요합니다. 숫자 타입은 스프레드시트 서식을 유지하기 위해 제외해야 한다는 점도 배웠습니다.
 **Prevention:** CSV로 내보내는 모든 필드에 대해 `csvField` 유틸리티와 같은 공통 함수를 사용하고, 문자열이 수식 시작 문자로 시작할 경우 앞에 작은따옴표(`'`)를 붙여 평문으로 처리되도록 강제해야 합니다.
+## 2026-09-03 - [Fix vulnerable dependencies via pnpm overrides (OSV-Scanner)]
+**Vulnerability:** OSV-Scanner를 통해 `@humanfs/node`, `browserslist`, `deepmerge-ts`, `fast-uri`, `postcss-selector-parser`, `qs` 패키지에서 알려진 취약점이 발견되었습니다 (GHSA-p498-v437-472g, GHSA-73wf-gq98-2v4g 등).
+**Learning:** 깊게 중첩된 의존성 패키지들(transitive dependencies)에서 발견된 취약점은 애플리케이션 전체에 위험을 초래할 수 있으므로, 주기적인 의존성 스캔 및 버전 강제가 필수적입니다.
+**Prevention:** 루트 `package.json`의 `pnpm.overrides` 블록을 활용하여 취약점이 패치된 안전한 버전으로 강제 업데이트(`pnpm install` 포함)함으로써 모든 의존성 경로에 대해 일관되게 방어할 수 있습니다.
