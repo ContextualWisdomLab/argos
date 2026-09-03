@@ -84,7 +84,7 @@ function csvField(value: string | number | null | undefined) {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
-function buildSessionsCsv(sessions: SessionWithInclude[]) {
+export function buildSessionsCsv(sessions: SessionWithInclude[]) {
   const headers = [
     'Session ID',
     'User',
