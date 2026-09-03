@@ -22,7 +22,7 @@ interface SessionTimelineChartProps {
 
 interface ToolCallPoint {
   toolName: string
-  parsedTimestamp: number
+  timestamp: string
 }
 
 interface ChartDataItem {
@@ -67,11 +67,13 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
+  // [Bolt: Performance Optimization] Use native string comparison for ISO 8601 timestamps
+  // Impact: Avoids repeated O(N log N) Date.parse() allocations during array sorting
   const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+    (a, b) => a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
   )
   const sortedTools = [...toolCalls].sort(
-    (a, b) => a.parsedTimestamp - b.parsedTimestamp
+    (a, b) => a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
   )
 
   let toolIndex = 0
@@ -82,7 +84,7 @@ function buildChartData(
 
     while (
       toolIndex < sortedTools.length &&
-      sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
+      Date.parse(sortedTools[toolIndex]!.timestamp) <= currentTimestamp
     ) {
       const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
       cumulativeToolCounts.set(
@@ -159,7 +161,7 @@ export function SessionTimelineChart({
       .filter((message) => message.role === 'TOOL')
       .map((message) => ({
         toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: Date.parse(message.timestamp),
+        timestamp: message.timestamp,
       }))
   }, [messages])
 

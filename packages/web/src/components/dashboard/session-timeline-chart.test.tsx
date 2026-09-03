@@ -275,4 +275,60 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+
+  it('handles equal timestamps and lexicographical sorting correctly', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+
+    const messages: SessionDetail['messages'] = [
+      {
+        role: 'TOOL',
+        content: 'Alpha output',
+        sequence: 1,
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'alpha',
+      },
+      {
+        role: 'TOOL',
+        content: 'Beta output',
+        sequence: 2,
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'beta',
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={messages}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    const chartData = readChartData()
+    expect(chartData[0].toolSummary).toBe('alpha, beta')
+    expect(chartData[1].toolSummary).toBe('alpha, beta')
+  })
 })
