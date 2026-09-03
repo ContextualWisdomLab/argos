@@ -30,8 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-
-## 2026-09-03 - NextAuth password admission aligned with the bcrypt byte boundary
-**Finding:** `packages/web/src/auth.ts` forwarded Credentials-provider passwords after checking only a coarse character ceiling. The shared authentication contract already rejects passwords above bcrypt's 72-byte UTF-8 input boundary, but this adapter did not reuse it.
-**Evidence:** bcrypt.js documents a 72-byte maximum input and states that the library does not implicitly enforce that limit for compatibility; callers should check it when necessary. `packages/shared/src/schemas/auth.ts` already combines a 1,024-character work bound with an exact UTF-8 byte check.
-**Repair:** Route the NextAuth Credentials adapter through the shared `LoginRequestSchema` before `loginUser`. Regression coverage includes 72-byte ASCII acceptance, 73-byte rejection, multibyte UTF-8 rejection, and the coarse oversized-input ceiling. Do not describe the repair as proof that bcrypt cost grows with password length; the contract is input admission and truncation prevention before the expensive verifier.
+## 2025-02-18 - [NextAuth credentials 인증 콜백에서의 bcrypt DoS 취약점 해결]
+**Vulnerability:** `packages/web/src/auth.ts` 의 NextAuth credentials provider 에서 로그인 처리를 위해 `loginUser` 에 `password` 를 넘기기 전 길이 검증을 누락하여, `bcrypt.compare` 실행 시 서버 CPU 리소스가 고갈되는 DoS 취약점이 있었습니다.
+**Learning:** NextAuth credentials provider 는 클라이언트로부터 직접적인 원시 데이터를 받습니다. `bcrypt` 연산 시간은 입력 크기(최대 72 바이트이지만 내부 문자열 파싱 포함)에 비례하여 증가하므로, 비밀번호 해시 전 입력 길이를 강제로 제한하는 것이 DoS 방어에 필수적입니다.
+**Prevention:** NextAuth authorize 콜백을 포함한 모든 인증 진입점에서 비밀번호 필드의 최대 길이를 강제로 확인하도록 처리해야 합니다.

@@ -1,8 +1,9 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 
+import { PASSWORD_INPUT_MAX_CHARACTERS } from '@argos/shared'
+
 import { authConfig } from './auth.config'
-import { admitPasswordLoginCredentials } from './lib/server/auth-credential-admission'
 import { issueUserAuthResult, loginUser } from './lib/server/auth-actions'
 import { verifyAdminImpersonationToken } from './lib/server/admin-auth'
 
@@ -28,10 +29,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return { ...user, argosToken: token }
         }
 
-        const admittedCredentials = admitPasswordLoginCredentials(credentials)
-        if (!admittedCredentials) return null
+        const email = credentials?.email
+        const password = credentials?.password
+        if (
+          typeof email !== 'string' ||
+          typeof password !== 'string' ||
+          password.length > PASSWORD_INPUT_MAX_CHARACTERS
+        ) {
+          return null
+        }
 
-        const result = await loginUser(admittedCredentials)
+        const result = await loginUser({ email, password })
         if (!result) return null
 
         const { token, user } = result
