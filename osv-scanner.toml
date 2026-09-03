@@ -4,56 +4,39 @@
 # fixable production findings — bump the dependency instead.
 
 [[IgnoredVulns]]
-id = "GHSA-p498-v437-472g"
+id = "GHSA-mh99-v99m-4gvg"
 ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in @humanfs/node"
+# brace-expansion ReDoS (CVE-2025-5889, CVSS 7.5). GitHub's advisory publishes a
+# single flat affected range "<= 5.0.7" (fix: 5.0.8), so every 1.x / 2.x release
+# is flagged even though 5.0.8 is the only "fixed" version. The only brace-expansion
+# instances that remain on the 1.x / 2.x line in this repo are DEV-ONLY transitive
+# deps of the ESLint lint toolchain, pulled through minimatch@3.1.5
+# (@eslint/config-array, @eslint/eslintrc, eslint-plugin-import,
+# eslint-plugin-jsx-a11y, eslint-plugin-react). minimatch 3.x calls
+# brace-expansion as a function (CJS callable default export); brace-expansion 5.0.8
+# is ESM-only and drops that export, so forcing 5.0.8 breaks `next build`/eslint with
+# "expand is not a function". No published minimatch version depends on
+# brace-expansion >= 5, and no current ESLint-plugin release drops minimatch 3.x, so
+# the finding is not fixable without forking the lint toolchain.
+# The production runtime bundle (@argos/web via Next.js) does NOT ship the lint
+# toolchain, and the prod-reachable 5.x line is pinned to the fixed 5.0.8 in the root
+# pnpm.overrides. This mirrors the org-central trivy-fs gate, which already suppresses
+# dev/test dependencies. Re-evaluate when the ESLint ecosystem moves off minimatch 3.x.
+reason = "brace-expansion <5.0.8 only reachable via dev-only ESLint toolchain (minimatch@3.1.5, CJS-callable); 5.0.8 is ESM-only and breaks the build. Prod 5.x line pinned to fixed 5.0.8."
 
 [[IgnoredVulns]]
-id = "GHSA-73wf-gq98-2v4g"
+id = "GHSA-3jxr-9vmj-r5cp"
 ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in browserslist"
-
-[[IgnoredVulns]]
-id = "GHSA-c83g-rgw3-j3cx"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in browserslist"
-
-[[IgnoredVulns]]
-id = "GHSA-ggr8-5vv4-36mx"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in deepmerge-ts"
-
-[[IgnoredVulns]]
-id = "GHSA-5jgf-p345-68v8"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in fast-uri"
-
-[[IgnoredVulns]]
-id = "GHSA-f65p-4m7j-42xc"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in fast-uri"
-
-[[IgnoredVulns]]
-id = "GHSA-fph4-wmhf-6fwf"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in fast-uri"
-
-[[IgnoredVulns]]
-id = "GHSA-jqff-g426-hqxp"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in fast-uri"
-
-[[IgnoredVulns]]
-id = "GHSA-w9m9-85wc-3x92"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in postcss-selector-parser"
-
-[[IgnoredVulns]]
-id = "GHSA-4mjr-xmp4-gh2g"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in qs"
-
-[[IgnoredVulns]]
-id = "GHSA-x5fp-wj9c-mxmx"
-ignoreUntil = 2026-10-28
-reason = "Dev dependency vulnerability in qs"
+# brace-expansion ReDoS (CVSS 7.7). Same dev-only exposure as GHSA-mh99 above:
+# the flagged brace-expansion 1.1.15 is pulled ONLY through the ESLint lint
+# toolchain via minimatch@3.1.5. This advisory is genuinely fixed in the 1.x line
+# by 1.1.16, BUT bumping 1.x 1.1.15 -> 1.1.16 would re-introduce the dev-only
+# brace-expansion into the central dependency-review DIFF, where the over-broad
+# GHSA-mh99 flat range ("<= 5.0.7", which still covers 1.1.16) would re-flag it and
+# turn the now-green central dependency-review gate red again. The 1.x line is
+# therefore intentionally pinned base-exact (1.1.15) so the unchanged dev-only dep
+# is not re-evaluated, and both dev-only advisories on it are ignored here with a
+# re-evaluation date. Production runtime (@argos/web via Next.js) does not ship the
+# lint toolchain; the prod-reachable 5.x line is pinned to the fixed 5.0.8. Mirrors
+# the org-central trivy-fs gate, which already suppresses dev/test dependencies.
+reason = "brace-expansion 1.1.15 reachable only via dev-only ESLint toolchain (minimatch@3.1.5); the 1.1.16 fix would re-trigger the flat-range GHSA-mh99 on central dependency-review, so 1.x is pinned base-exact and both dev-only advisories are ignored."
