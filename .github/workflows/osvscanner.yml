@@ -3,9 +3,6 @@ name: OSV-Scanner
 on:
   pull_request:
     branches: [main, developmental]
-    paths-ignore:
-      - "docs/**"
-      - "*.md"
   workflow_dispatch:
 
 permissions:

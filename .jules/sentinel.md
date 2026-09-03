@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-09-03 - [의존성 패키지 취약점 업데이트]
+**Vulnerability:** pnpm-lock.yaml에 취약점이 있는 패키지들(`browserslist`, `deepmerge-ts` 등)이 포함되어 OSV-Scanner 및 Trivy CI 체크에서 실패했습니다.
+**Learning:** 깊게 중첩된 의존성의 취약점은 직접 업데이트할 수 없으므로 `pnpm.overrides`를 사용해야 합니다.
+**Prevention:** 정기적으로 보안 스캐너를 실행하고, 취약점이 발견되면 root `package.json`의 `pnpm.overrides` 블록을 활용하여 패치 버전을 강제 적용하고 `pnpm install`로 lockfile을 업데이트합니다.
