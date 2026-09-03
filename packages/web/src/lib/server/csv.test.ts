@@ -1,33 +1,42 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { sanitizeCsvField } from './csv'
 
-describe('sanitizeCsvField security enhancements', () => {
-  it('prevents CSV Injection by prepending single quotes to formula triggers', () => {
-    expect(sanitizeCsvField('=cmd|C\\calc!A0')).toBe("'=" + "cmd|C\\calc!A0")
-    expect(sanitizeCsvField('+1+2')).toBe("'+1+2")
-    expect(sanitizeCsvField('-SUM(A1:A10)')).toBe("'-SUM(A1:A10)")
-    expect(sanitizeCsvField('@SUM(A1:A10)')).toBe("'@SUM(A1:A10)")
+describe('sanitizeCsvField 보안 경계', () => {
+  it.each([
+    ['=cmd|C\\calc!A0', "'=cmd|C\\calc!A0"],
+    ['+1+2', "'+1+2"],
+    ['-SUM(A1:A10)', "'-SUM(A1:A10)"],
+    ['@SUM(A1:A10)', "'@SUM(A1:A10)"],
+    ['  =1+1', "'  =1+1"],
+    ['\t-2', "'\t-2"],
+    ['\uFEFF=1+1', "'\uFEFF=1+1"],
+  ])('수식 트리거가 있는 값 %j을 데이터로 고정한다', (input, expected) => {
+    expect(sanitizeCsvField(input)).toBe(expected)
   })
 
-  it('handles padded formula triggers correctly', () => {
-    expect(sanitizeCsvField('  =1+1')).toBe("'  =1+1")
-    expect(sanitizeCsvField('\t-2')).toBe("'\t-2")
-  })
-
-  it('escapes quotes correctly while maintaining injection protection', () => {
+  it('수식 트리거와 큰따옴표가 함께 있어도 CSV 이스케이프를 보존한다', () => {
     expect(sanitizeCsvField('="malicious"')).toBe(`"'=""malicious"""`)
-    expect(sanitizeCsvField(null)).toBe('')
-    expect(sanitizeCsvField(undefined)).toBe('')
   })
 
-  it('passes normal text unchanged', () => {
-    expect(sanitizeCsvField('Normal text')).toBe('Normal text')
-    expect(sanitizeCsvField('123')).toBe('123')
+  it.each([
+    [null, ''],
+    [undefined, ''],
+  ])('값이 %s이면 빈 CSV 필드를 반환한다', (input, expected) => {
+    expect(sanitizeCsvField(input)).toBe(expected)
   })
 
-  it('escapes quotes in normal text correctly', () => {
-    expect(sanitizeCsvField('Text "with" quotes')).toBe(`"Text ""with"" quotes"`)
-    expect(sanitizeCsvField('Text, with comma')).toBe(`"Text, with comma"`)
-    expect(sanitizeCsvField('Text\nwith newline')).toBe(`"Text\nwith newline"`)
+  it.each([
+    ['Normal text', 'Normal text'],
+    ['123', '123'],
+  ])('일반 값 %j을 변경하지 않는다', (input, expected) => {
+    expect(sanitizeCsvField(input)).toBe(expected)
+  })
+
+  it.each([
+    ['Text "with" quotes', `"Text ""with"" quotes"`],
+    ['Text, with comma', `"Text, with comma"`],
+    ['Text\nwith newline', `"Text\nwith newline"`],
+  ])('CSV 구문 문자가 있는 값 %j을 RFC 4180 형태로 인용한다', (input, expected) => {
+    expect(sanitizeCsvField(input)).toBe(expected)
   })
 })
