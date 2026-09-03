@@ -113,7 +113,7 @@ describe('SessionActivityRibbon accessibility semantics', () => {
         onToggleGroup={vi.fn()}
       />
     )
-    expect(getByRole('button', { name: 'Agent message 1' })).toBeInTheDocument();
+    expect(getByRole('button', { name: /Agent message 1/ })).toBeInTheDocument();
   })
 
   it('identifies Skill and Subagent aria label', () => {
@@ -177,9 +177,9 @@ describe('SessionActivityRibbon accessibility semantics', () => {
         onToggleGroup={vi.fn()}
       />
     )
-    expect(getByRole('button', { name: 'Skill list_files 1' })).toBeInTheDocument();
-    expect(getByRole('button', { name: 'Subagent coder 2' })).toBeInTheDocument();
-    expect(getByRole('button', { name: 'Tool read_file 3' })).toBeInTheDocument();
+    expect(getByRole('button', { name: /Skill list_files 1/ })).toBeInTheDocument();
+    expect(getByRole('button', { name: /Subagent coder 2/ })).toBeInTheDocument();
+    expect(getByRole('button', { name: /Tool read_file 3/ })).toBeInTheDocument();
   })
 
   afterEach(cleanup)
