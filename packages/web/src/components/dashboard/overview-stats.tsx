@@ -88,6 +88,7 @@ export function OverviewStats({
         id="overview-stats-explanation-toggle"
         aria-expanded={expanded}
         aria-controls="overview-stats-explanation"
+        aria-label={expanded ? '통계 설명 숨기기' : '통계 설명 보기'}
         className="mt-4 flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors rounded-sm"
       >
         <span

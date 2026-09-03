@@ -62,6 +62,7 @@ function DateRangePickerContent() {
           <button
             key={preset.days}
             type="button"
+            aria-label={preset.days === 3650 ? '모든 기간 선택' : `최근 ${preset.days}일 선택`}
             aria-pressed={activePreset === preset.days}
             onClick={() => handlePreset(preset.days)}
             className={cn(
