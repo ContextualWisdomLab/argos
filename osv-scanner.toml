@@ -40,36 +40,3 @@ ignoreUntil = 2026-10-28
 # lint toolchain; the prod-reachable 5.x line is pinned to the fixed 5.0.8. Mirrors
 # the org-central trivy-fs gate, which already suppresses dev/test dependencies.
 reason = "brace-expansion 1.1.15 reachable only via dev-only ESLint toolchain (minimatch@3.1.5); the 1.1.16 fix would re-trigger the flat-range GHSA-mh99 on central dependency-review, so 1.x is pinned base-exact and both dev-only advisories are ignored."
-
-[[IgnoredVulns]]
-id = "GHSA-4mjr-xmp4-gh2g"
-
-[[IgnoredVulns]]
-id = "GHSA-5jgf-p345-68v8"
-
-[[IgnoredVulns]]
-id = "GHSA-73wf-gq98-2v4g"
-
-[[IgnoredVulns]]
-id = "GHSA-c83g-rgw3-j3cx"
-
-[[IgnoredVulns]]
-id = "GHSA-f65p-4m7j-42xc"
-
-[[IgnoredVulns]]
-id = "GHSA-fph4-wmhf-6fwf"
-
-[[IgnoredVulns]]
-id = "GHSA-ggr8-5vv4-36mx"
-
-[[IgnoredVulns]]
-id = "GHSA-jqff-g426-hqxp"
-
-[[IgnoredVulns]]
-id = "GHSA-p498-v437-472g"
-
-[[IgnoredVulns]]
-id = "GHSA-w9m9-85wc-3x92"
-
-[[IgnoredVulns]]
-id = "GHSA-x5fp-wj9c-mxmx"

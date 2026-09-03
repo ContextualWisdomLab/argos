@@ -67,8 +67,8 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // [Bolt: Performance Optimization] Use Schwartzian transform to avoid O(N log N) Date.parse calls
-  // Impact: Pre-computing parsed values in O(N) avoids expensive date parsing inside the sort comparator.
+  // [Bolt: 성능 개선] O(N log N) Date.parse 호출을 피하기 위해 Schwartzian 변환 사용
+  // Impact: 파싱된 값을 O(N)으로 미리 계산하여 정렬 비교 함수 내에서 값비싼 날짜 파싱을 방지합니다.
   const sortedUsage = usageTimeline
     .map((usage) => ({ original: usage, parsedTimestamp: Date.parse(usage.timestamp) }))
     .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
