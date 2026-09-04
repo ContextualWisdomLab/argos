@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-10-31 - [CLI 브라우저 실행 시 커맨드 인젝션 수정]
+**Vulnerability:** CLI에서 `spawn` 함수를 사용할 때 `cmd.exe /c start` 등 명령 셸을 경유하면, 외부에서 주입된 검증되지 않은 URL이 Node.js의 기본 이스케이프 처리를 우회하여 커맨드 인젝션을 유발할 수 있었습니다 (예: `&`나 `|` 문자를 이용한 명령어 연결).
+**Learning:** Windows에서 `spawn('cmd.exe', ...)`을 사용하고 `windowsVerbatimArguments` 옵션을 주거나, 입력값을 안전하게 이스케이프하지 않으면 심각한 보안 위험이 발생합니다.
+**Prevention:** 플랫폼에 관계없이 `cmd.exe` 같은 셸을 절대 경유하지 마십시오. Windows 환경에서는 `explorer.exe`를 직접 호출하여 셸 해석을 원천 차단해야 합니다. 더불어 URL 프로토콜(`http:` 또는 `https:`)을 항상 명시적으로 검증해야 합니다.
