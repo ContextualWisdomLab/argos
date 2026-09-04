@@ -14,7 +14,6 @@ vi.mock('child_process', () => ({
   })),
 }))
 
-// Mock ora and console
 vi.mock('ora', () => ({
   default: vi.fn(() => ({
     start: vi.fn(() => ({
@@ -23,13 +22,13 @@ vi.mock('ora', () => ({
     })),
   })),
 }))
-console.log = vi.fn()
 
 describe('auth-flow', () => {
   const originalPlatform = process.platform
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(console, 'log').mockImplementation(() => undefined)
   })
 
   afterEach(() => {
