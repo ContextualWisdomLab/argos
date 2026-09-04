@@ -18,6 +18,7 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
+          aria-label={`${modifiedCount} files modified`}
           className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-success hover:bg-success/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success"
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />
@@ -29,6 +30,7 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
+          aria-label={`${readCount} files read`}
           className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground hover:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Eye className="h-3 w-3" aria-hidden="true" />
