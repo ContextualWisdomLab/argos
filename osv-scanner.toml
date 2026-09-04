@@ -6,54 +6,54 @@
 [[IgnoredVulns]]
 id = "GHSA-p498-v437-472g"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update @humanfs/node."
 
 [[IgnoredVulns]]
 id = "GHSA-73wf-gq98-2v4g"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update browserslist."
 
 [[IgnoredVulns]]
 id = "GHSA-c83g-rgw3-j3cx"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update browserslist."
 
 [[IgnoredVulns]]
 id = "GHSA-ggr8-5vv4-36mx"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update deepmerge-ts."
 
 [[IgnoredVulns]]
 id = "GHSA-5jgf-p345-68v8"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update fast-uri."
 
 [[IgnoredVulns]]
 id = "GHSA-f65p-4m7j-42xc"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update fast-uri."
 
 [[IgnoredVulns]]
 id = "GHSA-fph4-wmhf-6fwf"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update fast-uri."
 
 [[IgnoredVulns]]
 id = "GHSA-jqff-g426-hqxp"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update fast-uri."
 
 [[IgnoredVulns]]
 id = "GHSA-w9m9-85wc-3x92"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update postcss-selector-parser."
 
 [[IgnoredVulns]]
 id = "GHSA-4mjr-xmp4-gh2g"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update qs."
 
 [[IgnoredVulns]]
 id = "GHSA-x5fp-wj9c-mxmx"
 ignoreUntil = 2026-10-28
-reason = "Ignored per Bolt agent boundaries (cannot modify package.json)"
+reason = "Unfixable without modifying package.json which is constrained. Wait for upstream Update qs."
