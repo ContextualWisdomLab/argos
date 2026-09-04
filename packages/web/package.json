@@ -19,7 +19,7 @@
   "dependencies": {
     "@argos/shared": "workspace:*",
     "@base-ui/react": "^1.4.0",
-    "@prisma/client": "^6",
+    "@prisma/client": "^6.19.3",
     "@tanstack/react-query": "^5",
     "bcryptjs": "^2",
     "class-variance-authority": "^0.7.1",
@@ -54,7 +54,7 @@
     "dotenv": "^17.4.2",
     "eslint-config-next": "^16.2.3",
     "jsdom": "^29.1.1",
-    "prisma": "^6",
+    "prisma": "^6.19.3",
     "shadcn": "^4.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
