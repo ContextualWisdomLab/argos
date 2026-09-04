@@ -28,7 +28,7 @@ function openBrowser(url: string): void {
     const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio, })
     child.unref()
   }
 }
@@ -56,7 +56,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
   // Step 2: 브라우저 즉시 열기
   openBrowser(authUrl)
   console.log()
-  console.log(`브라우저에서 허용해 주세요: ${authUrl}`)
+  console.log('브라우저에서 인증을 완료해 주세요.')
   console.log()
 
   // Step 3: 승인 polling
@@ -75,7 +75,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
       }
 
       try {
-        const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: string }>(
+        const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: }>(
           `${apiUrl}/api/auth/cli-poll?state=${state}`,
           { method: 'GET', baseUrl: '' }
         )
