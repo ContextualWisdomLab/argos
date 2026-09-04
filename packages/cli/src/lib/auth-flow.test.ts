@@ -14,7 +14,6 @@ vi.mock('child_process', () => ({
   })),
 }))
 
-// Mock ora and console
 vi.mock('ora', () => ({
   default: vi.fn(() => ({
     start: vi.fn(() => ({
@@ -23,38 +22,63 @@ vi.mock('ora', () => ({
     })),
   })),
 }))
-console.log = vi.fn()
 
 describe('auth-flow', () => {
   const originalPlatform = process.platform
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(console, 'log').mockImplementation(() => undefined)
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('opens an http URL on win32 without a command shell or console disclosure', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    const authUrl = 'https://example.com/login?state=state123&next=one|two;three%5Efour'
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      'explorer.exe',
+      [authUrl],
+      { detached: true, stdio: 'ignore' }
     )
+    expect(childProcess.spawn).not.toHaveBeenCalledWith(
+      'cmd.exe',
+      expect.anything(),
+      expect.anything()
+    )
+    for (const call of vi.mocked(console.log).mock.calls) {
+      expect(call.join(' ')).not.toContain(authUrl)
+      expect(call.join(' ')).not.toContain('state123')
+    }
+  })
+
+  it('rejects URLs with invalid protocols without reflecting the rejected URL', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    const rejectedUrl = 'file:///etc/passwd?secret=do-not-reflect'
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: rejectedUrl }) // Step 1
+
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    await expect(runLoginFlow('http://test-api')).rejects.toThrow('Invalid URL protocol')
+    expect(errorSpy).toHaveBeenCalled()
+    for (const call of errorSpy.mock.calls) {
+      expect(call.join(' ')).not.toContain(rejectedUrl)
+    }
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {

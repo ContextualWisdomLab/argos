@@ -5,22 +5,30 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
+  let safeUrl = url
+  try {
+    const parsedUrl = new URL(url)
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error('Invalid URL protocol')
+    }
+    safeUrl = parsedUrl.href
+  } catch (err) {
+    console.error(chalk.red('\n안전하지 않은 URL입니다.'))
+    throw err
+  }
+
+  // Keep the server-provided URL as one argv element; never route it through a command shell.
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
-      windowsVerbatimArguments: true,
+    const child = spawn('explorer.exe', [safeUrl], {
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
@@ -48,7 +56,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
   // Step 2: 브라우저 즉시 열기
   openBrowser(authUrl)
   console.log()
-  console.log(`브라우저에서 허용해 주세요: ${authUrl}`)
+  console.log('브라우저에서 인증을 완료해 주세요.')
   console.log()
 
   // Step 3: 승인 polling
