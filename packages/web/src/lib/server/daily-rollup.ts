@@ -630,33 +630,42 @@ export function aggregateSummary(
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
   // Postgres COLLATE "C" 와 정렬 결과 일치시켜 skills route 와 동일 순서 보장).
-  const topSkills = Object.entries(skillCounts)
-    .map(([skillName, callCount]) => ({ skillName, callCount }))
-    .sort((a, b) => {
-      if (b.callCount !== a.callCount) return b.callCount - a.callCount
-      return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0
-    })
-    .slice(0, topSkillsN)
+  // [Bolt: Performance Optimization] Avoid Object.entries() to prevent intermediate array tuple allocations
+  const topSkills = []
+  for (const skillName in skillCounts) {
+    topSkills.push({ skillName, callCount: skillCounts[skillName]! })
+  }
+  topSkills.sort((a, b) => {
+    if (b.callCount !== a.callCount) return b.callCount - a.callCount
+    return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0
+  })
+  const topSkillsSliced = topSkills.slice(0, topSkillsN)
 
   // Deterministic tie-break: callCount DESC, agentType ASC (codepoint binary).
-  const topAgents = Object.entries(agentCounts)
-    .map(([agentType, callCount]) => ({ agentType, callCount }))
-    .sort((a, b) => {
-      if (b.callCount !== a.callCount) return b.callCount - a.callCount
-      return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0
-    })
-    .slice(0, topAgentsN)
+  const topAgents = []
+  for (const agentType in agentCounts) {
+    topAgents.push({ agentType, callCount: agentCounts[agentType]! })
+  }
+  topAgents.sort((a, b) => {
+    if (b.callCount !== a.callCount) return b.callCount - a.callCount
+    return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0
+  })
+  const topAgentsSliced = topAgents.slice(0, topAgentsN)
 
-  const modelShare = Object.entries(modelTokens)
-    .filter(([, v]) => v > 0)
-    .map(([model, totalTokens]) => ({ model, totalTokens }))
-    .sort((a, b) => b.totalTokens - a.totalTokens)
+  const modelShare = []
+  for (const model in modelTokens) {
+    const totalTokens = modelTokens[model]!
+    if (totalTokens > 0) {
+      modelShare.push({ model, totalTokens })
+    }
+  }
+  modelShare.sort((a, b) => b.totalTokens - a.totalTokens)
 
   return {
     ...totals,
     activeUserCount: activeUsers.size,
-    topSkills,
-    topAgents,
+    topSkills: topSkillsSliced,
+    topAgents: topAgentsSliced,
     modelShare,
   }
 }
