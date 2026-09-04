@@ -67,9 +67,12 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  // Optimized: Lexicographical sort avoids Date.parse() overhead (ISO 8601 strings are natively sortable)
+  const sortedUsage = [...usageTimeline].sort((a, b) => {
+    if (a.timestamp < b.timestamp) return -1
+    if (a.timestamp > b.timestamp) return 1
+    return 0
+  })
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
