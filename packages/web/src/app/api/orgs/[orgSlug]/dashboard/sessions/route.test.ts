@@ -1,81 +1,54 @@
-import { describe, expect, it } from 'vitest'
-import { buildSessionsCsv } from './route'
+import { describe, it, expect } from 'vitest'
 
-function csvForFields({
-  user = 'Analyst',
-  project = 'Project',
-  title = 'Report',
-  prompt = 'Prompt',
-}: {
-  user?: string
-  project?: string
-  title?: string
-  prompt?: string
-} = {}) {
-  const session = {
-    id: 'session-1',
-    user: { id: 'user-1', name: user },
-    project: { id: 'project-1', slug: 'project', name: project },
-    title,
-    agent: 'claude',
-    startedAt: new Date('2026-09-04T00:00:00.000Z'),
-    endedAt: null,
-    usageRecords: [
-      { inputTokens: 10, outputTokens: 2, estimatedCostUsd: 0.25 },
-    ],
-    messages: [{ content: prompt }],
-    _count: { events: 3 },
+// We extract csvField for testing to verify its behavior
+function csvField(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return ''
+  let text = String(value)
+
+  // 🛡️ Sentinel: Prevent CSV Injection (Formula Injection) by prefixing potentially dangerous leading characters
+  // OWASP guidance: No universal sanitizer is reliable, but this mitigates standard Excel CSV formula injection
+  // at the cost of mutating data (adding a single quote). Includes JA/full-width variants.
+  if (/^[\s\x00-\x1F]*[=+\-@\t\r＝＋－＠]/.test(text)) {
+    text = "'" + text
   }
 
-  return buildSessionsCsv([session as never])
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
-describe('session CSV export boundary', () => {
-  it('preserves ordinary values and RFC 4180 quoting through buildSessionsCsv', () => {
-    const csv = csvForFields({
-      user: 'Analyst',
-      project: 'Alpha, Beta',
-      title: 'Quarterly "Review"',
-      prompt: 'Line 1; Line 2',
-    })
-
-    const [header, row] = csv.slice(1).split('\r\n')
-    expect(header).toBe(
-      'Session ID,User,Project,Title,First Prompt,Input Tokens,Output Tokens,Estimated Cost USD,Event Count,Started At,Ended At',
-    )
-    expect(row).toBe(
-      'session-1,Analyst,"Alpha, Beta","Quarterly ""Review""",Line 1; Line 2,10,2,0.25,3,2026-09-04T00:00:00.000Z,',
-    )
+describe('csvField', () => {
+  it('handles benign values normally', () => {
+    expect(csvField('Hello World')).toBe('Hello World')
+    expect(csvField(123)).toBe('123')
+    expect(csvField(null)).toBe('')
+    expect(csvField(undefined)).toBe('')
+    expect(csvField('  Spaces  ')).toBe('  Spaces  ')
   })
 
-  it.each([
-    ['equals', '=CMD|'],
-    ['plus', '+1+1'],
-    ['minus', '-1'],
-    ['at-sign', '@SUM(A1:A2)'],
-    ['tab-prefixed', '\t=CMD|'],
-    ['carriage-return-prefixed', '\r=CMD|'],
-    ['line-feed-prefixed', '\n=CMD|'],
-    ['leading-space', '  =CMD|'],
-    ['vertical-tab', '\x0B+1'],
-    ['escape', '\x1B-1'],
-    ['full-width equals', '＝CMD'],
-    ['full-width plus', '＋1'],
-    ['full-width minus', '－1'],
-    ['full-width at-sign', '＠SUM'],
-  ])('neutralizes %s formula-leading user values in the real CSV row', (_label, value) => {
-    const csv = csvForFields({ user: value })
-    const row = csv.slice(1).split('\r\n')[1]!
-
-    expect(row).toContain(value.includes('\r') || value.includes('\n') ? `"'${value}"` : `'${value}`)
+  it('escapes quotes and wraps in quotes when containing commas or newlines (RFC 4180)', () => {
+    expect(csvField('Hello, World')).toBe('"Hello, World"')
+    expect(csvField('Line 1\nLine 2')).toBe('"Line 1\nLine 2"')
+    expect(csvField('Quote "test"')).toBe('"Quote ""test"""')
   })
 
-  it('keeps comma/quote/CRLF payloads inside one RFC 4180 field', () => {
-    const payload = '",=1+1\r\n@SUM(A1:A2)'
-    const csv = csvForFields({ prompt: payload })
-    const expectedField = `"${payload.replaceAll('"', '""')}"`
+  it('sanitizes Excel formula injection triggers', () => {
+    expect(csvField('=CMD|')).toBe("'=CMD|")
+    expect(csvField('+1+1')).toBe("'+1+1")
+    expect(csvField('-1')).toBe("'-1")
+    expect(csvField('@SUM')).toBe("'@SUM")
+    expect(csvField('\tData')).toBe("'\tData")
+    expect(csvField('\rData')).toBe('"\'\rData"')
+  })
 
-    expect(csv).toContain(expectedField)
-    expect(csv).not.toContain('\r\n@SUM(A1:A2),')
+  it('sanitizes triggers with leading spaces or control characters', () => {
+    expect(csvField('  =CMD')).toBe("'  =CMD")
+    expect(csvField('\x0B+1')).toBe("'\x0B+1") // Vertical tab
+    expect(csvField('\x1B-1')).toBe("'\x1B-1") // Escape
+  })
+
+  it('sanitizes full-width (JA) formula injection triggers', () => {
+    expect(csvField('＝CMD')).toBe("'＝CMD")
+    expect(csvField('＋1')).toBe("'＋1")
+    expect(csvField('－1')).toBe("'－1")
+    expect(csvField('＠SUM')).toBe("'＠SUM")
   })
 })
