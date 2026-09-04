@@ -13,28 +13,22 @@ function openBrowser(url: string): void {
     }
     safeUrl = parsedUrl.href
   } catch (err) {
-    console.error(chalk.red(`\n안전하지 않은 URL입니다: ${url}`))
+    console.error(chalk.red('\n안전하지 않은 URL입니다.'))
     throw err
   }
 
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
+  // Keep the server-provided URL as one argv element; never route it through a command shell.
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    // url 내부의 특수문자(&, |, ;, <, >, (, ), ^)를 ^ 로 이스케이프 처리
-    const escapedUrl = safeUrl.replace(/([&|;<>()^])/g, '^$1')
-    const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
-      windowsVerbatimArguments: true,
+    const child = spawn('explorer.exe', [safeUrl], {
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
