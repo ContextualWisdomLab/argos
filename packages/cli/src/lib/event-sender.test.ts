@@ -39,6 +39,12 @@ describe('buildSelfHealScript', () => {
     expect(script).toContain('renameSync')
   })
 
+  it('creates the atomic temp file exclusively with owner-only permissions', () => {
+    expect(script).toContain("require('crypto').randomUUID()")
+    expect(script).not.toContain('Math.random')
+    expect(script).toContain("{encoding:'utf8',flag:'wx',mode:0o600}")
+  })
+
   it('holds an inter-process lock while rewriting project.json', () => {
     expect(script).toContain(`const lockDir=${JSON.stringify(PROJECT_JSON_PATH)}+'.lock'`)
     const mkdirIdx = script.indexOf('fs.mkdirSync(lockDir)')
