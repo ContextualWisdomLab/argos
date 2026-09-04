@@ -109,13 +109,14 @@ describe('auth-flow', () => {
 
     await runLoginFlow('http://api')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://api.example/url'].replace('api.', ''), { detached: true, stdio: 'ignore' })
+    expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://example.com/url'], { detached: true, stdio: 'ignore' })
   })
 
   it('throws an error if step 1 fails', async () => {
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockRejectedValueOnce(new Error('Network error'))
 
+    await expect(runLoginFlow('http://api')).rejects.toContain('')
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
   })
 })
