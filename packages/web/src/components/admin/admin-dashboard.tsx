@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -30,6 +30,48 @@ type ResetLink = {
   expiresAt: string
 }
 
+const UNABLE_TO_LOAD_USERS =
+  'Unable to load users. Retry the search or refresh the admin page.'
+const UNABLE_TO_CREATE_RESET_LINK =
+  'Unable to create reset link. Create the reset link again for the customer now selected.'
+const UNABLE_TO_OPEN_DASHBOARD =
+  'Unable to open dashboard as selected user. Start Open dashboard as user again from the customer now selected.'
+
+/**
+ * Map an API-supplied impersonation URL to a same-origin navigation target.
+ *
+ * The only accepted value is `/admin/impersonate` on the current origin with a
+ * single `token` query parameter. The token must be non-empty and must not
+ * contain whitespace after WHATWG decoding. Userinfo, hash, extra query keys,
+ * and any other origin or path are rejected.
+ *
+ * @param candidate - Value from `impersonationUrl` in the admin API response
+ * @param origin - Trusted `window.location.origin` of the admin page
+ * @returns Absolute href to assign, or `null` when the candidate is not allow-listed
+ */
+export function resolveImpersonationNavigationTarget(candidate: unknown, origin: string) {
+  if (typeof candidate !== 'string' || candidate.length === 0) return null
+
+  try {
+    const trustedOrigin = new URL(origin)
+    const target = new URL(candidate, trustedOrigin)
+    if (target.origin !== trustedOrigin.origin) return null
+    if (target.pathname !== '/admin/impersonate') return null
+    if (target.username || target.password) return null
+    if (target.hash) return null
+
+    const searchKeys = [...target.searchParams.keys()]
+    if (searchKeys.length !== 1 || searchKeys[0] !== 'token') return null
+
+    const token = target.searchParams.get('token')
+    if (!token || /\s/.test(token)) return null
+
+    return target.href
+  } catch {
+    return null
+  }
+}
+
 export function AdminDashboard() {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -41,11 +83,44 @@ export function AdminDashboard() {
   const [resetLink, setResetLink] = useState<ResetLink | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyResetTimer = useRef<number | null>(null)
+  const actionGeneration = useRef(0)
+  const selectedUserIdRef = useRef<string | null>(null)
+  selectedUserIdRef.current = selectedUserId
 
   const selectedUser = useMemo(
     () => users.find((user) => user.id === selectedUserId) ?? null,
     [selectedUserId, users]
   )
+
+  function clearCopyResetTimer() {
+    if (copyResetTimer.current !== null) {
+      window.clearTimeout(copyResetTimer.current)
+      copyResetTimer.current = null
+    }
+  }
+
+  function bumpActionGeneration() {
+    clearCopyResetTimer()
+    return ++actionGeneration.current
+  }
+
+  function isCurrentAction(generation: number) {
+    return actionGeneration.current === generation
+  }
+
+  function discardInFlightAdminWork() {
+    bumpActionGeneration()
+    setResetLink(null)
+    setCopied(false)
+    setCreatingLink(false)
+    setOpeningDashboard(false)
+    setError('')
+  }
+
+  useEffect(() => () => {
+    bumpActionGeneration()
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -60,18 +135,23 @@ export function AdminDashboard() {
           signal: controller.signal,
         })
         if (!res.ok) {
-          setError('Unable to load users')
+          setError(UNABLE_TO_LOAD_USERS)
           return
         }
         const data = (await res.json()) as { users: AdminUser[] }
+        const current = selectedUserIdRef.current
+        const nextSelectedUserId =
+          current && data.users.some((user) => user.id === current)
+            ? current
+            : (data.users[0]?.id ?? null)
+        if (nextSelectedUserId !== current) {
+          discardInFlightAdminWork()
+        }
         setUsers(data.users)
-        setSelectedUserId((current) => {
-          if (current && data.users.some((user) => user.id === current)) return current
-          return data.users[0]?.id ?? null
-        })
+        setSelectedUserId(nextSelectedUserId)
       } catch (err) {
         if ((err as { name?: string }).name !== 'AbortError') {
-          setError('Unable to load users')
+          setError(UNABLE_TO_LOAD_USERS)
         }
       } finally {
         setLoadingUsers(false)
@@ -92,6 +172,7 @@ export function AdminDashboard() {
   async function handleCreateLink() {
     if (!selectedUserId) return
 
+    const generation = bumpActionGeneration()
     setCreatingLink(true)
     setResetLink(null)
     setCopied(false)
@@ -103,23 +184,29 @@ export function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUserId }),
       })
+      if (!isCurrentAction(generation)) return
       if (!res.ok) {
-        setError('Unable to create reset link')
+        setError(UNABLE_TO_CREATE_RESET_LINK)
         return
       }
 
       const data = (await res.json()) as ResetLink
+      if (!isCurrentAction(generation)) return
       setResetLink(data)
     } catch {
-      setError('Unable to create reset link')
+      if (!isCurrentAction(generation)) return
+      setError(UNABLE_TO_CREATE_RESET_LINK)
     } finally {
-      setCreatingLink(false)
+      if (isCurrentAction(generation)) {
+        setCreatingLink(false)
+      }
     }
   }
 
   async function handleOpenDashboardAsUser() {
     if (!selectedUserId) return
 
+    const generation = bumpActionGeneration()
     setOpeningDashboard(true)
     setError('')
 
@@ -129,24 +216,54 @@ export function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: selectedUserId }),
       })
+      if (!isCurrentAction(generation)) return
       if (!res.ok) {
-        setError('Unable to open dashboard as selected user')
+        setError(UNABLE_TO_OPEN_DASHBOARD)
         return
       }
 
-      const data = (await res.json()) as { impersonationUrl: string }
-      window.location.assign(data.impersonationUrl)
+      const data = (await res.json()) as { impersonationUrl?: unknown }
+      const navigationTarget = resolveImpersonationNavigationTarget(
+        data.impersonationUrl,
+        window.location.origin
+      )
+      if (!isCurrentAction(generation)) return
+      if (!navigationTarget) {
+        setError(UNABLE_TO_OPEN_DASHBOARD)
+        return
+      }
+      window.location.assign(navigationTarget)
     } catch {
-      setError('Unable to open dashboard as selected user')
+      if (!isCurrentAction(generation)) return
+      setError(UNABLE_TO_OPEN_DASHBOARD)
     } finally {
-      setOpeningDashboard(false)
+      if (isCurrentAction(generation)) {
+        setOpeningDashboard(false)
+      }
     }
   }
 
   async function handleCopy() {
     if (!resetLink) return
-    await navigator.clipboard.writeText(resetLink.url)
-    setCopied(true)
+
+    const generation = bumpActionGeneration()
+    setError('')
+
+    try {
+      if (!navigator.clipboard) throw new Error('Clipboard API unavailable')
+      await navigator.clipboard.writeText(resetLink.url)
+      if (!isCurrentAction(generation)) return
+
+      setCopied(true)
+      copyResetTimer.current = window.setTimeout(() => {
+        setCopied(false)
+        copyResetTimer.current = null
+      }, 2000)
+    } catch {
+      if (!isCurrentAction(generation)) return
+      setCopied(false)
+      setError('Unable to copy reset link. Select the generated link and copy it manually.')
+    }
   }
 
   return (
@@ -209,11 +326,11 @@ export function AdminDashboard() {
                       <button
                         key={user.id}
                         type="button"
-                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
+                        aria-pressed={selected}
+                        className={`grid w-full grid-cols-[minmax(0,1fr)_160px] px-4 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring hover:bg-muted/60 ${selected ? 'bg-primary/10' : 'bg-background'}`}
                         onClick={() => {
+                          discardInFlightAdminWork()
                           setSelectedUserId(user.id)
-                          setResetLink(null)
-                          setCopied(false)
                         }}
                       >
                         <span className="min-w-0">
@@ -278,10 +395,22 @@ export function AdminDashboard() {
                         <Label htmlFor="reset-link">Generated link</Label>
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
-                      <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        <Copy className="size-4" aria-hidden="true" />
-                        {copied ? 'Copied' : 'Copy link'}
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        aria-label="Copy reset link"
+                        onClick={handleCopy}
+                      >
+                        {copied ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-4" aria-hidden="true" />
+                        )}
+                        <span aria-hidden="true">Copy link</span>
                       </Button>
+                      <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+                        {copied ? 'Reset link copied.' : ''}
+                      </span>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
                       </p>
