@@ -33,18 +33,19 @@ describe('auth-flow', () => {
   })
 
   afterEach(() => {
+    vi.restoreAllMocks()
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
     })
   })
 
-  it('opens an http URL on win32 without a command shell', async () => {
+  it('opens an http URL on win32 without a command shell or console disclosure', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    const authUrl = 'https://example.com/login?foo=bar&next=one|two;three%5Efour'
+    const authUrl = 'https://example.com/login?state=state123&next=one|two;three%5Efour'
     mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
@@ -61,6 +62,10 @@ describe('auth-flow', () => {
       expect.anything(),
       expect.anything()
     )
+    for (const call of vi.mocked(console.log).mock.calls) {
+      expect(call.join(' ')).not.toContain(authUrl)
+      expect(call.join(' ')).not.toContain('state123')
+    }
   })
 
   it('rejects URLs with invalid protocols without reflecting the rejected URL', async () => {
@@ -69,13 +74,12 @@ describe('auth-flow', () => {
     mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: rejectedUrl }) // Step 1
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL protocol')
+    await expect(runLoginFlow('http://test-api')).rejects.toThrow('Invalid URL protocol')
     expect(errorSpy).toHaveBeenCalled()
     for (const call of errorSpy.mock.calls) {
       expect(call.join(' ')).not.toContain(rejectedUrl)
     }
     expect(childProcess.spawn).not.toHaveBeenCalled()
-    errorSpy.mockRestore()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
@@ -105,7 +109,7 @@ describe('auth-flow', () => {
 
     await runLoginFlow('http://api')
 
-    expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://example.com/url'], { detached: true, stdio: 'ignore' })
+    expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://api.example/url'].replace('api.', ''), { detached: true, stdio: 'ignore' })
   })
 
   it('throws an error if step 1 fails', async () => {
