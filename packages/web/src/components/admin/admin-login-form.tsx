@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Lock } from 'lucide-react'
+import { Lock, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
@@ -76,7 +76,11 @@ export function AdminLoginForm() {
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> Signing in...</>
+            ) : (
+              'Sign in'
+            )}
             </Button>
           </form>
         </CardContent>
