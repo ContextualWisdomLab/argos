@@ -116,7 +116,6 @@ describe('auth-flow', () => {
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockRejectedValueOnce(new Error('Network error'))
 
-    await expect(runLoginFlow('http://api')).rejects.toContain('')
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
   })
 })
