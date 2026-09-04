@@ -204,6 +204,67 @@ export class ERDModel {
     table.foreignKeys.splice(fkIndex, 1);
   }
 
+  renameTable(oldName: string, newName: string): void {
+    assertSnakeCaseIdentifier("Table", oldName);
+    assertSnakeCaseIdentifier("Table", newName);
+
+    const table = this.tables.get(oldName);
+    if (!table) {
+      throw new Error(`Table '${oldName}' does not exist.`);
+    }
+    if (this.tables.has(newName)) {
+      throw new Error(`Table '${newName}' already exists.`);
+    }
+
+    table.name = newName;
+    this.tables.delete(oldName);
+    this.tables.set(newName, table);
+
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === oldName) {
+          fk.referenceTable = newName;
+        }
+      }
+    }
+  }
+
+  renameColumn(tableName: string, oldColumnName: string, newColumnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", oldColumnName);
+    assertSnakeCaseIdentifier("Column", newColumnName);
+
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+
+    const col = table.columns.find((c) => c.name === oldColumnName);
+    if (!col) {
+      throw new Error(`Column '${oldColumnName}' does not exist in table '${tableName}'.`);
+    }
+
+    if (table.columns.some((c) => c.name === newColumnName)) {
+      throw new Error(`Column '${newColumnName}' already exists in table '${tableName}'.`);
+    }
+
+    col.name = newColumnName;
+
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === oldColumnName) {
+          fk.referenceColumn = newColumnName;
+        }
+      }
+    }
+
+    for (const fk of table.foreignKeys) {
+      if (fk.columnName === oldColumnName) {
+        fk.columnName = newColumnName;
+      }
+    }
+  }
+
   generateDDL(): string {
     let ddl = "";
     for (const table of this.tables.values()) {
