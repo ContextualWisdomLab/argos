@@ -30,3 +30,17 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-18 - [Fix CSV Injection Vulnerability]
+**Vulnerability:** A CSV Injection (or Formula Injection) vulnerability existed in `packages/web/src/app/api/orgs/[orgSlug]/dashboard/sessions/route.ts` where unvalidated user input (like session titles or prompts) could start with dangerous characters (`=`, `+`, `-`, `@`, `\t`, `\r`) and be exported directly into a CSV file.
+**Learning:** Even internal admin dashboards are susceptible to CSV Injection if they export user-generated content without sanitization. Spreadsheet programs (like Excel) will execute formulas when a cell begins with specific trigger characters, which can lead to data exfiltration or remote code execution on the admin's machine.
+**Prevention:** Always sanitize data being exported to CSV formats by prepending a single quote (`'`) to strings that begin with dangerous characters (`=`, `+`, `-`, `@`, `\t`, `\r`). Centralize this logic (e.g., `csvField`) and thoroughly test it.
+
+## 2025-02-18 - [Fix vulnerable deepmerge-ts dependency via pnpm overrides]
+**Vulnerability:** A known high-severity vulnerability (CVE-2026-40345 / GHSA-ggr8-5vv4-36mx) existed in `deepmerge-ts` version 7.1.5, which was identified by GitHub CI using `trivy-fs` and `osv-scanner`.
+**Learning:** Transitive dependencies or direct dependencies can expose the application to vulnerabilities if not patched globally.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Injection Whitespace Bypass]
+**Vulnerability:** The regex used to sanitize CSV input for dangerous characters (`^[=+\-@\t\r]`) failed to account for leading whitespace. Attackers could bypass the filter by prefixing their payload with spaces or tabs (e.g., ` =cmd|'/C calc'!A0`).
+**Learning:** Input sanitization regexes must explicitly account for leading whitespace because spreadsheet parsers ignore leading spaces before evaluating formula triggers.
+**Prevention:** Always include `[\s]*` at the beginning of the regex (e.g., `/^[\s]*[=+\-@\t\r]/`) to ensure the formula trigger is matched correctly, even if padded.
