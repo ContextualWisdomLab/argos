@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-09-04 - Fix nested dependency vulnerabilities via pnpm.overrides
+**Vulnerability:** Multiple critical/high vulnerabilities flagged by OSV-scanner in deeply nested dependencies (like `fast-uri`, `qs`, `@humanfs/node`, etc.).
+**Learning:** These dependencies are buried deeply in the dependency tree (e.g., inside `@modelcontextprotocol/sdk` -> `ajv`), meaning normal `pnpm update` cannot resolve them if the parent package pins the older version.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce the patched versions globally across the workspace, and run `pnpm install` to apply the lockfile changes.
