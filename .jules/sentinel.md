@@ -30,3 +30,15 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-08-25 - Fix CSV Formula Injection (Macro Injection) in session export
+**Vulnerability:** User inputs (e.g., session titles or prompts) containing characters like `=`, `+`, `-`, `@`, `\t`, or `\r` at the start of a field could be executed as formulas or macros when the exported CSV was opened in spreadsheet software like Microsoft Excel or Google Sheets.
+**Learning:** Raw rendering of text into CSV without prepending a safe character (like `'`) can lead to formula execution, regardless of field quoting (`"..."`), which only prevents delimiter collision.
+**Prevention:** Always prepend a single quote (`'`) to string fields starting with dangerous characters before building the CSV string. Exclude raw numbers to preserve proper numeric formatting in spreadsheets.
+## 2024-08-25 - Never Override AGENTS.md
+**Vulnerability:** CI system components (e.g. Strix penetration testing gate, organizational code-owner governance rules) may rely on the existence and contents of the repository's `AGENTS.md` file. Overwriting or destroying it unintentionally triggers check suite failures like "provider/backend was unavailable".
+**Learning:** `AGENTS.md` controls core AI agent guidelines and must be preserved intact.
+**Prevention:** If `AGENTS.md` is corrupted or modified by accident, restore it immediately using `git restore --source origin/main AGENTS.md` to prevent pipeline breakage.
+## 2024-08-25 - Handle Strix Flakiness
+**Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to provider infrastructure errors (e.g. 404 from upstream language model).
+**Learning:** Strix security gates rely on external AI inference APIs which can be unstable. This is an environmental flake, not a codebase vulnerability.
+**Prevention:** Re-trigger the workflow using an empty commit (`git commit --allow-empty`) to bypass the transient failure.
