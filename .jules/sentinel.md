@@ -34,3 +34,7 @@
 **Vulnerability:** OSV-Scanner를 통해 `@humanfs/node`, `browserslist`, `deepmerge-ts`, `fast-uri`, `postcss-selector-parser`, `qs` 패키지에서 알려진 취약점이 발견되었습니다 (GHSA-p498-v437-472g, GHSA-73wf-gq98-2v4g 등).
 **Learning:** 깊게 중첩된 의존성 패키지들(transitive dependencies)에서 발견된 취약점은 애플리케이션 전체에 위험을 초래할 수 있으므로, 주기적인 의존성 스캔 및 버전 강제가 필수적입니다.
 **Prevention:** 루트 `package.json`의 `pnpm.overrides` 블록을 활용하여 취약점이 패치된 안전한 버전으로 강제 업데이트(`pnpm install` 포함)함으로써 모든 의존성 경로에 대해 일관되게 방어할 수 있습니다.
+## 2026-09-04 - [Trivy scan OSV mitigation via PR base update]
+**Vulnerability:** OSV-Scanner discovered vulnerable transitive dependencies, but applying fixes in `pnpm.overrides` directly on an active PR triggered out-of-scope Trivy check failures (`trivy-fs`) because Trivy checks are restricted to PR-changed files or base branch state logic.
+**Learning:** Fixing global package dependencies within a feature or isolated bug fix branch can cause CI scanners like Trivy to fail if the PR is expected to only touch codebase logic, or if the dependency update modifies the entire lockfile scope triggering unrelated check constraints.
+**Prevention:** Global dependency updates (like `pnpm.overrides`) should ideally be separated into a dedicated PR or applied directly on the base branch first. In this PR, I have isolated the code exclusively to the CSV Formula Injection fix and reverted the `package.json` updates to pass the isolated CI scopes, ensuring the code-level CSV vulnerability is addressed immediately.
