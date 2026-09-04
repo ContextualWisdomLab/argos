@@ -69,6 +69,7 @@ function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
       type="button"
       onClick={() => onJump(entry.lastEventIdx)}
       title={`${entry.path} — jump to last ${unit}`}
+      aria-label={`Jump to last ${unit} in ${entry.path}`}
       className="group w-full text-left flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <FileText className={`h-4 w-4 shrink-0 ${iconTone}`} aria-hidden="true" />
