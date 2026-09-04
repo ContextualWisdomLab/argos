@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/argos-ai"><img src="https://img.shields.io/npm/v/argos-ai.svg" alt="npm"/></a>
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"/>
+  <a href="https://deepwiki.com/ContextualWisdomLab/argos"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"/></a>
 </p>
 
 ---
@@ -34,13 +34,15 @@ git commit -m "chore: add argos tracking"
 > `/hooks` 에서 argos hook 들을 **trust** 하면 트래킹이 시작됩니다. (Claude Code 는 추가 단계 없음.)
 > 자세한 동작·검증 내용은 [docs/codex-integration.md](docs/codex-integration.md) 참고.
 
+> **License/provenance boundary:** this repository is a fork of `vibemafiaclub/argos`. No repository-level source license was found in the inspected upstream root, and the inspected root/CLI package metadata does not declare a source license. The commands above describe current product operation; they are not a representation that the source or npm package is approved for commercial redistribution, incorporation, or relicensing. See [License and upstream provenance](#license-and-upstream-provenance).
+
 ### AI 에이전트에게 맡기기
 
 Claude Code · Codex · Cursor · Copilot 대화창에 아래 프롬프트를 붙여넣으면 위 단계를 대신 수행합니다.
 
 ```
 이 프로젝트에 Argos를 설치해줘. Argos는 Claude Code · Codex 팀을 위한 사용량 애널리틱스야.
-참고: https://github.com/vibemafiaclub/argos
+참고: https://github.com/ContextualWisdomLab/argos
 
 다음 3단계로 진행:
 
@@ -63,7 +65,7 @@ Codex 를 쓴다면, codex 실행 후 `/hooks` 에서 argos hook 들을 trust �
 - **팀 토큰 사용 추세** — 주 단위 추세와 팀원·프로젝트별 드릴다운
 - **스킬·에이전트 호출 TOP** — 자주 호출되는 것, 안 쓰이는 것, 반복 실패 지점까지
 - **세션 타임라인 & 전사** — 팀이 서로의 성공 세션을 열람·공유해 온보딩 가속
-- **MIT 오픈소스 · 자체호스팅 가능** — 데이터는 조직 인프라 안에 유지
+- **자체호스팅 경로** — PostgreSQL과 앱 컨테이너로 조직 인프라 안에서 운영할 수 있는 현재 제품 경로. 배포·재배포 권리는 아래 provenance 경계를 별도로 확인해야 합니다.
 
 ## Why we built it
 
@@ -73,7 +75,7 @@ Codex 를 쓴다면, codex 실행 후 `/hooks` 에서 argos hook 들을 trust �
 - 누군가 추가한 스킬이 공유되지 않고 혼자만 쓰거나, 그대로 버려지는 경우가 많았습니다.
 - 우리가 팀 차원에서 AI를 잘 쓰고 있는지 누구도 파악할 수 없었습니다.
 
-그래서 대시보드를 직접 만들었습니다. Anthropic Console은 개인 단위였고, 우리가 원한 건 팀 단위였습니다. 같은 고민을 하는 팀들을 위해 오픈소스로 공개합니다.
+그래서 대시보드를 직접 만들었습니다. Anthropic Console은 개인 단위였고, 우리가 원한 건 팀 단위였습니다.
 
 ## How it works
 
@@ -86,7 +88,7 @@ Codex 를 쓴다면, codex 실행 후 `/hooks` 에서 argos hook 들을 trust �
 요구사항: PostgreSQL 하나 + 앱 컨테이너 하나.
 
 ```bash
-git clone https://github.com/vibemafiaclub/argos
+git clone https://github.com/ContextualWisdomLab/argos
 cd argos
 docker compose up
 ```
@@ -97,7 +99,7 @@ CLI가 자체 인스턴스를 가리키도록 설정합니다.
 argos --api-url https://your-instance.example.com
 ```
 
-혹은 `.argos/project.json`의 `apiUrl` 필드를 직접 수정해도 됩니다. 이렇게 하면 모든 데이터는 조직 인프라를 벗어나지 않습니다.
+혹은 `.argos/project.json`의 `apiUrl` 필드를 직접 수정해도 됩니다. 이렇게 하면 모든 데이터는 조직 인프라를 벗어나지 않습니다. Source redistribution or incorporation must still satisfy the unresolved upstream-license boundary below.
 
 ## FAQ
 
@@ -119,11 +121,10 @@ argos --api-url https://your-instance.example.com
 - Privacy: https://argos-ai.xyz/privacy
 - Architecture: [docs/code-architecture.md](docs/code-architecture.md)
 - PRD: [docs/prd.md](docs/prd.md)
+- Ask DeepWiki: https://deepwiki.com/ContextualWisdomLab/argos
 
-## 자율 주행 하네스
+## License and upstream provenance
 
-이 레포는 [`greatSumini/cc-system`](https://github.com/greatSumini/cc-system) 의 자율 주행 하네스를 이식해 쓴다. `scripts/run-server.py` 를 돌리면 ideation → plan-and-build → commit → check → rollback 루프가 반복되며, 이터레이션별 산출물은 `iterations/<N>-<timestamp>/` 아래에 남는다. 하네스가 spawn 하는 서브 세션에는 `HARNESS_HEADLESS=1` 이 주입돼 사용자 확인 단계가 자동 승인된다 — 쉘에서 이 변수를 직접 export 하지 말 것 (인터랙티브 세션이 무인 모드로 튄다). 트리거는 레포 관리자(메인테이너) 수동.
+This repository is a GitHub fork of [`vibemafiaclub/argos`](https://github.com/vibemafiaclub/argos). Current due diligence found no root repository license in the inspected upstream tree, and neither the inspected upstream/root `package.json` nor this fork's `packages/cli/package.json` declares a source license. No root `LICENSE` is therefore added here, and this README does **not** claim MIT, Apache-2.0, or another redistribution grant for the forked source.
 
-## License
-
-MIT
+Third-party dependencies retain their own terms, but dependency licenses do not establish the license of Argos itself. Commercial redistribution, incorporation into another product, and any relicensing of forked source remain blocked until authoritative upstream rights or contributor/provenance evidence establishes what grant can legally be made. Repository issue tracking records the exact evidence required to close that blocker.
