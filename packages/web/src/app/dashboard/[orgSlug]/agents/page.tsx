@@ -79,7 +79,8 @@ function AgentsContent({
   }
 
   const agents = data?.agents ?? []
-  const totalInvocations = agents.reduce((sum, a) => sum + a.callCount, 0)
+  let totalInvocations = 0
+  for (const a of agents) totalInvocations += a.callCount
 
   if (agents.length === 0) {
     return (

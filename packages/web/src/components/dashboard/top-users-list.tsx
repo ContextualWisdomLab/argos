@@ -16,10 +16,11 @@ export function TopUsersList({ users }: TopUsersListProps) {
     )
   }
 
-  const maxTokens = users.reduce(
-    (m, u) => Math.max(m, u.inputTokens + u.outputTokens),
-    0,
-  )
+  let maxTokens = 0
+  for (const u of users) {
+    const t = u.inputTokens + u.outputTokens
+    if (t > maxTokens) maxTokens = t
+  }
 
   return (
     <ol className="space-y-2">

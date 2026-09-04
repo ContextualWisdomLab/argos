@@ -34,7 +34,11 @@ function CustomTooltip({ active, payload }: TooltipProps<number, string>) {
 
 export function ModelShareChart({ data }: ModelShareChartProps) {
   // Optimize chart data preparation by memoizing it to prevent Recharts from re-rendering unnecessarilly
-  const total = useMemo(() => data.reduce((s, d) => s + d.totalTokens, 0), [data])
+  const total = useMemo(() => {
+    let sum = 0
+    for (const d of data) sum += d.totalTokens
+    return sum
+  }, [data])
 
   // Optimize chart data preparation by memoizing it to prevent Recharts from re-rendering unnecessarilly
   const chartData = useMemo(() => {
