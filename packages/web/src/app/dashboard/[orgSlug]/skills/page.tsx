@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { subDays, format, differenceInDays } from 'date-fns'
+import { differenceInDays } from 'date-fns'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
 import { RankedBarChart } from '@/components/dashboard/ranked-bar-chart'
 import { ChartCard } from '@/components/dashboard/chart-card'
@@ -10,6 +10,7 @@ import { KpiCard } from '@/components/dashboard/kpi-card'
 import { SkillProjectsCell } from '@/components/dashboard/skill-projects-cell'
 import { useDashboardSkills } from '@/hooks/use-dashboard-skills'
 import { formatDateTimeFull, formatLastUsed, formatDurationMs } from '@/lib/format'
+import { resolveSessionDateRange } from '@/lib/session-date-range'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -25,11 +26,10 @@ function SkillsContent({
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
-  const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
-
-  const from = searchParams.get('from') || format(sevenDaysAgo, 'yyyy-MM-dd')
-  const to = searchParams.get('to') || format(today, 'yyyy-MM-dd')
+  const { from, to } = resolveSessionDateRange(
+    searchParams.get('from'),
+    searchParams.get('to'),
+  )
 
   const isProjectFiltered = Boolean(projectId)
 
