@@ -30,22 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2026-09-02 - [Fix insecure Random Number Generation in temp file creation]
-**Vulnerability:** The temporary file name for atomic updates (`atomicTmp`) was generated using `Math.random().toString(36).slice(2)`.
-**Learning:** `Math.random()` does not provide cryptographically secure random numbers and its outputs can be predicted. When used in temporary file names, this can make the application vulnerable to race conditions, insecure temporary file creation, or file-system-based attacks if an attacker guesses the filename.
-**Prevention:** Use `crypto.randomUUID()` (or a similarly secure PRNG from the `crypto` module) instead of `Math.random()` to generate safe, unpredictable random strings for temporary or atomic file names.
-
-## 2026-09-02 - [Fix vulnerable dependencies via pnpm overrides (browserslist, deepmerge-ts)]
-**Vulnerability:** Known high-severity vulnerabilities discovered by Trivy in `browserslist` (CVE-2026-73088, CVE-2026-73089) and `deepmerge-ts` (CVE-2026-40345).
-**Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
-**Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
-
-## 2026-09-02 - [Fix vulnerable dependencies via pnpm overrides (postcss-selector-parser)]
-**Vulnerability:** Known medium-severity vulnerabilities discovered by Trivy in `postcss-selector-parser` (CVE-2026-40345 / GHSA-w9m9-85wc-3x92).
-**Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
-**Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
-
-## 2026-09-02 - [Fix vulnerable dependencies via pnpm overrides (qs, @humanfs/node)]
-**Vulnerability:** Known medium-severity vulnerabilities discovered by Trivy in `qs` (GHSA-4mjr-xmp4-gh2g, GHSA-x5fp-wj9c-mxmx) and `@humanfs/node` (GHSA-p498-v437-472g).
-**Learning:** Nested transitive dependencies can introduce significant vulnerabilities (like arbitrary code execution or ReDoS) and fail the CI pipeline's vulnerability scanning tools.
-**Prevention:** Always maintain up-to-date transitive overrides in `pnpm.overrides` block inside `package.json` to immediately force resolution to patched versions across the monorepo when upgrading root dependencies directly is not possible.
