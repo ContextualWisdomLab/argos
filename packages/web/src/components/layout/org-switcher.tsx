@@ -85,7 +85,10 @@ export function OrgSwitcher({
 
   return (
     <Select value={orgSlug ?? ''} onValueChange={handleChange}>
-      <SelectTrigger className="flex !h-auto w-full items-center gap-2.5 rounded-lg border-0 bg-card px-2.5 py-2 text-left ring-1 ring-foreground/10 transition-colors hover:bg-card-elevated dark:bg-card dark:hover:bg-card-elevated">
+      <SelectTrigger
+        aria-label="조직 선택"
+        className="flex !h-auto w-full items-center gap-2.5 rounded-lg border-0 bg-card px-2.5 py-2 text-left ring-1 ring-foreground/10 transition-colors hover:bg-card-elevated dark:bg-card dark:hover:bg-card-elevated"
+      >
         {current ? (
           <>
             <OrgAvatar name={current.name} id={current.id} size="md" />
