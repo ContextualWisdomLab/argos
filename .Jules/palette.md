@@ -9,3 +9,7 @@
 ## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
+
+## 2025-02-15 - Replace Raw Button Elements with Design System Components for Accessibility
+**Learning:** 애플리케이션 곳곳(예: `org-sidebar.tsx`, `no-organization-state.tsx`의 로그아웃 버튼)에서 공유 디자인 시스템 컴포넌트(`<Button>`) 대신 기본 HTML `<button>` 요소를 사용할 경우, `focus-visible`과 같은 키보드 접근성 스타일이 누락되거나 디자인 상태가 일관되지 않게 적용되는 문제가 발생합니다.
+**Action:** 항상 공유 디자인 시스템 컴포넌트(예: `@/components/ui/button`의 `Button`)를 사용하여 키보드 내비게이션 사용자를 위한 일관된 포커스 링과 접근성을 보장해야 합니다.
