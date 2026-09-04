@@ -30,6 +30,24 @@ type HoverState =
       x: number
     }
 
+
+function getEventAriaLabel(event: TimelineEvent, idx: number): string {
+  const num = idx + 1;
+  if (event.kind === 'message' && event.role === 'HUMAN') {
+    const preview = (event.content ? formatSlashCommandText(event.content) : '').slice(0, 50);
+    return `User message ${num}: ${preview}`;
+  }
+  if (event.kind === 'message') {
+    return `Agent message ${num}`;
+  }
+  const label = event.isSkillCall && event.skillName
+    ? `Skill ${event.skillName}`
+    : event.isAgentCall && event.agentType
+      ? `Subagent ${event.agentType}`
+      : `Tool ${event.toolName}`;
+  return `${label} ${num}`;
+}
+
 function EventTooltipBody({
   event,
   sessionStartedAt,
@@ -200,7 +218,7 @@ export function SessionActivityRibbon({
             onMouseEnter={handleEventHover(idx)}
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
-            aria-label={`Event ${idx + 1}`}
+            aria-label={getEventAriaLabel(event, idx)}
             aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
               selected
@@ -225,7 +243,7 @@ export function SessionActivityRibbon({
             onMouseEnter={handleEventHover(idx)}
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
-            aria-label={`Event ${idx + 1}`}
+            aria-label={getEventAriaLabel(event, idx)}
             aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
               selected
@@ -256,7 +274,7 @@ export function SessionActivityRibbon({
               onMouseEnter={handleEventHover(idx)}
               onMouseMove={handleEventHover(idx)}
               onMouseLeave={() => setHover(null)}
-              aria-label={`Event ${idx + 1}`}
+              aria-label={getEventAriaLabel(event, idx)}
               aria-current={selected ? 'true' : undefined}
               className={`h-full ${bg} transition-opacity ${
                 selected
