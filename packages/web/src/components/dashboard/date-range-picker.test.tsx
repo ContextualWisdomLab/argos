@@ -44,16 +44,16 @@ describe("DateRangePicker", () => {
   it("renders presets", () => {
     render(<DateRangePicker />);
 
-    expect(screen.getByRole("button", { name: "7d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "30d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "90d" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "ALL" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Select last 7 days" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Select last 30 days" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Select last 90 days" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Select last all days" })).toBeDefined();
   });
 
   it("updates URL when a preset is clicked", () => {
     render(<DateRangePicker />);
 
-    const button30d = screen.getByRole("button", { name: "30d" });
+    const button30d = screen.getByRole("button", { name: "Select last 30 days" });
     fireEvent.click(button30d);
 
     expect(mockPush).toHaveBeenCalledTimes(1);
@@ -67,7 +67,7 @@ describe("DateRangePicker", () => {
   it("has aria-pressed set correctly based on active state", () => {
     render(<DateRangePicker />);
 
-    const button7d = screen.getByRole("button", { name: "7d" });
+    const button7d = screen.getByRole("button", { name: "Select last 7 days" });
     expect(button7d.hasAttribute("aria-pressed")).toBe(true);
   });
 });
