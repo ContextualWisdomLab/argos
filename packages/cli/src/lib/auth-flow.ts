@@ -28,7 +28,7 @@ function openBrowser(url: string): void {
     const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio, })
+    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
@@ -75,7 +75,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
       }
 
       try {
-        const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: }>(
+        const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: string }>(
           `${apiUrl}/api/auth/cli-poll?state=${state}`,
           { method: 'GET', baseUrl: '' }
         )
