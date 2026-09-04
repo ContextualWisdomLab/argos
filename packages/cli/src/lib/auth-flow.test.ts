@@ -38,32 +38,42 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens browser using start on win32 safely with spawn, escaping shell metacharacters', async () => {
+  it('opens an http URL on win32 without a command shell', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/login?foo=bar&baz=qux|calc' }) // Step 1
+    const authUrl = 'https://example.com/login?foo=bar&next=one|two;three%5Efour'
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
+      'explorer.exe',
+      [authUrl],
+      { detached: true, stdio: 'ignore' }
+    )
+    expect(childProcess.spawn).not.toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/login?foo=bar^&baz=qux^|calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      expect.anything(),
+      expect.anything()
     )
   })
 
-  it('rejects URLs with invalid protocols (e.g., file://)', async () => {
+  it('rejects URLs with invalid protocols without reflecting the rejected URL', async () => {
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+    const rejectedUrl = 'file:///etc/passwd?secret=do-not-reflect'
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: rejectedUrl }) // Step 1
 
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL protocol')
     expect(errorSpy).toHaveBeenCalled()
+    for (const call of errorSpy.mock.calls) {
+      expect(call.join(' ')).not.toContain(rejectedUrl)
+    }
     expect(childProcess.spawn).not.toHaveBeenCalled()
     errorSpy.mockRestore()
   })
