@@ -438,16 +438,22 @@ export async function getDailyRollupsForProjects(
         const userSet = userSetsByDate.get(r.date)!
         for (const u of r.activeUserIds) userSet.add(u)
 
-        // [Bolt: Performance Optimization] Use Object.keys() instead of Object.entries() in hot paths.
+        // [Bolt: Performance Optimization] Use for...in instead of Object.keys() in hot paths.
         // Impact: Avoids array allocation for each key-value pair, significantly reducing GC overhead when aggregating large daily rollups.
-        for (const k of Object.keys(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
+        for (const k in r.skillCounts) {
+          if (Object.hasOwn(r.skillCounts, k)) {
+            prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
+          }
         }
-        for (const k of Object.keys(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!
+        for (const k in r.agentCounts) {
+          if (Object.hasOwn(r.agentCounts, k)) {
+            prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!
+          }
         }
-        for (const k of Object.keys(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
+        for (const k in r.modelTokens) {
+          if (Object.hasOwn(r.modelTokens, k)) {
+            prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
+          }
         }
 
         // userStats: userId 기준 sum (지연된 Map 변환)
@@ -622,10 +628,16 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    // [Bolt: Performance Optimization] Object.keys() iterations avoid internal array tuples, reducing heap thrashing
-    for (const k of Object.keys(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
-    for (const k of Object.keys(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!
-    for (const k of Object.keys(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!
+    // [Bolt: Performance Optimization] for...in iterations avoid array allocations, reducing heap thrashing
+    for (const k in r.skillCounts) {
+      if (Object.hasOwn(r.skillCounts, k)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
+    }
+    for (const k in r.agentCounts) {
+      if (Object.hasOwn(r.agentCounts, k)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!
+    }
+    for (const k in r.modelTokens) {
+      if (Object.hasOwn(r.modelTokens, k)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!
+    }
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
