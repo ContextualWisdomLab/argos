@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import type { PaginatedResult, SessionItem } from '@argos/shared'
 import { Prisma } from '@prisma/client'
+import { csvField } from '@/lib/csv'
 import { db } from '@/lib/server/db'
 import { requireAuth } from '@/lib/server/auth-helper'
 import { handleRouteError } from '@/lib/server/error-helper'
@@ -69,15 +70,6 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
       name: session.project.name,
     },
   }
-}
-
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  let text = String(value)
-  if (/^[\s]*[=+\-@\t\r]/.test(text)) {
-    text = "'" + text
-  }
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
