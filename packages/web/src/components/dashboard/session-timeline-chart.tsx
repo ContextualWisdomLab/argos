@@ -25,11 +25,6 @@ interface ToolCallPoint {
   parsedTimestamp: number
 }
 
-interface TimestampedUsagePoint {
-  usage: SessionTimelineUsage
-  parsedTimestamp: number
-}
-
 interface ChartDataItem {
   relativeTime: string
   input: number
@@ -63,18 +58,21 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
 /**
  * Merge chronologically sorted usage and tool events into cumulative chart rows.
  *
- * Local copies are sorted in O(N log N + M log M). Timestamp parsing is bounded
- * to once per usage row before sorting, and the forward cursor consumes every
- * tool event once instead of filtering all M events for every usage row.
+ * Local copies are sorted in O(N log N + M log M). The forward cursor then
+ * consumes every tool event once instead of filtering all M events for every
+ * one of the N usage rows.
  */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage: TimestampedUsagePoint[] = usageTimeline
-    .map((usage) => ({ usage, parsedTimestamp: Date.parse(usage.timestamp) }))
+  // [Bolt: Performance Optimization] Use Schwartzian transform (map-sort-map) to avoid
+  // O(N log N) Date.parse() calls during sort. This reduces parsing overhead to O(N).
+  const sortedUsage = usageTimeline
+    .map(usage => ({ original: usage, parsedTimestamp: Date.parse(usage.timestamp) }))
     .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+    .map(item => item.original)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -82,7 +80,9 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map(({ usage, parsedTimestamp: currentTimestamp }) => {
+  return sortedUsage.map((usage) => {
+    const currentTimestamp = Date.parse(usage.timestamp)
+
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
