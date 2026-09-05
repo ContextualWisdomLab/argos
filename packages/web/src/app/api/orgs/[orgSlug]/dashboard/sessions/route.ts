@@ -75,7 +75,7 @@ function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
   // 🛡️ Sentinel: Prevent CSV Injection (Formula Injection) by padding formulas with a single quote
-  if (/^[\s]*[=+\-@\t\r]/.test(text)) {
+  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r]/.test(text)) {
     text = "'" + text
   }
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
