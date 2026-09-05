@@ -33,6 +33,7 @@ test('csvField neutralizes spreadsheet formula prefixes', () => {
   expect(csvField('\r1+1')).toBe('"\'\r1+1"')
   expect(csvField('\n=1+1')).toBe('"\'\n=1+1"')
   expect(csvField(' =1+1')).toBe("' =1+1")
+  expect(csvField('\uFEFF=1+1')).toBe("'\uFEFF=1+1")
   expect(csvField('＝1+1')).toBe("'＝1+1")
   expect(csvField('＋1+1')).toBe("'＋1+1")
   expect(csvField('－1+1')).toBe("'－1+1")
