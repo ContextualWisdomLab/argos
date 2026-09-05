@@ -58,18 +58,17 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
 /**
  * Merge chronologically sorted usage and tool events into cumulative chart rows.
  *
- * Local copies are sorted in O(N log N + M log M). The forward cursor then
- * consumes every tool event once instead of filtering all M events for every
- * one of the N usage rows.
+ * Local copies are sorted in O(N log N + M log M). Each usage timestamp is parsed
+ * once into its sort key, and the forward cursor consumes every tool event once.
  */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  const sortedUsage = usageTimeline
+    .map((usage) => ({ usage, parsedTimestamp: Date.parse(usage.timestamp) }))
+    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,9 +76,7 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
-
+  return sortedUsage.map(({ usage, parsedTimestamp: currentTimestamp }) => {
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
