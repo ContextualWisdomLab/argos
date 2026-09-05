@@ -141,6 +141,14 @@ describe("ERDModel", () => {
       ).toThrowError("Column 'created__at' must be snake_case.");
     });
 
+    it("should reject identifiers exceeding length limit", () => {
+      model.addTable("users");
+      const longName = "a".repeat(65);
+      expect(() =>
+        model.addColumn("users", { name: longName, type: "integer" }),
+      ).toThrowError("Invalid length for Column identifier.");
+    });
+
     it("should reject invalid SQL default values", () => {
       model.addTable("users");
       expect(() =>
