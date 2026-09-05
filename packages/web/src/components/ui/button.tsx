@@ -1,7 +1,8 @@
+import React from 'react'
+import { Loader2 } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Loader2 } from "lucide-react"
-import type { ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -56,6 +57,7 @@ function Button({
     />
   )
 }
+
 
 function ButtonLoadingContent({ children }: { children: ReactNode }) {
   return (
