@@ -35,3 +35,7 @@
 **Vulnerability:** Known high-severity vulnerability (GHSA-ggr8-5vv4-36mx / CVE-2026-40345) discovered by the audit in the `deepmerge-ts` package.
 **Learning:** Deeply nested dependencies may expose the application to vulnerabilities. OSV-Scanner identified an issue with `deepmerge-ts` in version 7.1.5.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions (e.g. `8.0.0`) across all transitive paths in a pnpm workspace.
+## 2026-09-05 - [Fix CSV Formula Injection]
+**Vulnerability:** 사용자 입력을 CSV 형식으로 내보낼 때 CSV 매크로/수식 삽입(Spreadsheet Macro Injection) 취약점이 있었습니다. '=', '+', '-', '@', '\t', '\r' 등의 문자로 시작하는 문자열 필드는 스프레드시트 프로그램에서 수식으로 해석되어 임의 코드 실행으로 이어질 수 있습니다.
+**Learning:** 다운로드 되는 모든 CSV 데이터는 이러한 특수문자가 맨 앞에 오는지 검증하고 무력화(Neutralize)해야 합니다.
+**Prevention:** 모든 문자열 타입 데이터는 export 시 `csvField` 같은 유틸리티를 거쳐 안전하게 이스케이프(예: `'` 를 앞에 붙임) 처리해야 합니다.
