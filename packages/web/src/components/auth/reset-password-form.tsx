@@ -112,7 +112,13 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
           )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> Updating...</>
+              <>
+                <Loader2
+                  className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+                Updating...
+              </>
             ) : (
               'Update password'
             )}
