@@ -7,8 +7,10 @@ test('csvField handles null/undefined', () => {
 })
 
 test('csvField handles normal strings', () => {
+  expect(csvField('')).toBe('')
   expect(csvField('hello')).toBe('hello')
   expect(csvField('hello world')).toBe('hello world')
+  expect(csvField("'already-text")).toBe("'already-text")
 })
 
 test('csvField handles numbers', () => {
@@ -22,6 +24,7 @@ test('csvField handles quotes and delimiters without opening a new cell', () => 
   expect(csvField('hello"world')).toBe('"hello""world"')
   expect(csvField('hello\nworld')).toBe('"hello\nworld"')
   expect(csvField('safe",=1+1')).toBe('"safe"",=1+1"')
+  expect(csvField('=SUM(1,2)')).toBe('"\'=SUM(1,2)"')
 })
 
 test('csvField neutralizes spreadsheet formula prefixes', () => {
@@ -33,6 +36,7 @@ test('csvField neutralizes spreadsheet formula prefixes', () => {
   expect(csvField('\r1+1')).toBe('"\'\r1+1"')
   expect(csvField('\n=1+1')).toBe('"\'\n=1+1"')
   expect(csvField(' =1+1')).toBe("' =1+1")
+  expect(csvField('\u00A0=1+1')).toBe("'\u00A0=1+1")
   expect(csvField('\uFEFF=1+1')).toBe("'\uFEFF=1+1")
   expect(csvField('＝1+1')).toBe("'＝1+1")
   expect(csvField('＋1+1')).toBe("'＋1+1")
