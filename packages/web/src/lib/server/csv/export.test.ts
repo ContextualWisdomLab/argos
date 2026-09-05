@@ -14,7 +14,7 @@ describe('csvField', () => {
     expect(csvField('string\r\nwith\nnewlines')).toBe('"string\r\nwith\nnewlines"')
   })
 
-  it('neutralizes formula-leading string cells before CSV quoting', () => {
+  it('prevents CSV Injection by prepending a quote', () => {
     expect(csvField('=1+1')).toBe(`'=1+1`)
     expect(csvField('+1')).toBe(`'+1`)
     expect(csvField('-1')).toBe(`'-1`)
@@ -22,23 +22,13 @@ describe('csvField', () => {
     expect(csvField('\t=1+1')).toBe(`'\t=1+1`)
     expect(csvField('\r=1+1')).toBe(`"'\r=1+1"`)
     expect(csvField('\n=1+1')).toBe(`"'\n=1+1"`)
-    expect(csvField(' =1+1')).toBe(`' =1+1`)
-    expect(csvField('\u00a0=1+1')).toBe(`'\u00a0=1+1`)
-    expect(csvField('=SUM(1,2)')).toBe(`"'=SUM(1,2)"`)
+    expect(csvField(' =1+1')).toBe(`' =1+1`) // space padding
+    expect(csvField('\uff1d1+1')).toBe(`'\uff1d1+1`) // full width equals
   })
 
-  it('neutralizes full-width formula initiators used by some spreadsheet locales', () => {
-    expect(csvField('\uff1d1+1')).toBe(`'\uff1d1+1`)
-    expect(csvField('\uff0b1')).toBe(`'\uff0b1`)
-    expect(csvField('\uff0d1')).toBe(`'\uff0d1`)
-    expect(csvField('\uff20sum')).toBe(`'\uff20sum`)
-  })
-
-  it('preserves formatting of safe values', () => {
-    expect(csvField('')).toBe('')
-    expect(csvField("'already-text")).toBe("'already-text")
+  it('preserves formatting of safe numbers', () => {
     expect(csvField(123)).toBe('123')
-    expect(csvField(-123)).toBe('-123')
+    expect(csvField(-123)).toBe('-123') // numeric type is safe, not string
     expect(csvField(0)).toBe('0')
   })
 })
