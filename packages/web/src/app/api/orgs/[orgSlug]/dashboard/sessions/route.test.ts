@@ -1,16 +1,5 @@
 import { expect, test } from 'vitest'
-
-// Testing the extracted csvField logic directly since it's an internal function
-// For full coverage, we test the core logic here.
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  let text = String(value)
-  // 🛡️ Sentinel: Prevent CSV Injection (Formula Injection) by padding formulas with a single quote
-  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r]/.test(text)) {
-    text = "'" + text
-  }
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
+import { csvField } from './csv-field'
 
 test('csvField handles null/undefined', () => {
   expect(csvField(null)).toBe('')
@@ -28,18 +17,24 @@ test('csvField handles numbers', () => {
   expect(csvField(0)).toBe('0')
 })
 
-test('csvField handles quotes and commas', () => {
+test('csvField handles quotes and delimiters without opening a new cell', () => {
   expect(csvField('hello, world')).toBe('"hello, world"')
   expect(csvField('hello"world')).toBe('"hello""world"')
   expect(csvField('hello\nworld')).toBe('"hello\nworld"')
+  expect(csvField('safe",=1+1')).toBe('"safe"",=1+1"')
 })
 
-test('csvField prevents CSV injection', () => {
-  expect(csvField('=1+1')).toBe("'=" + "1+1")
+test('csvField neutralizes spreadsheet formula prefixes', () => {
+  expect(csvField('=1+1')).toBe("'=1+1")
   expect(csvField('+1+1')).toBe("'+1+1")
   expect(csvField('-1+1')).toBe("'-1+1")
   expect(csvField('@1+1')).toBe("'@1+1")
   expect(csvField('\t1+1')).toBe("'\t1+1")
   expect(csvField('\r1+1')).toBe('"\'\r1+1"')
-  expect(csvField(' =1+1')).toBe("' =1+1") // leading space
+  expect(csvField('\n=1+1')).toBe('"\'\n=1+1"')
+  expect(csvField(' =1+1')).toBe("' =1+1")
+  expect(csvField('＝1+1')).toBe("'＝1+1")
+  expect(csvField('＋1+1')).toBe("'＋1+1")
+  expect(csvField('－1+1')).toBe("'－1+1")
+  expect(csvField('＠1+1')).toBe("'＠1+1")
 })
