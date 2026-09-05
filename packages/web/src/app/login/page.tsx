@@ -77,10 +77,16 @@ export default function LoginPage() {
             )}
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> Signing in...</>
-            ) : (
-              'Sign in'
-            )}
+                <>
+                  <Loader2
+                    className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+                    aria-hidden="true"
+                  />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
