@@ -407,4 +407,67 @@ CREATE TABLE posts (
       );
     });
   });
+
+  describe("Renaming", () => {
+    beforeEach(() => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "id", type: "integer" });
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+    });
+
+    it("should rename table and update foreign keys", () => {
+      model.renameTable("users", "members");
+      expect(model.getTable("users")).toBeUndefined();
+      expect(model.getTable("members")?.name).toBe("members");
+      expect(model.getTable("posts")?.foreignKeys[0].referenceTable).toBe("members");
+    });
+
+    it("should throw when renaming non-existent table", () => {
+      expect(() => model.renameTable("non_existent", "members")).toThrowError(
+        "Table 'non_existent' does not exist."
+      );
+    });
+
+    it("should throw when renaming table to existing table", () => {
+      expect(() => model.renameTable("users", "posts")).toThrowError(
+        "Table 'posts' already exists."
+      );
+    });
+
+    it("should rename column and update foreign keys", () => {
+      model.renameColumn("users", "id", "member_id");
+      expect(model.getTable("users")?.columns[0].name).toBe("member_id");
+      expect(model.getTable("posts")?.foreignKeys[0].referenceColumn).toBe("member_id");
+
+      model.renameColumn("posts", "user_id", "member_id");
+      expect(model.getTable("posts")?.columns[1].name).toBe("member_id");
+      expect(model.getTable("posts")?.foreignKeys[0].columnName).toBe("member_id");
+    });
+
+    it("should throw when renaming column in non-existent table", () => {
+      expect(() => model.renameColumn("non_existent", "id", "new_id")).toThrowError(
+        "Table 'non_existent' does not exist."
+      );
+    });
+
+    it("should throw when renaming non-existent column", () => {
+      expect(() => model.renameColumn("users", "non_existent", "new_id")).toThrowError(
+        "Column 'non_existent' does not exist in table 'users'."
+      );
+    });
+
+    it("should throw when renaming column to existing column", () => {
+      model.addColumn("users", { name: "existing_col", type: "integer" });
+      expect(() => model.renameColumn("users", "id", "existing_col")).toThrowError(
+        "Column 'existing_col' already exists in table 'users'."
+      );
+    });
+  });
 });
