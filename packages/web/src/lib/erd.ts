@@ -217,11 +217,9 @@ export class ERDModel {
     }
 
     table.name = newName;
+    const entries = Array.from(this.tables.entries());
     this.tables = new Map(
-      Array.from(this.tables.entries(), ([name, currentTable]) => [
-        name === oldName ? newName : name,
-        currentTable,
-      ]),
+      entries.map(([key, val]) => (key === oldName ? [newName, val] : [key, val]))
     );
 
     for (const t of this.tables.values()) {

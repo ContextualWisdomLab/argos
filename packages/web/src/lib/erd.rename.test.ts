@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { ERDModel } from "./erd";
 
-describe("ERDModel rename stability", () => {
-  it("preserves dependency-safe table order when renaming a referenced table", () => {
+describe("ERDModel renameTable ordering regression", () => {
+  it("maintains table order and updates FKs when renaming users to members", () => {
     const model = new ERDModel();
     model.addTable("users");
-    model.addColumn("users", { name: "id", type: "integer" });
+    model.addColumn("users", { name: "id", type: "integer", isPrimaryKey: true });
+
     model.addTable("posts");
-    model.addColumn("posts", { name: "id", type: "integer" });
+    model.addColumn("posts", { name: "id", type: "integer", isPrimaryKey: true });
     model.addColumn("posts", { name: "user_id", type: "integer" });
     model.addForeignKey("posts", {
       columnName: "user_id",
@@ -15,17 +16,24 @@ describe("ERDModel rename stability", () => {
       referenceColumn: "id",
     });
 
+    // Rename users to members
     model.renameTable("users", "members");
 
-    expect(model.getTables().map((table) => table.name)).toEqual([
-      "members",
-      "posts",
-    ]);
+    // The order of tables should be [members, posts], not [posts, members]
+    const tables = model.getTables();
+    expect(tables.map(t => t.name)).toStrictEqual(["members", "posts"]);
 
+    // DDL should also generate members before posts and update REFERENCES
     const ddl = model.generateDDL();
-    expect(ddl.indexOf("CREATE TABLE members")).toBeLessThan(
-      ddl.indexOf("CREATE TABLE posts"),
-    );
-    expect(ddl).toContain("REFERENCES members(id)");
+    const expectedDdl = `CREATE TABLE members (
+  id integer PRIMARY KEY
+);
+
+CREATE TABLE posts (
+  id integer PRIMARY KEY,
+  user_id integer,
+  FOREIGN KEY (user_id) REFERENCES members(id)
+);`;
+    expect(ddl).toBe(expectedDdl);
   });
 });
