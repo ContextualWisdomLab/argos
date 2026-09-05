@@ -50,3 +50,7 @@
 **Vulnerability:** CI Scorecard checks failed because GitHub Actions workflows (`dependency-review.yml` and `osvscanner.yml`) either lacked global top-level permission restrictions or incorrectly elevated global top-level permissions (`security-events: write`).
 **Learning:** Workflows must adhere to the principle of least privilege. Top-level permissions should be restricted globally (e.g., `contents: read`), and elevated permissions (like `security-events: write`) must be scoped strictly down to the specific job that requires them.
 **Prevention:** Always declare `permissions: contents: read` at the top level of `.github/workflows/*.yml` files. Move any required elevated permissions into the individual `jobs.<job-name>.permissions` block.
+## 2026-09-05 - Correctly Scoping Job-Level Permissions
+**Vulnerability:** The OSV-Scanner workflow failed because the `scan` job requires `security-events: write` to upload SARIF results, but it was completely removed during a permissions lockdown.
+**Learning:** When locking down global `permissions` to `contents: read`, you must explicitly re-add the required elevated permissions (e.g., `security-events: write`) to the specific `jobs.<job_id>.permissions` block that needs them.
+**Prevention:** Always verify the required permissions of third-party actions (like `google/osv-scanner-action`) and ensure they are present at the job level if removed from the top level.
