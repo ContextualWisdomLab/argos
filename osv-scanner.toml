@@ -40,19 +40,3 @@ ignoreUntil = 2026-10-28
 # lint toolchain; the prod-reachable 5.x line is pinned to the fixed 5.0.8. Mirrors
 # the org-central trivy-fs gate, which already suppresses dev/test dependencies.
 reason = "brace-expansion 1.1.15 reachable only via dev-only ESLint toolchain (minimatch@3.1.5); the 1.1.16 fix would re-trigger the flat-range GHSA-mh99 on central dependency-review, so 1.x is pinned base-exact and both dev-only advisories are ignored."
-
-
-[[IgnoredVulns]]
-id = "CVE-2026-73088"
-ignoreUntil = "2026-10-01"
-reason = "dev dependency with no runtime security impact"
-
-[[IgnoredVulns]]
-id = "CVE-2026-73089"
-ignoreUntil = "2026-10-01"
-reason = "dev dependency with no runtime security impact"
-
-[[IgnoredVulns]]
-id = "CVE-2026-40345"
-ignoreUntil = "2026-10-01"
-reason = "dev dependency with no runtime security impact"
