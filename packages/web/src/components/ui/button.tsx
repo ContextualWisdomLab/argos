@@ -1,5 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Loader2 } from "lucide-react"
+import type { ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -55,4 +57,16 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+function ButtonLoadingContent({ children }: { children: ReactNode }) {
+  return (
+    <>
+      <Loader2
+        className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+        aria-hidden="true"
+      />
+      {children}
+    </>
+  )
+}
+
+export { Button, ButtonLoadingContent, buttonVariants }
