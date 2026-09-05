@@ -1,11 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button, ButtonLoadingContent, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -112,13 +111,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
           )}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? (
-              <>
-                <Loader2
-                  className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
-                  aria-hidden="true"
-                />
-                Updating...
-              </>
+              <ButtonLoadingContent>Updating...</ButtonLoadingContent>
             ) : (
               'Update password'
             )}
