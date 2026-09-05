@@ -67,8 +67,8 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // Parse each usage timestamp once and reuse that same primitive for sorting
-  // and the chronological merge below; the regression locks this call count.
+  // [Bolt: Performance Optimization] Use Schwartzian transform (map-sort-map) to avoid
+  // O(N log N) Date.parse() calls during sort. This reduces parsing overhead to O(N).
   const sortedUsage = usageTimeline
     .map(usage => ({ original: usage, parsedTimestamp: Date.parse(usage.timestamp) }))
     .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
@@ -81,6 +81,7 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map(({ original: usage, parsedTimestamp: currentTimestamp }) => {
+
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp

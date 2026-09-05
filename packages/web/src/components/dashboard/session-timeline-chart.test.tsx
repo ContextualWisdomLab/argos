@@ -30,7 +30,7 @@ function readChartData(): Array<{
 describe('SessionTimelineChart', () => {
   afterEach(() => {
     cleanup()
-    vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   it('renders "No timeline data available" when usageTimeline is empty', () => {
