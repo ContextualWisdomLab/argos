@@ -30,7 +30,7 @@ function readChartData(): Array<{
 describe('SessionTimelineChart', () => {
   afterEach(() => {
     cleanup()
-    vi.clearAllMocks()
+    vi.restoreAllMocks()
   })
 
   it('renders "No timeline data available" when usageTimeline is empty', () => {
@@ -274,5 +274,49 @@ describe('SessionTimelineChart', () => {
     ])
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
+  })
+
+  it('parses each usage timestamp once while sorting and merging chart rows', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:03:00.000Z',
+        inputTokens: 300,
+        outputTokens: 30,
+        estimatedCostUsd: 0.003,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 10,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 200,
+        outputTokens: 20,
+        estimatedCostUsd: 0.002,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+    const originalDateParse = Date.parse.bind(Date)
+    const parseSpy = vi
+      .spyOn(Date, 'parse')
+      .mockImplementation((timestamp) => originalDateParse(timestamp))
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(parseSpy).toHaveBeenCalledTimes(usageTimeline.length)
+    expect(readChartData().map(({ input }) => input)).toEqual([100, 200, 300])
   })
 })
