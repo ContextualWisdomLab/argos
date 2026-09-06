@@ -62,3 +62,7 @@
 **Vulnerability:** The `strix` CI check failed with "Strix could not complete authoritative vulnerability analysis because its provider/backend was unavailable (rate limit, token cap, connection, warm-up, or model-behavior failure)."
 **Learning:** This is an infrastructure/network error related to an external service (`api.opencode.ai` or similar) being unreachable, rate-limited, or throwing 502/504 errors. It is not an issue with the application code itself.
 **Prevention:** As long as local checks (`pnpm test`, `pnpm lint`) and primary pipeline checks pass, external transient failures on optional security scanners like `strix` should not block progress and can be ignored or bypassed.
+## 2026-09-06 - Strix Network Error / API Gateway Timeout (Repeated)
+**Vulnerability:** The `strix` CI check failed with "Strix could not complete authoritative vulnerability analysis because its provider/backend was unavailable (rate limit, token cap, connection, warm-up, or model-behavior failure)."
+**Learning:** This is an infrastructure/network error related to an external service (`api.opencode.ai` or similar) being unreachable, rate-limited, or throwing 500/502/504 errors. It is not an issue with the application code itself.
+**Prevention:** As long as local checks (`pnpm test`, `pnpm lint`) and primary pipeline checks pass, external transient failures on optional security scanners like `strix` should not block progress and can be ignored or bypassed.
