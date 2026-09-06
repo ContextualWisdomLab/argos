@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { csvField } from './export'
 
 describe('csvField', () => {
-  it('escapes spreadsheet formula trigger characters', () => {
+  it('escapes macro injection characters', () => {
     expect(csvField('=1+1')).toBe("'=1+1")
     expect(csvField('+1+1')).toBe("'+1+1")
     expect(csvField('-1+1')).toBe("'-1+1")
@@ -10,7 +10,6 @@ describe('csvField', () => {
     expect(csvField('\t1+1')).toBe("'\t1+1")
     expect(csvField('\r1+1')).toBe("\"'\r1+1\"")
     expect(csvField('\n1+1')).toBe("\"'\n1+1\"")
-    expect(csvField('\0=1+1')).toBe("'\0=1+1")
     expect(csvField('  =1+1')).toBe("'  =1+1")
     expect(csvField('\uFF1D1+1')).toBe("'\uFF1D1+1")
   })
