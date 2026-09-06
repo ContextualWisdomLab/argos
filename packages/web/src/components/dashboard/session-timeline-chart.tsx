@@ -62,7 +62,7 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
  * consumes every tool event once instead of filtering all M events for every
  * one of the N usage rows.
  */
-function buildChartData(
+export function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
