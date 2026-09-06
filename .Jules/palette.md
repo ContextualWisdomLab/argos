@@ -9,3 +9,7 @@
 ## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
+
+## 2025-01-01 - SelectTrigger 접근성 향상 (aria-label 추가)
+**Learning:** `SelectTrigger`와 같이 드롭다운 메뉴를 여는 인터랙티브 요소는 겉으로 보이는 `<Label>`이 없는 경우, 스크린 리더 사용자가 해당 요소의 역할을 이해할 수 없다는 문제를 발견했습니다. 특히 `OrgSwitcher`나 `ProjectFilter`처럼 컨텍스트 스위칭 역할을 하는 드롭다운 트리거에서는 접근성(ARIA) 레이블의 부재가 큰 불편함을 초래합니다.
+**Action:** `SelectTrigger`에 명시적인 연결 `<Label>` 요소가 없는 경우, 컴포넌트 내부에 직접 `aria-label` 속성(예: `aria-label="Select organization"`)을 추가하여 스크린 리더 사용자도 현재 요소의 목적과 기능을 쉽게 파악할 수 있도록 해야 합니다.
