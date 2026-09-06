@@ -5,7 +5,7 @@ describe('daily-rollup performance', () => {
   const generateLargeRollups = (count: number) => {
     return Array.from({ length: count }, (_, i) => ({
       projectId: 'proj-1',
-      date: new Date(`2024-01-${(i % 31) + 1}`),
+      date: new Date(`2024-01-${(i % 31) + 1}`).toISOString(),
       sessionCount: 100,
       turnCount: 500,
       inputTokens: 10000,
