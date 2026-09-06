@@ -3,7 +3,7 @@ import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
-import { SessionTimelineChart } from './session-timeline-chart'
+import { SessionTimelineChart, buildChartData } from './session-timeline-chart'
 
 vi.mock('recharts', async () => {
   const OriginalModule = await vi.importActual('recharts')
@@ -26,6 +26,45 @@ function readChartData(): Array<{
     screen.getByTestId('composed-chart-data').textContent ?? '[]'
   ) as Array<{ input: number; toolSummary: string }>
 }
+
+describe('buildChartData', () => {
+  it('maintains source-array immutability, chronological usage order, cumulative tool-count merge semantics, and handles equal timestamps', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      { timestamp: '2023-01-01T00:02:00.000Z', inputTokens: 200, outputTokens: 0, estimatedCostUsd: 0, model: null, isSubagent: false },
+      { timestamp: '2023-01-01T00:01:00.000Z', inputTokens: 100, outputTokens: 0, estimatedCostUsd: 0, model: null, isSubagent: false },
+      { timestamp: '2023-01-01T00:01:00.000Z', inputTokens: 150, outputTokens: 0, estimatedCostUsd: 0, model: null, isSubagent: false },
+    ]
+
+    const originalUsageTimeline = [...usageTimeline]
+
+    const toolCalls = [
+      { toolName: 'alpha', parsedTimestamp: Date.parse('2023-01-01T00:00:30.000Z') },
+      { toolName: 'beta', parsedTimestamp: Date.parse('2023-01-01T00:01:30.000Z') },
+      { toolName: 'alpha', parsedTimestamp: Date.parse('2023-01-01T00:00:45.000Z') },
+      { toolName: 'gamma', parsedTimestamp: Date.parse('2023-01-01T00:01:00.000Z') },
+    ]
+
+    const originalToolCalls = [...toolCalls]
+
+    const result = buildChartData(usageTimeline, toolCalls, '2023-01-01T00:00:00.000Z')
+
+    // 1. Source array immutability
+    expect(usageTimeline).toEqual(originalUsageTimeline)
+    expect(toolCalls).toEqual(originalToolCalls)
+
+    // 2. Chronological usage order and 3. Equal timestamps
+    // Note: Due to stable sort on objects vs arrays, we just check they are before the 00:02:00 one.
+    const earlyInputs = [result[0].input, result[1].input]
+    expect(earlyInputs).toContain(100)
+    expect(earlyInputs).toContain(150)
+    expect(result[2].input).toBe(200)
+
+    // 4. Cumulative tool-count merge semantics
+    expect(result[0].toolSummary).toBe('alpha x2, gamma')
+    expect(result[1].toolSummary).toBe('alpha x2, gamma')
+    expect(result[2].toolSummary).toBe('alpha x2, gamma, beta')
+  })
+})
 
 describe('SessionTimelineChart', () => {
   afterEach(() => {
