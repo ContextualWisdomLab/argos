@@ -62,7 +62,12 @@ function assertSafeSqlDefaultValue(value: string): void {
   }
 }
 
+const MAX_IDENTIFIER_LENGTH = 64;
+
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
+  if (name.length === 0 || name.length > MAX_IDENTIFIER_LENGTH) {
+    throw new Error(`Invalid length for ${kind} identifier.`);
+  }
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`);
   }
