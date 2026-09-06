@@ -438,8 +438,8 @@ export async function getDailyRollupsForProjects(
         const userSet = userSetsByDate.get(r.date)!
         for (const u of r.activeUserIds) userSet.add(u)
 
-        // [Bolt: Performance Optimization] Use for...in loops instead of Object.keys() in hot paths.
-        // Impact: Completely avoids array allocation, significantly reducing GC overhead when aggregating large daily rollups.
+        // [Bolt: Performance Optimization] Iterate own enumerable counters without materializing the Object.keys() result array in hot paths.
+        // Impact: Avoids intermediate array allocation when aggregating large daily rollups.
         for (const k in r.skillCounts) {
           if (Object.hasOwn(r.skillCounts, k)) {
             prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
@@ -628,7 +628,7 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    // [Bolt: Performance Optimization] for...in loops avoid internal array tuples completely, eliminating heap thrashing
+    // [Bolt: Performance Optimization] Iterate own enumerable counters without materializing the Object.keys() result array in hot paths.
     for (const k in r.skillCounts) {
       if (Object.hasOwn(r.skillCounts, k)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
     }
