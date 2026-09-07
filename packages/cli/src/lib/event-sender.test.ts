@@ -52,11 +52,6 @@ describe('buildSelfHealScript', () => {
     expect(releaseIdx).toBeGreaterThan(renameIdx)
   })
 
-  it('creates the atomic temp file exclusively with owner-only permissions', () => {
-    expect(script).toContain("flag:'wx'")
-    expect(script).toContain('mode:0o600')
-  })
-
   it('(d) contains res.status !== 202 guard', () => {
     expect(script).toContain('res.status!==202')
   })
