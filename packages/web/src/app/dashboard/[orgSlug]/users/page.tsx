@@ -3,10 +3,10 @@
 import { Suspense, useEffect } from 'react'
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { useOrgs } from '@/hooks/use-orgs'
-import { subDays, format } from 'date-fns'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
 import { useDashboardUsers } from '@/hooks/use-dashboard-users'
 import { formatTokens, formatCost } from '@/lib/format'
+import { resolveSessionDateRange } from '@/lib/session-date-range'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -25,11 +25,10 @@ function UsersContent({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
-
-  const from = searchParams.get('from') || format(sevenDaysAgo, 'yyyy-MM-dd')
-  const to = searchParams.get('to') || format(today, 'yyyy-MM-dd')
+  const { from, to } = resolveSessionDateRange(
+    searchParams.get('from'),
+    searchParams.get('to'),
+  )
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const pageSize = Number(searchParams.get('pageSize')) || DEFAULT_PAGE_SIZE
 
