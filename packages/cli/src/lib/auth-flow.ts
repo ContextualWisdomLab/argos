@@ -5,32 +5,33 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  let parsedUrl: URL
+  // Validate URL scheme to prevent arbitrary protocol execution
   try {
-    parsedUrl = new URL(url)
+    const parsedUrl = new URL(url)
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error(`Invalid protocol: ${parsedUrl.protocol}`)
+    }
   } catch {
-    throw new Error('Invalid browser URL')
+    console.error(`Invalid URL provided to openBrowser: ${url}`)
+    return
   }
 
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-    throw new Error(`Unsupported browser URL protocol: ${parsedUrl.protocol}`)
-  }
-
-  const browserUrl = parsedUrl.href
-
+  // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // `cmd.exe /c start` reparses URL metacharacters. Keep the normalized URL
-    // as a process argument so it never crosses a command-shell boundary.
-    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', browserUrl], {
+    // Windows: cmd.exe 빌트인 start 명령어 사용
+    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>()^])/g, '^$1')], {
+      windowsVerbatimArguments: true,
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    const child = spawn('open', [browserUrl], { detached: true, stdio: 'ignore' })
+    // macOS
+    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    const child = spawn('xdg-open', [browserUrl], { detached: true, stdio: 'ignore' })
+    // Linux 등
+    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
