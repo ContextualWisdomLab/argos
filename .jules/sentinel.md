@@ -30,3 +30,13 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Formula Injection risk in exports]
+**Vulnerability:** A custom `csvField` utility failed to sanitize string values starting with vulnerable characters (like `=`, `+`, `-`, `@`, `\t`, `\r`), allowing CSV Formula Injection (Spreadsheet Macro Injection) when users download session exports.
+**Learning:** Raw string values injected into CSV exports can be interpreted as executable formulas by spreadsheet applications (like Excel or Google Sheets), potentially leading to arbitrary code execution or data exfiltration on the user's machine.
+**Prevention:** Always prepend a single quote (`'`) to string values starting with vulnerable characters (`=`, `+`, `-`, `@`, `\t`, `\r`) during CSV generation. However, do not apply this to raw number types to preserve proper numeric formatting in spreadsheets.
+
+## 2026-08-17 - [Fix vulnerable deepmerge-ts via pnpm overrides]
+**Vulnerability:** A High severity vulnerability (GHSA-ggr8-5vv4-36mx) was discovered in `deepmerge-ts` v7.1.5 via OSV-Scanner and Trivy file system scan.
+**Learning:** This transitive dependency was pulled via `@prisma/config` which is a peer/subdependency of `prisma` and `@prisma/client`.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions (`>=8.0.0`) across all transitive paths in the pnpm workspace.
