@@ -6,6 +6,7 @@ import { useParams, usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { OrgSwitcher } from './org-switcher'
 import { CreateOrgModal } from '@/components/org/create-org-modal'
 import { useOrgs } from '@/hooks/use-orgs'
@@ -121,14 +122,15 @@ export function OrgSidebar() {
           </div>
         </nav>
         <div className="p-3 border-t">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={handleLogout}
-            className="w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
+            className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
             aria-label="Log out of your account"
           >
             Log Out
-          </button>
+          </Button>
         </div>
       </aside>
 
@@ -149,14 +151,16 @@ export function OrgSidebar() {
           <div className="flex-1 min-w-0">
             <OrgSwitcher onCreateClick={() => setCreateOpen(true)} />
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleLogout}
-            className="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             aria-label="Log out of your account"
           >
             Logout
-          </button>
+          </Button>
         </div>
         <nav className="flex overflow-x-auto px-2 pb-2 gap-1">
           {mobileNavItems.map((item) => renderLink(item, 'mobile'))}

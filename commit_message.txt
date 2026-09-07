@@ -1,0 +1,6 @@
+🎨 Palette: OSV 보안 취약점(deepmerge-ts) 수정 및 pnpm-lock.yaml 갱신
+
+💡 What: `package.json`의 overrides 항목에 `deepmerge-ts: ^8.0.0`을 추가하여 `deepmerge-ts`를 버전 8.0.1로 업그레이드했습니다.
+🎯 Why: GitHub CI OSV-Scanner에서 `deepmerge-ts` 버전 7.1.5의 취약점(GHSA-ggr8-5vv4-36mx)이 발견되어 빌드 실패가 발생했기 때문입니다.
+📸 Before/After: 빌드가 정상적으로 통과되며, trivy-fs 스캔 및 osv-scanner 스캔에서 해당 취약점이 더 이상 검출되지 않습니다.
+♿ Accessibility: N/A
