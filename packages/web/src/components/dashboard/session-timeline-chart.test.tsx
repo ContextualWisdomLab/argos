@@ -170,6 +170,58 @@ describe('SessionTimelineChart', () => {
     ])
   })
 
+  it('correctly compares string timestamps for proper sorting', () => {
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:03:00.000Z',
+        inputTokens: 300,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: null,
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: null,
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 200,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: null,
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 250,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: null,
+        isSubagent: false,
+      },
+    ]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(readChartData()).toEqual([
+      expect.objectContaining({ input: 100, toolSummary: '' }),
+      expect.objectContaining({ input: 200, toolSummary: '' }),
+      expect.objectContaining({ input: 250, toolSummary: '' }),
+      expect.objectContaining({ input: 300, toolSummary: '' }),
+    ])
+  })
+
   it('sorts local copies and bounds repeated and distinct tool summaries', () => {
     const usageTimeline: SessionTimelineUsage[] = [
       {
