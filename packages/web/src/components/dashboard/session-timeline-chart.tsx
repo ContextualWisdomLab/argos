@@ -201,7 +201,7 @@ export function SessionTimelineChart({
         <Bar
           dataKey="output"
           stackId="tokens"
-          fill="var(--color-chart-2"
+          fill="var(--color-chart-2)"
           name="Output Tokens"
         />
       </ComposedChart>
