@@ -38,7 +38,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
   async function handleDeny() {
     setLoading(true)
     try {
-      await fetch(`/api/auth/cli-callback`, {
+      const res = await fetch(`/api/auth/cli-callback`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${argosToken}`,
@@ -46,6 +46,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         },
         body: JSON.stringify({ state, denied: true }),
       })
+      if (!res.ok) throw new Error('Failed')
       setStatus('denied')
     } catch {
       setStatus('error')
