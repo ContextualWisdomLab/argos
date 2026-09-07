@@ -30,7 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2025-02-18 - [Fix CSV Formula Injection (Macro Injection)]
-**Vulnerability:** CSV 내보내기 기능에서 사용자 입력값(세션 타이틀, 프로젝트 이름 등)이 이스케이프 되지 않아 CSV Formula Injection (Macro Injection) 취약점이 발생할 수 있었습니다.
-**Learning:** Excel, Google Sheets 등은 CSV 파일에서 `=, +, -, @, \t, \r, \n` 등의 문자로 시작하는 필드를 수식으로 해석하고 실행합니다.
-**Prevention:** CSV로 데이터를 내보낼 때, 원시 `number` 타입이 아닌 문자열 필드가 수식 트리거 문자로 시작하는 경우, 값 앞에 작은따옴표(`'`)를 추가하여 일반 문자열로 처리되도록 해야 합니다.
