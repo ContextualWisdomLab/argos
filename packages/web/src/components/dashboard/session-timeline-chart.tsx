@@ -67,7 +67,6 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // [Bolt: Performance Optimization] Use Schwartzian transform to avoid O(N log N) Date.parse() overhead during sort phase
   const sortedUsage = usageTimeline
     .map(usage => ({ usage, parsedTs: Date.parse(usage.timestamp) }))
     .sort((a, b) => a.parsedTs - b.parsedTs)
