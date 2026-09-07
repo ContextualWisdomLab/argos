@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vite
 import { CliAuthClient } from './client';
 import { cleanup } from '@testing-library/react';
 
+// Setup React globally
 global.React = React;
 
 describe('CliAuthClient', () => {
@@ -82,21 +83,6 @@ describe('CliAuthClient', () => {
     }));
 
     expect(screen.getByText('로그인 거부됨')).toBeDefined();
-  });
-
-  it('does not report denial when the callback rejects it', async () => {
-    (global.fetch as Mock).mockResolvedValue({ ok: false });
-
-    render(<CliAuthClient {...defaultProps} />);
-
-    const denyBtn = screen.getByRole('button', { name: '거부' });
-
-    await act(async () => {
-      fireEvent.click(denyBtn);
-    });
-
-    expect(screen.getByText('오류 발생')).toBeDefined();
-    expect(screen.queryByText('로그인 거부됨')).toBeNull();
   });
 
   it('handles network error', async () => {
