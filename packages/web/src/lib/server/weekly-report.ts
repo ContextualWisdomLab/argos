@@ -53,11 +53,10 @@ function percentDelta(current: number, prev: number): number {
 }
 
 function totalTokensFromRollups(rollups: DailyRollup[]): number {
-  let sum = 0
-  for (const r of rollups) {
-    sum += r.inputTokens + r.outputTokens + r.cacheReadTokens + r.cacheCreationTokens
-  }
-  return sum
+  return rollups.reduce(
+    (sum, r) => sum + r.inputTokens + r.outputTokens + r.cacheReadTokens + r.cacheCreationTokens,
+    0,
+  )
 }
 
 function seriesFromRollups(rollups: DailyRollup[]): DailySeriesPoint[] {
