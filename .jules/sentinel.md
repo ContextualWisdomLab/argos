@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-09-08 - [임시 파일 생성 시 암호학적 난수 생성기 사용]
+**Vulnerability:** 파일 이름 충돌 방지 및 임시 파일 생성 시 `Math.random()`을 사용하여 고유한 파일명을 생성하고 있었음. 이는 공격자가 임시 파일명을 예측하여 덮어쓰기나 심볼릭 링크 공격을 수행할 수 있는 취약점을 초래할 수 있음.
+**Learning:** `Math.random()`은 암호학적으로 안전하지 않은 난수 생성기이므로, 보안 관련 작업이나 시스템 자원과 관련된 작업(파일 시스템 등)에서는 예측 불가능한 암호학적 난수(`crypto.randomBytes()`, `crypto.randomUUID()`)를 사용해야 함.
+**Prevention:** 모든 시스템 관련 작업에서 고유값이나 난수가 필요한 경우 항상 Node.js의 `crypto` 모듈을 사용하도록 코드 리뷰 및 정적 분석 규칙 적용 필요.

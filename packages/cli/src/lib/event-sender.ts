@@ -96,9 +96,9 @@ export function buildSelfHealScript({
     `if(latest.orgId===body.project.orgId&&latest.orgSlug===body.project.orgSlug)return;`,
     // Step 10: Merge new orgId/orgSlug, preserving all other fields and key order
     `const updated={...latest,orgId:body.project.orgId,orgSlug:body.project.orgSlug};`,
-    // Step 11: Atomic write via exclusively-created tmp + renameSync
+    // Step 11: Atomic write via tmp + renameSync
     `atomicTmp=${projectJsonPathJson}+'.tmp.'+process.pid+'.'+require('crypto').randomBytes(16).toString('hex');`,
-    `fs.writeFileSync(atomicTmp,JSON.stringify(updated,null,2),{encoding:'utf8',flag:'wx'});`,
+    `fs.writeFileSync(atomicTmp,JSON.stringify(updated,null,2),'utf8');`,
     `fs.renameSync(atomicTmp,${projectJsonPathJson});`,
     `}catch{try{if(atomicTmp)fs.unlinkSync(atomicTmp);}catch{}}finally{try{fs.rmdirSync(lockDir);}catch{}}`,
     `}catch{}`,

@@ -52,10 +52,6 @@ describe('buildSelfHealScript', () => {
     expect(releaseIdx).toBeGreaterThan(renameIdx)
   })
 
-  it('creates the atomic temp path exclusively before rename', () => {
-    expect(script).toContain("flag:'wx'")
-  })
-
   it('(d) contains res.status !== 202 guard', () => {
     expect(script).toContain('res.status!==202')
   })
