@@ -35,8 +35,9 @@ export function NoOrganizationState({
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{email}</span>
             <button
+              type="button"
               onClick={() => signOut({ callbackUrl: '/login' })}
-              className="text-sm text-destructive hover:underline"
+              className="text-sm text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
               aria-label="Log out of your account"
             >
               Log out
