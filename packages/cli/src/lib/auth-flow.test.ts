@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { runLoginFlow } from './auth-flow.js'
+import { normalizeBrowserUrl, runLoginFlow } from './auth-flow.js'
 import { apiRequest } from './api-client.js'
 import * as childProcess from 'child_process'
 
@@ -38,22 +38,30 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('opens a normalized HTTP URL with explorer.exe on win32 without cmd.exe', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
-    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
-    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+    mockApiRequest.mockResolvedValueOnce({
+      state: 'state123',
+      authUrl: 'https://example.com/cli-auth?state=a%26b',
+    })
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' })
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } })
 
-    await runLoginFlow('http://api')
+    await runLoginFlow('https://api.example.com')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
+      'explorer.exe',
+      ['https://example.com/cli-auth?state=a%26b'],
+      { detached: true, stdio: 'ignore', windowsHide: true }
+    )
+    expect(childProcess.spawn).not.toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      expect.anything(),
+      expect.anything()
     )
   })
 
@@ -63,9 +71,9 @@ describe('auth-flow', () => {
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/url' }) // Step 1
-    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
-    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/url' })
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' })
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } })
 
     await runLoginFlow('http://api')
 
@@ -78,13 +86,38 @@ describe('auth-flow', () => {
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/url' }) // Step 1
-    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
-    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/url' })
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' })
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } })
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith('xdg-open', ['http://example.com/url'], { detached: true, stdio: 'ignore' })
+  })
+
+  it.each([
+    'javascript:alert(1)',
+    'file:///etc/passwd',
+    'data:text/html,unsafe',
+    'mailto:attacker@example.com',
+    'not a URL',
+  ])('rejects non-HTTP browser targets: %s', (candidate) => {
+    expect(() => normalizeBrowserUrl(candidate)).toThrow('Invalid browser URL')
+  })
+
+  it('rejects embedded credentials and control characters', () => {
+    expect(() => normalizeBrowserUrl('https://user:secret@example.com/login')).toThrow(
+      'Invalid browser URL'
+    )
+    expect(() => normalizeBrowserUrl('https://example.com/\u0000login')).toThrow(
+      'Invalid browser URL'
+    )
+  })
+
+  it('returns a canonical HTTP(S) URL for the launcher', () => {
+    expect(normalizeBrowserUrl('HTTPS://Example.COM:443/a/../cli-auth?state=abc')).toBe(
+      'https://example.com/cli-auth?state=abc'
+    )
   })
 
   it('throws an error if step 1 fails', async () => {
