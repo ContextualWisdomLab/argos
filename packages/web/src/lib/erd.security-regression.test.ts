@@ -118,4 +118,48 @@ describe("ERDModel security regressions", () => {
       },
     ]);
   });
+
+  it("rejects excessively long identifiers", () => {
+    const longName = "a".repeat(64);
+    expect(() => model.addTable(longName)).toThrowError(
+      `Table '${longName}' length must be between 1 and 63 characters.`
+    );
+  });
+
+  it("enforces limits on tables, columns, and foreign keys", () => {
+    // Max tables
+    for (let i = 0; i < 100; i++) {
+      model.addTable(`table_${i}`);
+    }
+    expect(() => model.addTable("table_100")).toThrowError(
+      "Cannot add table 'table_100': maximum number of tables (100) reached."
+    );
+
+    // Max columns
+    for (let i = 0; i < 100; i++) {
+      model.addColumn("table_0", { name: `col_${i}`, type: "INTEGER" });
+    }
+    expect(() =>
+      model.addColumn("table_0", { name: "col_100", type: "INTEGER" })
+    ).toThrowError(
+      "Cannot add column 'col_100': maximum number of columns (100) reached for table 'table_0'."
+    );
+
+    // Remove one table to make room for ref_table
+    model.removeTable("table_99");
+
+    // Max foreign keys
+    model.addTable("ref_table");
+    model.addColumn("ref_table", { name: "id", type: "INTEGER" });
+    for (let i = 0; i < 50; i++) {
+      model.addForeignKey("table_0", {
+        columnName: `col_${i}`,
+        referenceTable: "ref_table",
+        referenceColumn: "id",
+      });
+    }
+    expect(() =>
+      model.addForeignKey("table_0", { columnName: "col_50", referenceTable: "ref_table", referenceColumn: "id" })
+    ).toThrowError("Cannot add foreign key: maximum number of foreign keys (50) reached for table 'table_0'.");
+  });
 });
