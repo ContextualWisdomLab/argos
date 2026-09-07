@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2024-11-21 - deepmerge-ts ReDoS Vulnerability
+**Vulnerability:** deepmerge-ts@7.1.5 was vulnerable to ReDoS (Regular Expression Denial of Service) through GHSA-ggr8-5vv4-36mx.
+**Learning:** This vulnerability existed in deeply nested dependency trees and was flagged by the strict OSV-Scanner checks in CI.
+**Prevention:** Always ensure vulnerabilities in deeply nested dependencies (like deepmerge-ts) are enforced to the patched versions using the `pnpm.overrides` block in the root `package.json` to safely patch them and pass CI checks.
