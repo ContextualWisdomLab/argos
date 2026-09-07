@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2026-08-25 - Fix vulnerable deepmerge-ts version
+**Vulnerability:** A HIGH severity vulnerability (CVE-2026-40345) was detected in `deepmerge-ts` v7.1.5 via Trivy FS scan.
+**Learning:** `deepmerge-ts` was pulled in as a transitive dependency by `@prisma/config` which is locked at a specific version.
+**Prevention:** Used `pnpm.overrides` in `package.json` to force the resolution of `deepmerge-ts` to a safe version (`>=8.0.0`) globally across the workspace. This is the recommended approach for fixing vulnerable transitive dependencies when the parent package cannot be immediately upgraded.
