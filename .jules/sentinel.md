@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2026-08-23 - [Fix command injection in CLI auth flow on Windows]
+**Vulnerability:** Command injection was possible when opening a browser using `spawn('cmd.exe')` with `windowsVerbatimArguments: true` due to incomplete shell metacharacter escaping (only `&` was escaped). Also missing URL protocol validation.
+**Learning:** When using `spawn('cmd.exe')` with `windowsVerbatimArguments: true` on Windows, Node.js normal escaping is bypassed. To prevent command injection without breaking valid URLs, it is necessary to escape all shell metacharacters (`&`, `|`, `;`, `<`, `>`, `(`, `)`, `^`) with a caret (`^`). Validating URL protocol (e.g., rejecting `file:///` or `javascript:`) is also required to prevent local file execution.
+**Prevention:** Validate URL protocol strictly (`http:` or `https:`) and comprehensively escape shell metacharacters (`/([&|;<>()^])/g`) when launching `cmd.exe` directly.

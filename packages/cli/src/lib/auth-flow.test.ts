@@ -44,7 +44,7 @@ describe('auth-flow', () => {
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/?q=test&calc=1|echo;' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
@@ -52,9 +52,16 @@ describe('auth-flow', () => {
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
+      ['/c', 'start', '""', 'http://example.com/?q=test^&calc=1^|echo^;'],
       { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
     )
+  })
+
+  it('throws an error if URL protocol is not http or https', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('안전하지 않은 URL 프로토콜입니다. http 또는 https만 허용됩니다.')
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
