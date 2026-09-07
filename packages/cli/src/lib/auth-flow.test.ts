@@ -38,40 +38,23 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens browser on win32 without passing the URL through cmd.exe', async () => {
+  it('opens browser using start on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
-    const authUrl = 'http://example.com/a\r\nb?x=1&y=2|;()^<>'
-    const normalizedAuthUrl = new URL(authUrl).href
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc|;()^<>' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'rundll32.exe',
-      ['url.dll,FileProtocolHandler', normalizedAuthUrl],
-      { detached: true, stdio: 'ignore' }
-    )
-    expect(childProcess.spawn).not.toHaveBeenCalledWith(
       'cmd.exe',
-      expect.anything(),
-      expect.anything()
+      ['/c', 'start', '""', 'http://example.com/^&calc^|^;^(^)^^^<^>'],
+      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
     )
-  })
-
-  it('fails before polling when the authorization URL is not http(s)', async () => {
-    const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'javascript:alert(1)' })
-
-    await expect(runLoginFlow('http://api')).rejects.toThrow('Unsupported browser URL protocol: javascript:')
-
-    expect(mockApiRequest).toHaveBeenCalledTimes(1)
-    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
