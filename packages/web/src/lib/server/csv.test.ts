@@ -2,67 +2,55 @@ import { describe, expect, it } from 'vitest'
 import { csvField } from './csv'
 
 describe('csvField', () => {
-  it.each([null, undefined])('%s 는 빈 필드로 직렬화한다', (value) => {
-    expect(csvField(value)).toBe('')
+  it('handles null and undefined', () => {
+    expect(csvField(null)).toBe('')
+    expect(csvField(undefined)).toBe('')
   })
 
-  it.each([
-    [123, '123'],
-    [-456, '-456'],
-    [0, '0'],
-  ] as const)('숫자 %s 의 숫자 표현을 보존한다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('preserves numbers', () => {
+    expect(csvField(123)).toBe('123')
+    expect(csvField(-456)).toBe('-456')
+    expect(csvField(0)).toBe('0')
   })
 
-  it.each([
-    ['=cmd', "'=cmd"],
-    ['+cmd', "'+cmd"],
-    ['-cmd', "'-cmd"],
-    ['@cmd', "'@cmd"],
-    ['\tcmd', "'\tcmd"],
-    ['\rcmd', '"\'\rcmd"'],
-    ['\ncmd', '"\'\ncmd"'],
-  ] as const)('수식 시작 문자열 %j 앞에 텍스트 표식을 붙인다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('prepends single quote to formula injection triggers', () => {
+    expect(csvField('=cmd')).toBe("'=cmd")
+    expect(csvField('+cmd')).toBe("'+cmd")
+    expect(csvField('-cmd')).toBe("'-cmd")
+    expect(csvField('@cmd')).toBe("'@cmd")
+    expect(csvField('\tcmd')).toBe("'\tcmd")
+    // \r and \n are handled by the next check and will be quoted
+    expect(csvField('\rcmd')).toBe('"\'\rcmd"')
+    expect(csvField('\ncmd')).toBe('"\'\ncmd"')
   })
 
-  it.each([
-    ['\uff1dcmd', "'\uff1dcmd"],
-    ['\uff0bcmd', "'\uff0bcmd"],
-    ['\uff0dcmd', "'\uff0dcmd"],
-    ['\uff20cmd', "'\uff20cmd"],
-  ] as const)('전각 수식 시작 문자 %j 를 텍스트로 직렬화한다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('prepends single quote to full-width formula injection triggers', () => {
+    expect(csvField('\uff1dcmd')).toBe("'\uff1dcmd")
+    expect(csvField('\uff0bcmd')).toBe("'\uff0bcmd")
+    expect(csvField('\uff0dcmd')).toBe("'\uff0dcmd")
+    expect(csvField('\uff20cmd')).toBe("'\uff20cmd")
   })
 
-  it.each([
-    [' =cmd', "' =cmd"],
-    ['  -cmd', "'  -cmd"],
-    [' \tcmd', "' \tcmd"],
-  ] as const)('선행 공백 뒤 수식 시작 문자열 %j 도 텍스트로 직렬화한다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('prepends single quote even with leading spaces', () => {
+    expect(csvField(' =cmd')).toBe("' =cmd")
+    expect(csvField('  -cmd')).toBe("'  -cmd")
+    expect(csvField(' \tcmd')).toBe("' \tcmd")
   })
 
-  it.each([
-    ['normal,string', '"normal,string"'],
-    ['string with "quotes"', '"string with ""quotes"""'],
-    ['multi\nline', '"multi\nline"'],
-  ] as const)('구분자나 개행이 있는 %j 를 하나의 CSV 필드로 유지한다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('escapes quotes and handles commas', () => {
+    expect(csvField('normal,string')).toBe('"normal,string"')
+    expect(csvField('string with "quotes"')).toBe('"string with ""quotes"""')
+    expect(csvField('multi\nline')).toBe('"multi\nline"')
   })
 
-  it.each([
-    ['normal', 'normal'],
-    [' normal', ' normal'],
-    ['123', '123'],
-  ] as const)('일반 문자열 %j 를 불필요하게 변형하지 않는다', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('does not prepend quote for normal strings', () => {
+    expect(csvField('normal')).toBe('normal')
+    expect(csvField(' normal')).toBe(' normal')
+    expect(csvField('123')).toBe('123')
   })
 
-  it.each([
-    ['=cmd,test', '"\'=cmd,test"'],
-    ['=-"test"', '"\'=-""test"""'],
-  ] as const)('수식 방어와 CSV quote escaping 을 함께 적용한다: %j', (value, expected) => {
-    expect(csvField(value)).toBe(expected)
+  it('combines formula injection prevention with quote escaping', () => {
+    expect(csvField('=cmd,test')).toBe('"\'=cmd,test"')
+    expect(csvField('=-"test"')).toBe('"\'=-""test"""')
   })
 })
