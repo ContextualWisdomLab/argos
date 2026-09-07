@@ -11,6 +11,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateOrg } from '@/hooks/use-create-org'
@@ -116,6 +117,7 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
               size="sm"
               disabled={!name.trim() || mutation.isPending}
             >
+              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
               {mutation.isPending ? '생성 중…' : '생성'}
             </Button>
           </AlertDialogFooter>

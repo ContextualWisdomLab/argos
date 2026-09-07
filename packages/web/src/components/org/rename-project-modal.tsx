@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdateProject } from '@/hooks/use-update-project'
@@ -108,6 +109,7 @@ export function RenameProjectModal({
               취소
             </Button>
             <Button type="submit" size="sm" disabled={!canSubmit}>
+              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
               {mutation.isPending ? '변경 중…' : '변경'}
             </Button>
           </AlertDialogFooter>
