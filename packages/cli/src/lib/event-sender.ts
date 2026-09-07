@@ -98,7 +98,7 @@ export function buildSelfHealScript({
     `const updated={...latest,orgId:body.project.orgId,orgSlug:body.project.orgSlug};`,
     // Step 11: Atomic write via exclusively-created tmp + renameSync
     `atomicTmp=${projectJsonPathJson}+'.tmp.'+process.pid+'.'+require('crypto').randomBytes(16).toString('hex');`,
-    `fs.writeFileSync(atomicTmp,JSON.stringify(updated,null,2),{encoding:'utf8',flag:'wx',mode:0o600});`,
+    `fs.writeFileSync(atomicTmp,JSON.stringify(updated,null,2),{encoding:'utf8',flag:'wx'});`,
     `fs.renameSync(atomicTmp,${projectJsonPathJson});`,
     `}catch{try{if(atomicTmp)fs.unlinkSync(atomicTmp);}catch{}}finally{try{fs.rmdirSync(lockDir);}catch{}}`,
     `}catch{}`,
