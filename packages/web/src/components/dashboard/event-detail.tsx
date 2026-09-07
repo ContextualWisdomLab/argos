@@ -141,7 +141,7 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
               aria-label="Close event details"
               className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="h-4 w-4" />
+              <X aria-hidden="true" className="h-4 w-4" />
             </button>
           )}
         </div>
