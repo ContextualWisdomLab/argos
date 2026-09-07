@@ -171,7 +171,7 @@ function RowView({
           bg,
         )}
       >
-        <Icon className="h-3 w-3 text-background" />
+        <Icon className="h-3 w-3 text-background" aria-hidden="true" />
       </span>
       <span className="w-20 shrink-0 text-sm font-medium truncate">
         {label}
@@ -183,6 +183,7 @@ function RowView({
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
             )}
+            aria-hidden="true"
           />
         )}
         <span className="truncate">{preview}</span>

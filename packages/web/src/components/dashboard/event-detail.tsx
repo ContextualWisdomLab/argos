@@ -121,7 +121,7 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
           <span
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${bg}`}
           >
-            <Icon className="h-3.5 w-3.5 text-background" />
+            <Icon className="h-3.5 w-3.5 text-background" aria-hidden="true" />
           </span>
           <div className="min-w-0">
             <div className="text-sm font-medium truncate">{label}</div>
@@ -141,7 +141,7 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
               aria-label="Close event details"
               className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
         </div>
