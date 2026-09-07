@@ -67,8 +67,10 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
+  // [Bolt: Performance Optimization] Use direct string comparison for ISO 8601 timestamps instead of Date.parse() inside the sort comparator.
+  // Impact: Avoids O(N log N) expensive Date parsing allocations, reducing main thread blocking time during render for sessions with many events.
   const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+    (a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
