@@ -330,21 +330,23 @@ function SessionsContent({
                       {formatDateTimeFull(session.startedAt)}
                     </td>
                     <td className="py-3 px-2 w-10">
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
+                        size="icon-sm"
                         aria-label="세션 삭제"
+                        title="세션 삭제"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSessionToDelete(session)
                         }}
                         className={cn(
-                          'inline-flex size-7 items-center justify-center rounded-md text-muted-foreground',
-                          'hover:bg-destructive/10 hover:text-destructive transition-colors',
+                          'text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors',
                           'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
                         )}
                       >
                         <Trash2 className="size-4" />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))
