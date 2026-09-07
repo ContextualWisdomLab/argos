@@ -67,9 +67,12 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  // ⚡ Bolt: Schwartzian transform (map-sort-map)
+  // Date.parse() 파싱 비용(O(N log N))을 O(N)으로 줄이기 위해 결과를 캐싱합니다.
+  const sortedUsage = usageTimeline
+    .map((original) => ({ original, parsedTimestamp: Date.parse(original.timestamp) }))
+    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+    .map((wrapper) => wrapper.original)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
