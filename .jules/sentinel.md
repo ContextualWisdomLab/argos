@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-05-18 - [HIGH] CSV 매크로 인젝션 취약점 방지
+
+**Vulnerability:** 사용자 입력(이름 등)이 CSV로 내보내기 될 때, `=, +, -, @` 등으로 시작하는 값을 검증하거나 이스케이프하지 않아 스프레드시트 프로그램에서 매크로로 실행될 수 있는 CSV Macro Injection(스프레드시트 인젝션) 취약점이 존재했습니다.
+**Learning:** 텍스트가 `=` 등의 특수문자로 시작하는지 확인할 때 단순히 첫 글자만 확인하면 안 되며, 공백이 포함된 경우(` `나 `\t`, `\r`, `\n`)를 무시하고 실제 텍스트가 특수문자로 시작하는지도 방어해야 한다는 것을 배웠습니다. 단순 정규식으로 앞 공백을 무시하여 검증해야 우회를 막을 수 있습니다.
+**Prevention:** CSV로 데이터를 내보내는 모든 기능에서 문자열 데이터를 처리할 때, 값이 `=, +, -, @, \t, \r, \n` 이나 그 전각 문자(full-width) 등으로 시작하는 경우 앞에 작은따옴표(`'`)를 붙이도록(escape) 공통 유틸리티 함수를 만들어 사용해야 합니다.
