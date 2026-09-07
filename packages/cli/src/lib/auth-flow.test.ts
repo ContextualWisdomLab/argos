@@ -43,7 +43,8 @@ describe('auth-flow', () => {
       value: 'win32',
     })
 
-    const authUrl = 'http://example.com/&calc|;()^<>'
+    const authUrl = 'http://example.com/a\r\nb?x=1&y=2|;()^<>'
+    const normalizedAuthUrl = new URL(authUrl).href
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
@@ -53,7 +54,7 @@ describe('auth-flow', () => {
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'rundll32.exe',
-      ['url.dll,FileProtocolHandler', authUrl],
+      ['url.dll,FileProtocolHandler', normalizedAuthUrl],
       { detached: true, stdio: 'ignore' }
     )
     expect(childProcess.spawn).not.toHaveBeenCalledWith(
@@ -61,6 +62,16 @@ describe('auth-flow', () => {
       expect.anything(),
       expect.anything()
     )
+  })
+
+  it('fails before polling when the authorization URL is not http(s)', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'javascript:alert(1)' })
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Unsupported browser URL protocol: javascript:')
+
+    expect(mockApiRequest).toHaveBeenCalledTimes(1)
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
