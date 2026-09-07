@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-08-18 - [Vulnerability in deepmerge-ts]
+**Vulnerability:** [GitHub CI Check Suite Failure Detected a vulnerability CVE-2026-40345 in deepmerge-ts v7.1.5 through trivy scanner]
+**Learning:** [pnpm overrides can be used to forcefully update a transitive dependency like deepmerge-ts across the monorepo to resolve vulnerabilities without waiting for the primary package to update]
+**Prevention:** [Keep checking CI scan results and use pnpm overrides for swift remediation of transitive vulnerabilities]
