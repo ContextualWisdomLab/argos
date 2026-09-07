@@ -30,8 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-
-## 2026-09-06 - [Fix vulnerable subdependencies via pnpm overrides (browserslist, deepmerge-ts)]
-**Vulnerability:** Known high-severity vulnerabilities (CVE-2026-73088, CVE-2026-73089, CVE-2026-40345) discovered by the Trivy filesystem scan in `browserslist` and `deepmerge-ts` packages.
-**Learning:** Even when top-level code is secure, deeply nested dependencies can introduce critical risks (e.g. prototype pollution or regex DoS) that trigger security pipeline failures.
-**Prevention:** Continuously monitor security scan outputs (like Trivy or OSV-Scanner) and proactively use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths until upstream packages update their dependency trees.
