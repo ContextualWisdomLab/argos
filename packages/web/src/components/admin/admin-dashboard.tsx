@@ -195,7 +195,7 @@ export function AdminDashboard() {
               </div>
               <div className="divide-y">
                 {loadingUsers ? (
-                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <div role="status" aria-live="polite" className="px-4 py-10 text-center text-sm text-muted-foreground">
                     Loading...
                   </div>
                 ) : users.length === 0 ? (
@@ -257,9 +257,10 @@ export function AdminDashboard() {
                     className="w-full"
                     onClick={handleOpenDashboardAsUser}
                     disabled={openingDashboard}
+                    aria-busy={openingDashboard}
                   >
                     <LogIn className="size-4" aria-hidden="true" />
-                    {openingDashboard ? 'Opening...' : 'Open dashboard as user'}
+                    <span aria-live="polite">{openingDashboard ? 'Opening...' : 'Open dashboard as user'}</span>
                   </Button>
 
                   <Button
@@ -267,9 +268,10 @@ export function AdminDashboard() {
                     className="w-full"
                     onClick={handleCreateLink}
                     disabled={creatingLink}
+                    aria-busy={creatingLink}
                   >
                     <Link2 className="size-4" aria-hidden="true" />
-                    {creatingLink ? 'Creating...' : 'Create reset link'}
+                    <span aria-live="polite">{creatingLink ? 'Creating...' : 'Create reset link'}</span>
                   </Button>
 
                   {resetLink && (
@@ -280,7 +282,7 @@ export function AdminDashboard() {
                       </div>
                       <Button variant="outline" className="w-full" onClick={handleCopy}>
                         <Copy className="size-4" aria-hidden="true" />
-                        {copied ? 'Copied' : 'Copy link'}
+                        <span aria-live="polite">{copied ? 'Copied' : 'Copy link'}</span>
                       </Button>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
