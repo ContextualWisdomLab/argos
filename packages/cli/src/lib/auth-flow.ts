@@ -5,32 +5,32 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  let protocol: string
+  let parsedUrl: URL
   try {
-    protocol = new URL(url).protocol
+    parsedUrl = new URL(url)
   } catch {
-    console.error('Invalid browser URL')
-    return
+    throw new Error('Invalid browser URL')
   }
 
-  if (protocol !== 'http:' && protocol !== 'https:') {
-    console.error(`Unsupported browser URL protocol: ${protocol}`)
-    return
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error(`Unsupported browser URL protocol: ${parsedUrl.protocol}`)
   }
+
+  const browserUrl = parsedUrl.href
 
   if (process.platform === 'win32') {
-    // `cmd.exe /c start` reparses URL metacharacters. Keep the validated URL
+    // `cmd.exe /c start` reparses URL metacharacters. Keep the normalized URL
     // as a process argument so it never crosses a command-shell boundary.
-    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', url], {
+    const child = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', browserUrl], {
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [browserUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [browserUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
