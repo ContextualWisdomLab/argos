@@ -67,10 +67,9 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = usageTimeline
-    .map((usage) => ({ original: usage, parsedValue: Date.parse(usage.timestamp) }))
-    .sort((a, b) => a.parsedValue - b.parsedValue)
-    .map((item) => item.original)
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
