@@ -8,6 +8,7 @@ describe('CSV field escaping', () => {
     expect(csvField('-foo')).toBe("'-foo")
     expect(csvField('@foo')).toBe("'@foo")
     expect(csvField('\tfoo')).toBe("'\tfoo")
+    expect(csvField('\0=1+2')).toBe("'\0=1+2")
     expect(csvField('  \r\nfoo')).toBe("\"'  \r\nfoo\"")
     expect(csvField('  \uff1dfoo')).toBe("'  \uff1dfoo")
   })
