@@ -8,7 +8,7 @@
 
 ### ⚡ 성능 (Performance)
 
-- 대시보드의 세션 타임라인 차트(`SessionTimelineChart`)에서 `usageTimeline` 배열을 정렬할 때 Schwartzian transform(map-sort-map) 기법을 적용하여 반복적인 날짜 파싱 비용을 줄였습니다. 정렬 함수의 비교마다 `Date.parse()`가 불필요하게 호출되는 문제를 O(N)으로 최적화했습니다.
+- 대시보드의 세션 타임라인 차트(`SessionTimelineChart`)에서 `usageTimeline`의 timestamp를 정렬 comparator 안에서 반복 파싱하지 않고 항목마다 한 번 계산한 뒤 정렬합니다. 이 변경은 날짜 파싱 호출 수를 줄이는 구조적 최적화이며, 사용자 체감 지연이나 p95 개선 수치는 representative benchmark가 확보되기 전까지 주장하지 않습니다.
 - 세션 타임라인의 사용량 시점마다 전체 도구 이벤트를 다시 필터링하던 중첩 스캔을 정렬된 로컬 복사본과 단일 순방향 커서로 교체했습니다. 이후 시점의 도구 요약은 이전 호출을 누락하지 않고 누적되며, 반복 도구 횟수·표시 개수 상한·입력 배열 불변성을 실제 차트 데이터 회귀 테스트로 고정했습니다.
 - 가상화 이벤트 목록에서 모든 visible row가 동일한 세션 시작 시각 문자열을 반복 파싱하던 경로를 제거했습니다. 세션 anchor는 prop이 바뀔 때만 `Date.parse`로 계산하고 숫자 값을 행에 전달하며, elapsed-time 동작은 순수 formatter와 invalid/negative 시간 회귀 테스트로 고정했습니다.
 
