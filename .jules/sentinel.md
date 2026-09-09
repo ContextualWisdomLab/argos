@@ -30,8 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-
-## 2023-10-25 - [MEDIUM] Fix DoS vulnerability by enforcing ERD model constraints
-**Vulnerability:** The `ERDModel` in `packages/web/src/lib/erd.ts` lacked restrictions on identifier lengths and maximum array counts for tables, columns, and foreign keys. This could lead to a resource exhaustion DoS.
-**Learning:** O(N^2) algorithms (such as some generation passes in DDL output or deeply nested maps) require boundaries to ensure they do not become attack vectors on large inputs.
-**Prevention:** Bound collection lengths (arrays, maps) and identifier sizes (especially ones that feed into structured parsers or DB drivers) to sensible application maximums.
