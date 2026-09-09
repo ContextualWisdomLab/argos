@@ -101,7 +101,7 @@ export function OrgSidebar() {
         <div className="p-6 flex items-center gap-2">
           <Image
             src="/argos-logo.svg"
-            alt="Argos"
+            alt=""
             width={28}
             height={28}
             className="rounded-md"
@@ -138,7 +138,7 @@ export function OrgSidebar() {
           <div className="flex items-center gap-2 shrink-0">
             <Image
               src="/argos-logo.svg"
-              alt="Argos"
+              alt=""
               width={24}
               height={24}
               className="rounded-md"
