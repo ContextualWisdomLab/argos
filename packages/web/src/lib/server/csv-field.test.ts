@@ -16,6 +16,6 @@ describe('csvField', () => {
     expect(csvField('Line1\nLine2')).toBe('"Line1\nLine2"')
     expect(csvField('Line1\r\nLine2')).toBe('"Line1\r\nLine2"')
     expect(csvField('She said "Hello"')).toBe('"She said ""Hello"""')
-    expect(csvField('=Danger, "Zone"')).toBe('\"\'=Danger, ""Zone""\"')
+    expect(csvField('=Danger, "Zone"')).toBe('"\'=Danger, ""Zone"""')
   })
 })
