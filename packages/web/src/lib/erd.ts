@@ -27,6 +27,10 @@ const MULTI_WORD_SQL_TYPE =
   /^(?:DOUBLE PRECISION|CHARACTER VARYING(?:\((?:MAX|[0-9]+)\))?|(?:TIME|TIMESTAMP)(?:\([0-9]+\))? (?:WITH|WITHOUT) TIME ZONE)$/i;
 const MAX_SQL_TYPE_LENGTH = 128;
 const MAX_DEFAULT_VALUE_LENGTH = 255;
+const MAX_IDENTIFIER_LENGTH = 63;
+const MAX_TABLES = 100;
+const MAX_COLUMNS_PER_TABLE = 100;
+const MAX_FOREIGN_KEYS_PER_TABLE = 50;
 const SAFE_SQL_DEFAULT_VALUE =
   /^('(?:[^']|'')*')$|^(?:-?[0-9]+(?:\.[0-9]+)?)$|^(?:TRUE|FALSE|CURRENT_TIMESTAMP|CURRENT_DATE|NULL)$/i;
 
@@ -63,6 +67,11 @@ function assertSafeSqlDefaultValue(value: string): void {
 }
 
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
+  if (!name || name.length === 0 || name.length > MAX_IDENTIFIER_LENGTH) {
+    throw new Error(
+      `${kind} '${name}' length must be between 1 and ${MAX_IDENTIFIER_LENGTH} characters.`
+    );
+  }
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`);
   }
@@ -73,6 +82,9 @@ export class ERDModel {
 
   addTable(name: string): Table {
     assertSnakeCaseIdentifier("Table", name);
+    if (this.tables.size >= MAX_TABLES) {
+      throw new Error(`Cannot add table '${name}': maximum number of tables (${MAX_TABLES}) reached.`);
+    }
     if (this.tables.has(name)) {
       throw new Error(`Table '${name}' already exists.`);
     }
@@ -117,6 +129,9 @@ export class ERDModel {
     const table = this.tables.get(tableName);
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    if (table.columns.length >= MAX_COLUMNS_PER_TABLE) {
+      throw new Error(`Cannot add column '${column.name}': maximum number of columns (${MAX_COLUMNS_PER_TABLE}) reached for table '${tableName}'.`);
     }
     if (table.columns.some((c) => c.name === column.name)) {
       throw new Error(
@@ -168,6 +183,9 @@ export class ERDModel {
     const table = this.tables.get(tableName);
     if (!table) {
       throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    if (table.foreignKeys.length >= MAX_FOREIGN_KEYS_PER_TABLE) {
+      throw new Error(`Cannot add foreign key: maximum number of foreign keys (${MAX_FOREIGN_KEYS_PER_TABLE}) reached for table '${tableName}'.`);
     }
     if (!table.columns.some((c) => c.name === fk.columnName)) {
       throw new Error(
