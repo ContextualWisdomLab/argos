@@ -102,7 +102,6 @@ export function OrgSidebar() {
           <Image
             src="/argos-logo.svg"
             alt=""
-            aria-hidden="true"
             width={28}
             height={28}
             className="rounded-md"
@@ -140,7 +139,6 @@ export function OrgSidebar() {
             <Image
               src="/argos-logo.svg"
               alt=""
-              aria-hidden="true"
               width={24}
               height={24}
               className="rounded-md"

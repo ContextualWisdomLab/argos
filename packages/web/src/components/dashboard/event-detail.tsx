@@ -121,7 +121,7 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
           <span
             className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${bg}`}
           >
-            <Icon className="h-3.5 w-3.5 text-background" aria-hidden="true" />
+            <Icon className="h-3.5 w-3.5 text-background" />
           </span>
           <div className="min-w-0">
             <div className="text-sm font-medium truncate">{label}</div>
