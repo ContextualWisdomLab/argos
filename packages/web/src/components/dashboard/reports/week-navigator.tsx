@@ -54,7 +54,7 @@ export function WeekNavigator({ currentIsoKey, label, isCurrent }: WeekNavigator
         aria-label="이전 주"
         className={cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }))}
       >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        <ChevronLeft className="h-4 w-4" />
       </Link>
       <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted">
         <span className="text-sm font-medium tabular-nums">{label}</span>
@@ -69,7 +69,7 @@ export function WeekNavigator({ currentIsoKey, label, isCurrent }: WeekNavigator
         aria-label="다음 주"
         className={cn(buttonVariants({ variant: 'outline', size: 'icon-sm' }))}
       >
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4" />
       </Link>
     </div>
   )
