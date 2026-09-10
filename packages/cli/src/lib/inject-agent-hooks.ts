@@ -15,9 +15,7 @@ export interface AgentHookResult {
  */
 export function injectAgentHooks(deps: ExternalDeps, cwd: string): AgentHookResult {
   return {
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local hook installation.
     claude: deps.hooks.inject(join(cwd, '.claude', 'settings.json'), 'claude'),
-    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local hook installation.
     codex: deps.hooks.inject(join(cwd, '.codex', 'hooks.json'), 'codex'),
   }
 }

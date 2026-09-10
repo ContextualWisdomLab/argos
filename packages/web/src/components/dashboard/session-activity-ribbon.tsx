@@ -1,17 +1,16 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import {
   formatSlashCommandText,
+  buildTimelineGroups,
   type TimelineEvent,
-  type TimelineGroup,
 } from '@/lib/timeline-events'
 import { formatTokens, formatCost, formatRelativeTime } from '@/lib/format'
 import { segmentVisuals } from './session-ribbon-visuals'
 
 type Props = {
   events: TimelineEvent[]
-  groups: TimelineGroup[]
   selectedIdx: number | null
   onSelect: (idx: number) => void
   sessionStartedAt: string
@@ -148,7 +147,6 @@ function MergedTooltipBody({
 
 export function SessionActivityRibbon({
   events,
-  groups,
   selectedIdx,
   onSelect,
   sessionStartedAt,
@@ -158,17 +156,21 @@ export function SessionActivityRibbon({
   const [hover, setHover] = useState<HoverState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const trackMouse = useCallback((e: React.MouseEvent) => {
+  const groups = useMemo(() => buildTimelineGroups(events), [events])
+
+  if (events.length === 0) return null
+
+  const trackMouse = (e: React.MouseEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
     if (!rect) return e.clientX
     return e.clientX - rect.left
-  }, [])
+  }
 
-  const handleEventHover = useCallback((idx: number) => (e: React.MouseEvent) => {
+  const handleEventHover = (idx: number) => (e: React.MouseEvent) => {
     setHover({ kind: 'event', idx, x: trackMouse(e) })
-  }, [trackMouse])
+  }
 
-  const handleMergedHover = useCallback((
+  const handleMergedHover = (
     firstIdx: number,
     toolName: string,
     count: number,
@@ -182,123 +184,115 @@ export function SessionActivityRibbon({
       firstEvent,
       x: trackMouse(e),
     })
-  }, [trackMouse])
+  }
 
-  const segments = useMemo(() => {
-    const result: React.ReactNode[] = []
-    for (const group of groups) {
-      if (group.kind === 'single') {
-        const { event, idx } = group
-        const { bg, style } = segmentVisuals(event)
-        const selected = idx === selectedIdx
-        result.push(
-          <button
-            key={`s-${idx}`}
-            type="button"
-            style={style}
-            onClick={() => onSelect(idx)}
-            onMouseEnter={handleEventHover(idx)}
-            onMouseMove={handleEventHover(idx)}
-            onMouseLeave={() => setHover(null)}
-            aria-label={`Event ${idx + 1}`}
-            aria-current={selected ? 'true' : undefined}
-            className={`h-full ${bg} transition-opacity ${
-              selected
-                ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                : 'hover:opacity-70'
-            }`}
-          />,
-        )
-        continue
-      }
-
-      if (group.items.length === 1) {
-        const { event, idx } = group.items[0]
-        const { bg, style } = segmentVisuals(event)
-        const selected = idx === selectedIdx
-        result.push(
-          <button
-            key={`gs-${idx}`}
-            type="button"
-            style={style}
-            onClick={() => onSelect(idx)}
-            onMouseEnter={handleEventHover(idx)}
-            onMouseMove={handleEventHover(idx)}
-            onMouseLeave={() => setHover(null)}
-            aria-label={`Event ${idx + 1}`}
-            aria-current={selected ? 'true' : undefined}
-            className={`h-full ${bg} transition-opacity ${
-              selected
-                ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                : 'hover:opacity-70'
-            }`}
-          />,
-        )
-        continue
-      }
-
-      const firstIdx = group.items[0].idx
-      const lastIdx = group.items[group.items.length - 1].idx
-      const containsSelected =
-        selectedIdx !== null && selectedIdx >= firstIdx && selectedIdx <= lastIdx
-      const isExpanded = expandedGroups.has(firstIdx) || containsSelected
-
-      if (isExpanded) {
-        for (const { event, idx } of group.items) {
-          const { bg, style } = segmentVisuals(event)
-          const selected = idx === selectedIdx
-          result.push(
-            <button
-              key={`gc-${idx}`}
-              type="button"
-              style={style}
-              onClick={() => onSelect(idx)}
-              onMouseEnter={handleEventHover(idx)}
-              onMouseMove={handleEventHover(idx)}
-              onMouseLeave={() => setHover(null)}
-              aria-label={`Event ${idx + 1}`}
-              aria-current={selected ? 'true' : undefined}
-              className={`h-full ${bg} transition-opacity ${
-                selected
-                  ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
-                  : 'hover:opacity-70'
-              }`}
-            />,
-          )
-        }
-        continue
-      }
-
-      result.push(
+  const segments: React.ReactNode[] = []
+  for (const group of groups) {
+    if (group.kind === 'single') {
+      const { event, idx } = group
+      const { bg, style } = segmentVisuals(event)
+      const selected = idx === selectedIdx
+      segments.push(
         <button
-          key={`gh-${firstIdx}`}
+          key={`s-${idx}`}
           type="button"
-          style={{ flex: '0 0 10px' }}
-          onClick={() => onToggleGroup(firstIdx)}
-          onMouseEnter={handleMergedHover(
-            firstIdx,
-            group.toolName,
-            group.items.length,
-            group.items[0].event,
-          )}
-          onMouseMove={handleMergedHover(
-            firstIdx,
-            group.toolName,
-            group.items.length,
-            group.items[0].event,
-          )}
+          style={style}
+          onClick={() => onSelect(idx)}
+          onMouseEnter={handleEventHover(idx)}
+          onMouseMove={handleEventHover(idx)}
           onMouseLeave={() => setHover(null)}
-          aria-label={`Expand ${group.toolName} group, ${group.items.length} events`}
-          className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
-        >
-          <span className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px bg-background/50" />
-        </button>,
+          aria-label={`Event ${idx + 1}`}
+          className={`h-full ${bg} transition-opacity ${
+            selected
+              ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
+              : 'hover:opacity-70'
+          }`}
+        />,
       )
+      continue
     }
-    return result
-  }, [groups, expandedGroups, selectedIdx, onSelect, onToggleGroup, handleEventHover, handleMergedHover])
 
-  if (events.length === 0) return null
+    if (group.items.length === 1) {
+      const { event, idx } = group.items[0]
+      const { bg, style } = segmentVisuals(event)
+      const selected = idx === selectedIdx
+      segments.push(
+        <button
+          key={`gs-${idx}`}
+          type="button"
+          style={style}
+          onClick={() => onSelect(idx)}
+          onMouseEnter={handleEventHover(idx)}
+          onMouseMove={handleEventHover(idx)}
+          onMouseLeave={() => setHover(null)}
+          aria-label={`Event ${idx + 1}`}
+          className={`h-full ${bg} transition-opacity ${
+            selected
+              ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
+              : 'hover:opacity-70'
+          }`}
+        />,
+      )
+      continue
+    }
+
+    const firstIdx = group.items[0].idx
+    const lastIdx = group.items[group.items.length - 1].idx
+    const containsSelected =
+      selectedIdx !== null && selectedIdx >= firstIdx && selectedIdx <= lastIdx
+    const isExpanded = expandedGroups.has(firstIdx) || containsSelected
+
+    if (isExpanded) {
+      for (const { event, idx } of group.items) {
+        const { bg, style } = segmentVisuals(event)
+        const selected = idx === selectedIdx
+        segments.push(
+          <button
+            key={`gc-${idx}`}
+            type="button"
+            style={style}
+            onClick={() => onSelect(idx)}
+            onMouseEnter={handleEventHover(idx)}
+            onMouseMove={handleEventHover(idx)}
+            onMouseLeave={() => setHover(null)}
+            aria-label={`Event ${idx + 1}`}
+            className={`h-full ${bg} transition-opacity ${
+              selected
+                ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
+                : 'hover:opacity-70'
+            }`}
+          />,
+        )
+      }
+      continue
+    }
+
+    segments.push(
+      <button
+        key={`gh-${firstIdx}`}
+        type="button"
+        style={{ flex: '0 0 10px' }}
+        onClick={() => onToggleGroup(firstIdx)}
+        onMouseEnter={handleMergedHover(
+          firstIdx,
+          group.toolName,
+          group.items.length,
+          group.items[0].event,
+        )}
+        onMouseMove={handleMergedHover(
+          firstIdx,
+          group.toolName,
+          group.items.length,
+          group.items[0].event,
+        )}
+        onMouseLeave={() => setHover(null)}
+        aria-label={`${group.toolName} x${group.items.length}`}
+        className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
+      >
+        <span className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px bg-background/50" />
+      </button>,
+    )
+  }
 
   return (
     <div ref={containerRef} className="relative">

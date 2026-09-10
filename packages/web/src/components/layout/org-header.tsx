@@ -18,7 +18,6 @@ export function OrgHeader({ orgName }: { orgName?: string }) {
           <Button
             variant="outline"
             onClick={() => signOut({ callbackUrl: '/login' })}
-            aria-label="Sign out of your account"
           >
             Sign out
           </Button>
