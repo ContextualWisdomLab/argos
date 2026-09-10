@@ -160,8 +160,10 @@ describe('aggregateSummary — UNION 정의 skill (EXPECTED_SKILL_COUNTS) 반영
   it('topSkills 에 EXPECTED_SKILL_COUNTS 의 모든 skill 이름이 포함된다', () => {
     const result = aggregateSummary([rollupWithUnionSkills], 10)
     const topSkillNames = new Set(result.topSkills.map((s) => s.skillName))
-    for (const skill of Object.keys(EXPECTED_SKILL_COUNTS)) {
-      expect(topSkillNames).toContain(skill)
+    for (const skill in EXPECTED_SKILL_COUNTS) {
+      if (Object.hasOwn(EXPECTED_SKILL_COUNTS, skill)) {
+        expect(topSkillNames).toContain(skill)
+      }
     }
   })
 
