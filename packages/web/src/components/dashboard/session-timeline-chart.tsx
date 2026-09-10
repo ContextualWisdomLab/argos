@@ -67,16 +67,9 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // Schwartzian transform (map-sort-map)을 사용하여 정렬 시 발생하는 Date.parse() 호출 횟수를
-  // O(N log N)에서 O(N)으로 줄이는 최적화를 적용했습니다.
-  const sortedUsage = [...usageTimeline]
-    .map((usage) => ({
-      original: usage,
-      parsedTimestamp: Date.parse(usage.timestamp),
-    }))
-    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
-    .map((item) => item.original)
-
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
