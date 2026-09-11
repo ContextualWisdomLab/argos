@@ -61,15 +61,21 @@ function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
  * Local copies are sorted in O(N log N + M log M). The forward cursor then
  * consumes every tool event once instead of filtering all M events for every
  * one of the N usage rows.
+ *
+ * [Bolt: Performance Optimization] Applied Schwartzian transform (decorate-sort-undecorate)
+ * to usage timeline sorting to avoid parsing ISO date strings inside the comparator.
+ * Re-used the pre-parsed timestamp in the map loop, turning O(N log N) Date.parse()
+ * operations into O(N).
  */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  const sortedUsage = usageTimeline
+    .map((usage) => ({ ...usage, parsedTimestamp: Date.parse(usage.timestamp) }))
+    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -78,7 +84,7 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
+    const currentTimestamp = usage.parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
