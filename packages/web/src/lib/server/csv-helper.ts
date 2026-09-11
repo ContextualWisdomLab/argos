@@ -2,8 +2,9 @@ export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   if (typeof value === 'number') return String(value)
 
-  let text = value
-  if (/^[ \t\r\n]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
+  let text = String(value)
+
+  if (/^[ \t\v\f\r\n]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
     text = "'" + text
   }
 
