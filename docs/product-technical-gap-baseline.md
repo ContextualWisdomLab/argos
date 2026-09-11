@@ -39,11 +39,11 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Problem.** Session export에는 사용자 제어 문자열이 포함된다. Spreadsheet는 `=`, `+`, `-`, `@`, tab/CR/LF 및 일부 full-width variant로 시작하는 cell을 수식으로 해석할 수 있고, separator/quote 조작으로 위험 prefix가 새 cell 첫 위치에 오게 만들 수도 있다. OWASP는 모든 환경에 보편적으로 안전한 단일 CSV sanitization이 없으며 실제 Excel/LibreOffice workflow 검증이 필요하다고 명시한다.
 
-**Current evidence.** PR #614의 repaired exact head `d22fa9b99bc2f2b37c94413bf37f3c01235b4519`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. 모든 untrusted string cell을 quote하고 embedded quote를 doubling하며 formula-leading 값을 neutralize한다. 이번 repair에서 #615가 소유하는 `package.json`/`pnpm-lock.yaml` dependency delta를 ordinary descendant로 제거했다. Exact-head CI와 SAST는 GREEN이며 Security는 protected-base dependency findings 때문에 `trivy-fs`에서 실패한다.
+**Current evidence.** PR #614 current exact head `ca9734921b5b2db82cdf50f9f7b071751f6506ee`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. #615가 소유하는 package/lockfile re-entry를 ordinary-forward로 제거한 뒤, current-head review가 발견한 vertical-tab/form-feed leading-control omission을 test-first `ed110cf3...` → production `ca973492...`로 수리했다. `\v`/`\f` 자체를 formula trigger라고 일반화하지 않고, 실제 formula prefix 앞의 ASCII whitespace/control 방어 범위를 일관되게 만든다.
 
-**Remaining RED.** 실제 Microsoft Excel과 LibreOffice Calc에서 benign formula-like fixture가 formula로 평가되지 않는지, locale separator가 달라도 단일 cell로 보존되는지, Excel save/re-open 뒤에도 mitigation이 유지되는지 current-head evidence가 없다.
+**Remaining RED.** 새 exact-head CI/SAST/Security/CodeQL과 independent review가 다시 terminalize되어야 한다. 또한 실제 Microsoft Excel과 LibreOffice Calc에서 benign formula-like fixture가 formula로 평가되지 않는지, locale separator가 달라도 단일 cell로 보존되는지, Excel save/re-open 뒤에도 mitigation이 유지되는지 current-head evidence가 없다.
 
-**GREEN acceptance.** isolated/right-cleared fixture를 사용해 Excel과 LibreOffice에서 open → inspect → save/re-open을 검증하고 application/version/locale, raw CSV, rendered cell/formula-bar 결과를 남긴다. 실패 시 export contract를 조정하되 downstream machine-import semantics를 깨는 tab prefix 등을 무근거로 강제하지 않는다.
+**GREEN acceptance.** exact-head correctness/security gates를 먼저 통과한 뒤 isolated/right-cleared fixture를 사용해 Excel과 LibreOffice에서 open → inspect → save/re-open을 검증하고 application/version/locale, raw CSV, rendered cell/formula-bar 결과를 남긴다. 실패 시 export contract를 조정하되 downstream machine-import semantics를 깨는 tab prefix 등을 무근거로 강제하지 않는다.
 
 ### G-002 — Dependency security foundation ownership
 
@@ -57,7 +57,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Problem.** Session timeline의 timestamp parse 중복은 계산량을 늘리지만, 계산 중복 감소와 buyer-visible p95 개선은 같은 주장이 아니다. 성능 PR에 unrelated repository snapshot이나 security repair가 섞이면 원인·검증 경계도 무너진다.
 
-**Current evidence.** PR #612는 intervening `ce838414...`와 `1f4eb793...`를 실제로 분류했다. 첫 commit은 제목과 달리 약 90개 파일의 workflow/auth/API/ERD/docs/security/dependency snapshot을 섞고 focused parse-contract regression을 삭제하며 기존 `useMemo`와 stable tool-summary 구현도 후퇴시켰다. 두 번째 commit은 persuasion-review probe와 CLI status Semgrep 대응으로 timeline bounded context와 무관했다. 이를 Close하거나 history rewrite하지 않고 current head의 ordinary child에서 last reviewed timeline tree를 채택했다. Current exact head `ff458c390f226ab6e811a4b109547082c5172021`은 protected base 대비 정확히 timeline source와 focused regression 두 파일만 변경한다.
+**Current evidence.** PR #612는 intervening `ce838414...`와 `1f4eb793...`를 실제로 분류하고 ordinary descendant `ff458c39...`에서 unrelated 90-file snapshot/security delta를 반환했다. Current-head review는 empty usage + TOOL messages에서 hook order를 유지하려고 옮긴 preparation이 불필요한 timestamp parse/sort를 수행한다는 P2 finding을 냈다. 이를 conditional hook으로 되돌리지 않고 test-first `508bddbd...` → production `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f`로 수리했다. `hasUsage` guard는 hooks를 항상 같은 순서로 호출하면서 empty chart의 tool normalization과 chart-data build를 건너뛴다. Protected-base effective diff는 여전히 timeline source와 focused regression 두 파일뿐이다.
 
 **Remaining RED.** 새 exact head의 hosted CI/security/CodeQL/independent-review generation과 representative buyer workload performance evidence가 아직 완료되지 않았다.
 
@@ -112,9 +112,9 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 | --- | --- |
 | `docs/prd.md` | 제품 정의, 현재 기능·SLO·MVP 비스코프 |
 | protected `developmental@2fa92012bcf80acc1f921a4bafea76b3b1424b46` | 현재 canonical code baseline |
-| PR #614 / `d22fa9b99bc2f2b37c94413bf37f3c01235b4519` | CSV export boundary |
+| PR #614 / `ca9734921b5b2db82cdf50f9f7b071751f6506ee` | CSV export boundary + leading-control follow-up repair |
 | PR #615 / `b8665e85ae9875acc90a782349bacb023a9450b7` | dependency security foundation |
-| PR #612 / `ff458c390f226ab6e811a4b109547082c5172021` | timeline parse optimization + repaired two-file scope |
+| PR #612 / `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f` | timeline parse optimization + empty-state zero-work repair |
 | PR #616 / `56742ebac9de46158418e20951b7829bfc988f78` | ContextSection accessibility delta |
 
 ## References
@@ -122,5 +122,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 OWASP Foundation. (n.d.). *CSV injection*. Retrieved September 11, 2026, from https://owasp.org/www-community/attacks/CSV_Injection
 
 OWASP Foundation. (n.d.). *Testing for CSV injection (WSTG-INJT-21)*. In *OWASP Web Security Testing Guide: Latest*. Retrieved September 11, 2026, from https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/07-Injection/21-CSV_Injection/
+
+MITRE. (2026). *CWE-1236: Improper neutralization of formula elements in a CSV file*. CWE 4.20. https://cwe.mitre.org/data/definitions/1236.html
 
 Shafranovich, Y. (2005). *Common format and MIME type for comma-separated values (CSV) files* (RFC 4180). Internet Engineering Task Force. https://www.rfc-editor.org/rfc/rfc4180
