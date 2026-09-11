@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-23 - [CSV 포뮬라 인젝션(Macro Injection) 우회 방지]
+**Vulnerability:** 선행하는 수직 공백(`\v`, `\f`)이나 널 문자(`\0`), 혹은 특정 구분자 내부에서 발생할 수 있는 CSV 포뮬라 인젝션 우회 가능성을 발견함.
+**Learning:** `\s` 정규식은 `\t`, `\n`, `\r` 뿐만 아니라 `\v`, `\f` 등 다양한 공백 문자를 포함하므로, 이전에 단순히 `'=', '+', '-', '@', '\t', '\r', '\n'`만 체크하는 로직은 우회될 수 있음. 또한 따옴표(`"`)를 이스케이핑하지 않아 발생하는 CSV 구조 변조도 문제가 될 수 있음.
+**Prevention:** 모든 형태의 제어/공백 문자를 제거(`trim()`)한 뒤 첫 글자가 포뮬라 트리거 문자인지 엄격히 검사하고, 값에 따옴표(`"`)가 포함된 경우 올바르게 이스케이핑(반복)해야 함. 외부 데이터를 CSV로 렌더링할 때는 항상 엑셀 및 스프레드시트 매크로 동작의 모든 Edge Case(우회 패턴)를 고려한 검증과 인젝션 방어 로직을 적용해야 함.
