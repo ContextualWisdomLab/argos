@@ -155,22 +155,26 @@ export function SessionTimelineChart({
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
-  // Cache the normalized tool events until the underlying messages change.
+  const hasUsage = usageTimeline.length > 0
+
+  // Keep hooks unconditional across empty/non-empty rerenders while skipping
+  // timestamp work that cannot contribute to an empty chart.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
+    if (!hasUsage) return []
     return messages
       .filter((message) => message.role === 'TOOL')
       .map((message) => ({
         toolName: message.toolName ?? 'unknown',
         parsedTimestamp: Date.parse(message.timestamp),
       }))
-  }, [messages])
+  }, [hasUsage, messages])
 
   const chartData = useMemo(
-    () => buildChartData(usageTimeline, toolCalls, sessionStartedAt),
-    [usageTimeline, sessionStartedAt, toolCalls]
+    () => (hasUsage ? buildChartData(usageTimeline, toolCalls, sessionStartedAt) : []),
+    [hasUsage, usageTimeline, sessionStartedAt, toolCalls]
   )
 
-  if (usageTimeline.length === 0) {
+  if (!hasUsage) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
