@@ -30,10 +30,13 @@ def free_port() -> int:
 
 
 def wait_http_ready(url: str, timeout_sec: float) -> bool:
+    if not url.startswith(("http://", "https://")):
+        raise ValueError("Only http/https schemes are allowed")
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            urllib.request.urlopen(url, timeout=1).read()
+            req = urllib.request.Request(url)
+            urllib.request.urlopen(req, timeout=1).read()
             return True
         except Exception:
             time.sleep(0.2)

@@ -1,4 +1,4 @@
-import { join } from 'path'
+import { join, resolve } from 'path'
 import chalk from 'chalk'
 import type { CommandFactory } from '../deps.js'
 import { DEFAULT_API_URL } from '../lib/config.js'
@@ -43,8 +43,11 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
-    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
+    const basePath = resolve(deps.cwd())
+    const claudePath = join(basePath, '.claude', 'settings.json')
+    if (!claudePath.startsWith(basePath)) throw new Error('Path traversal detected')
+    const codexPath = join(basePath, '.codex', 'hooks.json')
+    if (!codexPath.startsWith(basePath)) throw new Error('Path traversal detected')
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 
