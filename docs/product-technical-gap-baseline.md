@@ -37,31 +37,35 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 ### G-001 — CSV/spreadsheet export boundary
 
-**Problem.** Session export에는 사용자 제어 문자열이 포함된다. Spreadsheet는 `=`, `+`, `-`, `@`, tab/CR/LF 및 일부 full-width variant로 시작하는 cell을 수식으로 해석할 수 있고, separator/quote 조작으로 위험 prefix가 새 cell 첫 위치에 오게 만들 수도 있다. OWASP는 모든 환경에 보편적으로 안전한 단일 CSV sanitization이 없으며 실제 Excel/LibreOffice workflow 검증이 필요하다고 명시한다.
+**Problem.** Session export에는 사용자 제어 문자열이 포함된다. Spreadsheet는 일부 leading cell value를 수식으로 해석할 수 있다. OWASP WSTG-INJT-21은 실제 위험이 CSV를 spreadsheet application에서 열 때 나타나며 client configuration과 user interaction에 따라 영향이 달라질 수 있음을 명시한다. OWASP ASVS 5.0.0 `v5.0.0-1.2.10`은 RFC 4180의 CSV escaping과 함께 field 첫 문자의 `=`, `+`, `-`, `@`, tab, NUL에 대한 single-quote escaping을 요구한다.
 
-**Current evidence.** PR #614 current exact head `ca9734921b5b2db82cdf50f9f7b071751f6506ee`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. #615가 소유하는 package/lockfile re-entry를 ordinary-forward로 제거한 뒤, current-head review가 발견한 vertical-tab/form-feed leading-control omission을 test-first `ed110cf3...` → production `ca973492...`로 수리했다. `\v`/`\f` 자체를 formula trigger라고 일반화하지 않고, 실제 formula prefix 앞의 ASCII whitespace/control 방어 범위를 일관되게 만든다.
+**Current evidence.** PR #614 current exact head `48bfeeddea2f7f1a72ea378457a5661c111e3862`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. Intervening `5158b587...`가 dependency/lockfile과 helper script를 leaf PR에 섞고 CSV regression을 제거했지만 ordinary child `9231eeb0...`에서 reviewed three-file tree를 복원했다. Hosted CI `34608030315`는 `\v`/`\f` 자체를 formula trigger로 취급한 잘못된 fixture를 RED로 만들었고, `12ef7f4f...`는 test만 `\v=cmd|`, `\f@cmd|`로 교정했다.
 
-**Remaining RED.** 새 exact-head CI/SAST/Security/CodeQL과 independent review가 다시 terminalize되어야 한다. 또한 실제 Microsoft Excel과 LibreOffice Calc에서 benign formula-like fixture가 formula로 평가되지 않는지, locale separator가 달라도 단일 cell로 보존되는지, Excel save/re-open 뒤에도 mitigation이 유지되는지 current-head evidence가 없다.
+Fresh standards traceability에서 ASVS 5.0.0의 NUL requirement가 현재 helper에 빠져 있음을 확인했다. Test-only head `c364326de8b0d5a9477c2e1eb63b11550b3a557e`의 hosted CI `34608759593`은 정확히 NUL case 하나에서 expected `"'\u0000cmd|"` / received `"\u0000cmd|"`로 실패했고 나머지 web tests 294개는 통과했다. Current candidate `48bfeed...`는 direct formula-prefix class에 NUL만 추가한다. SAST `34608974221`은 GREEN이며 current CI/CodeQL generation은 같은 exact head에서 재검증 중이다. Security failure는 #615가 소유하는 protected-base dependency findings다.
 
-**GREEN acceptance.** exact-head correctness/security gates를 먼저 통과한 뒤 isolated/right-cleared fixture를 사용해 Excel과 LibreOffice에서 open → inspect → save/re-open을 검증하고 application/version/locale, raw CSV, rendered cell/formula-bar 결과를 남긴다. 실패 시 export contract를 조정하되 downstream machine-import semantics를 깨는 tab prefix 등을 무근거로 강제하지 않는다.
+**Remaining RED.** #615가 immutable protected ancestry에 병합되기 전 leaf Security는 GREEN이 될 수 없다. 또한 Microsoft Excel/LibreOffice Calc에서 benign formula-like fixture가 formula로 평가되지 않는지, locale separator가 달라도 단일 cell로 보존되는지, save/re-open 후에도 mitigation이 유지되는지 실제 evidence가 없다.
+
+**GREEN acceptance.** #615 정상 병합 뒤 #614를 non-force restack하고 exact-head CI/SAST/Security/CodeQL/current review를 다시 통과한다. 그 후 isolated/right-cleared fixture를 사용해 Excel과 LibreOffice에서 open → inspect → save/re-open을 검증하고 application/version/locale, raw CSV, rendered cell/formula-bar 결과를 남긴다. 실패 시 export contract를 조정하되 downstream machine-import semantics를 무근거로 바꾸지 않는다.
 
 ### G-002 — Dependency security foundation ownership
 
 **Problem.** protected base에는 Next.js, sharp, browserslist, deepmerge-ts, baseline-browser-mapping 관련 scanner findings가 남아 있다. Leaf feature PR에 lockfile을 복사하면 owner와 provenance가 흐려진다.
 
-**Current evidence.** PR #615 current exact head `b8665e85ae9875acc90a782349bacb023a9450b7`는 protected base보다 9 commits ahead이며 effective diff는 `package.json`, `pnpm-lock.yaml` 두 파일이다. #614에서 발견된 dependency re-entry는 #615 owner lane으로 반환했다. Exact-head CI, Security Scan, SAST는 GREEN이다. CodeQL만 중앙 producer/consumer settlement ordering defect 때문에 실패하며 authoritative dispatch가 compatibility consumers보다 늦게 시작했다.
+**Current evidence.** PR #615 current exact head `23bd6289a2ab216fdd781e41da622c609f571c12`는 protected base 대비 effective diff가 `package.json`, `pnpm-lock.yaml` 두 파일이다. `next 15.5.25`, `sharp 0.35.4`, `browserslist 4.28.9`, `deepmerge-ts 8.0.2`, `baseline-browser-mapping 2.11.22`로 기존 Next 15.x product line을 보존하면서 scanner findings를 제거한다. Earlier valid tree `ecee9aed...`에서 CI `34608558343`, Security `34608558398`, SAST `34608558367`은 GREEN이었다. CodeQL `34608558368`은 javascript-typescript consumer가 14:13:12Z에 먼저 실패한 뒤 authoritative dispatch가 14:13:55Z에 시작해 14:14:04Z 성공하는 중앙 producer/consumer ordering defect를 재현했다.
 
-**GREEN acceptance.** current package/lock diff에 대한 독립 review와 중앙 CodeQL terminal acceptance가 같은 unchanged head에 필요하다. 정상 merge된 immutable protected ancestry 이후 dependent PR을 non-force restack한다.
+Live branch는 이후 zero-file-delta descendant `23bd6289...`로 전진했다. Tree는 `ecee9aed...`와 동일하지만 exact SHA가 달라졌으므로 predecessor GREEN을 current-head evidence로 재사용하지 않는다. Current exact head에서는 CI `34609082611`, Security `34609082590`, SAST `34609082490`이 GREEN이고 CodeQL `34609082561`은 current generation에서 재검증 중이다.
+
+**GREEN acceptance.** current package/lock diff의 qualifying independent review와 중앙 CodeQL exact authenticated receipt/settlement가 같은 unchanged head에 필요하다. 정상 merge된 immutable protected ancestry 이후 #612/#614/#616을 non-force restack하고 fresh exact-head 검증을 수행한다.
 
 ### G-003 — Timeline performance evidence and scope repair
 
 **Problem.** Session timeline의 timestamp parse 중복은 계산량을 늘리지만, 계산 중복 감소와 buyer-visible p95 개선은 같은 주장이 아니다. 성능 PR에 unrelated repository snapshot이나 security repair가 섞이면 원인·검증 경계도 무너진다.
 
-**Current evidence.** PR #612는 intervening `ce838414...`와 `1f4eb793...`를 실제로 분류하고 ordinary descendant `ff458c39...`에서 unrelated 90-file snapshot/security delta를 반환했다. Current-head review는 empty usage + TOOL messages에서 hook order를 유지하려고 옮긴 preparation이 불필요한 timestamp parse/sort를 수행한다는 P2 finding을 냈다. 이를 conditional hook으로 되돌리지 않고 test-first `508bddbd...` → production `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f`로 수리했다. `hasUsage` guard는 hooks를 항상 같은 순서로 호출하면서 empty chart의 tool normalization과 chart-data build를 건너뛴다. Protected-base effective diff는 여전히 timeline source와 focused regression 두 파일뿐이다.
+**Current evidence.** PR #612 current exact head `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f`는 protected base 대비 timeline source와 focused regression 두 파일만 변경한다. Intervening unrelated snapshot/security delta를 ordinary descendant에서 반환했고, empty usage + TOOL messages에서 hook order를 유지하면서 불필요한 timestamp parse/sort를 하지 않도록 `hasUsage` guard를 useMemo 내부에 둔다. Mixed-order regression은 usage row마다 timestamp를 한 번 parse하는 계약을 유지한다.
 
-**Remaining RED.** 새 exact head의 hosted CI/security/CodeQL/independent-review generation과 representative buyer workload performance evidence가 아직 완료되지 않았다.
+**Remaining RED.** #615 merge 후 fresh exact-head correctness/security/CodeQL/independent-review generation과 representative buyer workload 성능 evidence가 필요하다.
 
-**GREEN acceptance.** exact-head correctness checks를 먼저 통과한 뒤 representative/right-cleared timeline workload로 main-thread CPU, allocation/GC, median·p95를 재고 정확성 regression과 함께 제시한다. sample 축소나 비현실적인 warm cache로 목표를 맞추지 않는다.
+**GREEN acceptance.** representative/right-cleared timeline workload로 browser main-thread time, CPU, allocation/GC, median·p95를 측정한다. sample 축소나 비현실적 warm cache로 목표를 맞추지 않고 정확성 regression과 함께 제시한다.
 
 ### G-004 — Material UI accessibility evidence
 
@@ -69,7 +73,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Current evidence.** PR #616 exact head `56742ebac9de46158418e20951b7829bfc988f78`은 `ContextSection` chevron을 `aria-hidden` 처리하고 기존 accessible name/`aria-expanded` contract를 보존한다.
 
-**GREEN acceptance.** current-head browser에서 collapsed/expanded accessibility tree, Tab/Enter/Space 동작, focus visibility를 검증한다. 정상/loading/empty/error/permission 및 주요 responsive width에 영향을 주는 UI 변경이 생기면 같은 generation에서 E2E와 screenshot evidence를 추가한다.
+**GREEN acceptance.** #615 merge/restack 이후 current-head browser에서 collapsed/expanded button의 accessibility tree, Tab/Enter/Space 동작, focus visibility를 검증한다. 정상/loading/empty/error/permission 및 주요 responsive width에 영향을 주는 UI 변경이 생기면 같은 generation에서 E2E와 screenshot evidence를 추가한다.
 
 ### G-005 — Identity architecture drift
 
@@ -77,7 +81,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Risk.** 자체 identity truth를 계속 확장하면 credential lifecycle, recovery, revocation, audit semantics가 제품별로 분기된다.
 
-**GREEN acceptance.** 먼저 Keyverse의 released/versioned API/client/schema를 inventory한다. Argos Ubiquitous Language의 Organization/Project membership은 Argos에 남기고, credential/identity truth만 ACL을 통해 위임한다. mutable sibling head, source copy, cross-service SQL은 금지한다. contract가 부족하면 Argos workaround보다 Keyverse owner path의 RED/GREEN/release를 먼저 수리한다.
+**GREEN acceptance.** 먼저 Keyverse의 released/versioned API/client/schema를 inventory한다. Argos Ubiquitous Language의 Organization/Project membership은 Argos에 남기고 credential/identity truth만 ACL을 통해 위임한다. mutable sibling head, source copy, cross-service SQL은 금지한다. contract가 부족하면 Argos workaround보다 Keyverse owner path의 RED/GREEN/release를 먼저 수리한다.
 
 ### G-006 — Data retention, PII purpose boundary, auditability
 
@@ -97,13 +101,21 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **GREEN acceptance.** PRD/TRD/architecture/ADR를 merged code와 함께 갱신하고 release candidate exact SHA에서 build/API/schema/E2E/security/SBOM/provenance/rollback evidence를 묶는다. 문서가 구현보다 앞서 Accepted 상태가 되지 않도록 한다.
 
+### G-009 — CI/runtime operability warnings
+
+**Problem.** Fresh #614 CI log에서 workflow action runtime이 Node 20 deprecation 경고를 내고, `pnpm/action-setup` 경로에서 Node `url.parse()` deprecation이 보인다. PostgreSQL service health probe도 `pg_isready`를 DB user 없이 실행해 반복적으로 `role "root" does not exist`를 로그에 남긴다. 테스트 자체가 동작하더라도 이런 소음은 실제 장애 신호를 가리고 장기적으로 hosted-runner/runtime 전환 실패가 될 수 있다.
+
+**Owner boundary.** Reusable CI/action-runtime policy가 중앙 `.github` 책임이면 Argos leaf workflow에서 독자 dialect를 만들지 않고 canonical owner에 exact log/RCA/acceptance를 전달한다. Argos가 직접 소유하는 thin caller/service configuration만 causal local fix 대상이다.
+
+**GREEN acceptance.** active workflow owner를 먼저 확인한 뒤, Node runtime deprecation은 maintained action/runtime generation으로 전환하고 deprecated API warning의 실제 emitting owner를 추적한다. PostgreSQL health probe는 명시적 Argos DB user/database로 검사해 정상 readiness가 error log를 생성하지 않게 한다. Warning suppression이나 `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` 같은 우회는 acceptance가 아니다.
+
 ## Decision rules
 
 1. Core event/session/usage semantics와 Organization/Project Ubiquitous Language는 Argos가 소유한다.
 2. Identity truth는 Keyverse released contract를 ACL로 소비한다. foundation을 전제품 강제 설치물로 만들지 않는다.
 3. Dependency remediation은 #615 같은 canonical owner lane에서 처리하고 feature PR의 lockfile로 우회하지 않는다.
 4. Security/performance/a11y 주장은 exact-head evidence의 범위를 넘겨 일반화하지 않는다.
-5. PR은 current head가 moved 되었으면 이전 generation의 GREEN/approval을 승계하지 않는다.
+5. PR head가 움직이면 이전 generation의 GREEN/approval을 자동 승계하지 않는다. Tree가 같더라도 exact SHA evidence는 구분한다.
 6. Release는 protected exact head에서 immutable artifact와 rollback evidence가 동시에 있을 때만 수행한다.
 
 ## Traceability
@@ -112,12 +124,16 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 | --- | --- |
 | `docs/prd.md` | 제품 정의, 현재 기능·SLO·MVP 비스코프 |
 | protected `developmental@2fa92012bcf80acc1f921a4bafea76b3b1424b46` | 현재 canonical code baseline |
-| PR #614 / `ca9734921b5b2db82cdf50f9f7b071751f6506ee` | CSV export boundary + leading-control follow-up repair |
-| PR #615 / `b8665e85ae9875acc90a782349bacb023a9450b7` | dependency security foundation |
-| PR #612 / `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f` | timeline parse optimization + empty-state zero-work repair |
+| PR #614 / `48bfeeddea2f7f1a72ea378457a5661c111e3862` | CSV export boundary, leading-control fixture correction, ASVS NUL RED→repair |
+| PR #615 / `23bd6289a2ab216fdd781e41da622c609f571c12` | dependency security foundation; CI/Security/SAST current-head GREEN |
+| PR #612 / `1e97fca0e4c55222d88d3d062a60d5a487f5bd1f` | timeline parse-once + empty-state zero-work repair |
 | PR #616 / `56742ebac9de46158418e20951b7829bfc988f78` | ContextSection accessibility delta |
+| CI `34608759593` | ASVS NUL-prefix realistic RED: one targeted failure, 294 other web tests passed |
+| CodeQL `34608558368` | central producer/consumer settlement ordering canary from #615 predecessor exact head |
 
 ## References
+
+OWASP Foundation. (2025). *OWASP Application Security Verification Standard 5.0.0* (Requirement v5.0.0-1.2.10, CSV and Formula Injection). https://github.com/OWASP/ASVS/tree/v5.0.0
 
 OWASP Foundation. (n.d.). *CSV injection*. Retrieved September 11, 2026, from https://owasp.org/www-community/attacks/CSV_Injection
 
