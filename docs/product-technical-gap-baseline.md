@@ -39,7 +39,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Problem.** Session export에는 사용자 제어 문자열이 포함된다. Spreadsheet는 `=`, `+`, `-`, `@`, tab/CR/LF 및 일부 full-width variant로 시작하는 cell을 수식으로 해석할 수 있고, separator/quote 조작으로 위험 prefix가 새 cell 첫 위치에 오게 만들 수도 있다. OWASP는 모든 환경에 보편적으로 안전한 단일 CSV sanitization이 없으며 실제 Excel/LibreOffice workflow 검증이 필요하다고 명시한다.
 
-**Current evidence.** PR #614의 repaired exact head `d22fa9b99bc2f2b37c94413bf37f3c01235b4519`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. 모든 untrusted string cell을 quote하고 embedded quote를 doubling하며 formula-leading 값을 neutralize한다. 이번 repair에서 #615가 소유하는 `package.json`/`pnpm-lock.yaml` dependency delta를 ordinary descendant로 제거했다.
+**Current evidence.** PR #614의 repaired exact head `d22fa9b99bc2f2b37c94413bf37f3c01235b4519`는 protected base 대비 route, `csv-helper.ts`, focused regression 세 파일만 변경한다. 모든 untrusted string cell을 quote하고 embedded quote를 doubling하며 formula-leading 값을 neutralize한다. 이번 repair에서 #615가 소유하는 `package.json`/`pnpm-lock.yaml` dependency delta를 ordinary descendant로 제거했다. Exact-head CI와 SAST는 GREEN이며 Security는 protected-base dependency findings 때문에 `trivy-fs`에서 실패한다.
 
 **Remaining RED.** 실제 Microsoft Excel과 LibreOffice Calc에서 benign formula-like fixture가 formula로 평가되지 않는지, locale separator가 달라도 단일 cell로 보존되는지, Excel save/re-open 뒤에도 mitigation이 유지되는지 current-head evidence가 없다.
 
@@ -49,17 +49,19 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 
 **Problem.** protected base에는 Next.js, sharp, browserslist, deepmerge-ts, baseline-browser-mapping 관련 scanner findings가 남아 있다. Leaf feature PR에 lockfile을 복사하면 owner와 provenance가 흐려진다.
 
-**Current evidence.** PR #615 current exact head `b8665e85ae9875acc90a782349bacb023a9450b7`는 protected base보다 9 commits ahead이며 effective diff는 `package.json`, `pnpm-lock.yaml` 두 파일이다. #614에서 발견된 dependency re-entry는 #615 owner lane으로 반환했다.
+**Current evidence.** PR #615 current exact head `b8665e85ae9875acc90a782349bacb023a9450b7`는 protected base보다 9 commits ahead이며 effective diff는 `package.json`, `pnpm-lock.yaml` 두 파일이다. #614에서 발견된 dependency re-entry는 #615 owner lane으로 반환했다. Exact-head CI, Security Scan, SAST는 GREEN이다. CodeQL만 중앙 producer/consumer settlement ordering defect 때문에 실패하며 authoritative dispatch가 compatibility consumers보다 늦게 시작했다.
 
-**GREEN acceptance.** #615 exact head에서 frozen install, typecheck, tests, production build/runtime smoke, Security/SAST/SBOM/dependency scan을 통과하고 Next 15.x product contract가 유지되어야 한다. 정상 merge된 immutable protected ancestry 이후 dependent PR을 non-force restack한다.
+**GREEN acceptance.** current package/lock diff에 대한 독립 review와 중앙 CodeQL terminal acceptance가 같은 unchanged head에 필요하다. 정상 merge된 immutable protected ancestry 이후 dependent PR을 non-force restack한다.
 
-### G-003 — Timeline performance evidence and branch scope drift
+### G-003 — Timeline performance evidence and scope repair
 
-**Problem.** Session timeline의 timestamp parse 중복은 계산량을 늘리지만, 계산 중복 감소와 buyer-visible p95 개선은 같은 주장이 아니다.
+**Problem.** Session timeline의 timestamp parse 중복은 계산량을 늘리지만, 계산 중복 감소와 buyer-visible p95 개선은 같은 주장이 아니다. 성능 PR에 unrelated repository snapshot이나 security repair가 섞이면 원인·검증 경계도 무너진다.
 
-**Current evidence.** PR #612는 Date parsing을 row당 한 번으로 제한하는 focused delta를 설명하지만 current exact head `1f4eb79317f73f4d10f44baaffc6e06071dd2837`의 live PR metadata는 90 changed files를 보고한다. 본문이 가리키는 이전 2-file reviewed tree와 일치하지 않는다. 이는 Close 사유가 아니라 scope-repair finding이다.
+**Current evidence.** PR #612는 intervening `ce838414...`와 `1f4eb793...`를 실제로 분류했다. 첫 commit은 제목과 달리 약 90개 파일의 workflow/auth/API/ERD/docs/security/dependency snapshot을 섞고 focused parse-contract regression을 삭제하며 기존 `useMemo`와 stable tool-summary 구현도 후퇴시켰다. 두 번째 commit은 persuasion-review probe와 CLI status Semgrep 대응으로 timeline bounded context와 무관했다. 이를 Close하거나 history rewrite하지 않고 current head의 ordinary child에서 last reviewed timeline tree를 채택했다. Current exact head `ff458c390f226ab6e811a4b109547082c5172021`은 protected base 대비 정확히 timeline source와 focused regression 두 파일만 변경한다.
 
-**GREEN acceptance.** intervening delta를 분류해 유효 delta를 보존하고 unrelated files를 ordinary descendant에서 owner lane으로 반환한다. 이후 representative/right-cleared timeline workload로 main-thread CPU, allocation/GC, median·p95를 재고 정확성 regression과 함께 제시한다. sample 축소나 비현실적인 warm cache로 목표를 맞추지 않는다.
+**Remaining RED.** 새 exact head의 hosted CI/security/CodeQL/independent-review generation과 representative buyer workload performance evidence가 아직 완료되지 않았다.
+
+**GREEN acceptance.** exact-head correctness checks를 먼저 통과한 뒤 representative/right-cleared timeline workload로 main-thread CPU, allocation/GC, median·p95를 재고 정확성 regression과 함께 제시한다. sample 축소나 비현실적인 warm cache로 목표를 맞추지 않는다.
 
 ### G-004 — Material UI accessibility evidence
 
@@ -112,7 +114,7 @@ Aggregate transaction은 필요한 최소 범위로 제한한다. Organization/P
 | protected `developmental@2fa92012bcf80acc1f921a4bafea76b3b1424b46` | 현재 canonical code baseline |
 | PR #614 / `d22fa9b99bc2f2b37c94413bf37f3c01235b4519` | CSV export boundary |
 | PR #615 / `b8665e85ae9875acc90a782349bacb023a9450b7` | dependency security foundation |
-| PR #612 / `1f4eb79317f73f4d10f44baaffc6e06071dd2837` | timeline parse optimization + current scope-drift finding |
+| PR #612 / `ff458c390f226ab6e811a4b109547082c5172021` | timeline parse optimization + repaired two-file scope |
 | PR #616 / `56742ebac9de46158418e20951b7829bfc988f78` | ContextSection accessibility delta |
 
 ## References
