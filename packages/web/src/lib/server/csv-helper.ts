@@ -4,7 +4,7 @@ export function csvField(value: string | number | null | undefined) {
 
   let text = String(value)
 
-  if (/^[ \t\r\n]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
+  if (/^[ \t\v\f\r\n]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
     text = "'" + text
   }
 
