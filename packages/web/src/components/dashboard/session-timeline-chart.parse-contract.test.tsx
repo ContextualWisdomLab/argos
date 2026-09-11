@@ -2,7 +2,7 @@
 import React from 'react'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { SessionTimelineUsage } from '@argos/shared'
+import type { SessionDetail, SessionTimelineUsage } from '@argos/shared'
 import { SessionTimelineChart } from './session-timeline-chart'
 
 vi.mock('recharts', async () => {
@@ -20,6 +20,32 @@ describe('SessionTimelineChart timestamp parsing', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
+  })
+
+  it('does not parse tool timestamps when usage timeline is empty', () => {
+    const messages: SessionDetail['messages'] = [
+      {
+        role: 'TOOL',
+        content: 'Unused tool output',
+        sequence: 1,
+        timestamp: '2023-01-01T00:00:30.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'alpha',
+      },
+    ]
+    const parse = vi.spyOn(Date, 'parse')
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={[]}
+        messages={messages}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(parse).not.toHaveBeenCalled()
   })
 
   it('parses each usage timestamp once before sorting', () => {
