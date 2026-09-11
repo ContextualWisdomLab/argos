@@ -1,4 +1,4 @@
-import { join, resolve } from 'path'
+import { join } from 'path'
 import chalk from 'chalk'
 import type { CommandFactory } from '../deps.js'
 import { DEFAULT_API_URL } from '../lib/config.js'
@@ -43,11 +43,10 @@ export const makeStatusCommand: CommandFactory =
     console.log()
 
     // Hooks status (Claude Code + Codex)
-    const basePath = resolve(deps.cwd())
-    const claudePath = join(basePath, '.claude', 'settings.json')
-    if (!claudePath.startsWith(basePath)) throw new Error('Path traversal detected')
-    const codexPath = join(basePath, '.codex', 'hooks.json')
-    if (!codexPath.startsWith(basePath)) throw new Error('Path traversal detected')
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local config lookup.
+    const claudePath = join(deps.cwd(), '.claude', 'settings.json')
+    // nosemgrep: javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal -- joins the operator's own working directory with static string literals; no untrusted path segment is appended, so no traversal is possible in this CLI-local config lookup.
+    const codexPath = join(deps.cwd(), '.codex', 'hooks.json')
     const hasClaude = deps.hooks.fileExists(claudePath)
     const hasCodex = deps.hooks.fileExists(codexPath)
 

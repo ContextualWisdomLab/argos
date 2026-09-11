@@ -71,7 +71,7 @@ function ProjectCard({
             }}
             className="pointer-events-auto relative text-muted-foreground hover:text-foreground"
           >
-            <PencilIcon />
+            <PencilIcon aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
@@ -84,7 +84,7 @@ function ProjectCard({
             }}
             className="pointer-events-auto relative text-muted-foreground hover:text-destructive"
           >
-            <Trash2Icon />
+            <Trash2Icon aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function OrgHomePage() {
           <p className="text-sm text-muted-foreground">Projects</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <PlusIcon />
+          <PlusIcon aria-hidden="true" />
           Create project
         </Button>
       </div>
@@ -151,7 +151,7 @@ export default function OrgHomePage() {
             </p>
           </div>
           <Button size="sm" onClick={() => setCreateOpen(true)}>
-            <PlusIcon />
+            <PlusIcon aria-hidden="true" />
             Create project
           </Button>
         </div>

@@ -3,6 +3,7 @@ import 'server-only'
 import { createHash } from 'crypto'
 import { NextResponse } from 'next/server'
 import { db } from './db'
+import { handleRouteError, jsonError } from './error-helper'
 import { verifyJwt } from './jwt'
 
 // 토큰 검증 결과 in-memory 캐시. TTL 동안 revocation 반영이 지연될 수 있으나,
@@ -43,14 +44,14 @@ export async function requireAuth(
   const authHeader = req.headers.get('Authorization')
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return jsonError('UNAUTHORIZED', 'Unauthorized', 401)
   }
 
   const token = authHeader.substring(7)
 
   const payload = await verifyJwt(token)
   if (!payload) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return jsonError('UNAUTHORIZED', 'Unauthorized', 401)
   }
 
   const tokenHash = createHash('sha256').update(token).digest('hex')
@@ -59,7 +60,7 @@ export async function requireAuth(
   const cached = getCached(tokenHash, now)
   if (cached) {
     if (!cached.valid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return jsonError('UNAUTHORIZED', 'Unauthorized', 401)
     }
     // lastUsedAt은 드물게만 업데이트 (캐시 hit 동안은 최대 1번/interval)
     if (now - cached.lastWrittenAt > LAST_USED_UPDATE_INTERVAL_MS) {
@@ -74,13 +75,13 @@ export async function requireAuth(
   let cliToken
   try {
     cliToken = await db.cliToken.findUnique({ where: { tokenHash } })
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  } catch (err) {
+    return handleRouteError(err)
   }
 
   if (!cliToken || cliToken.revokedAt) {
     setCached(tokenHash, false, now)
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return jsonError('UNAUTHORIZED', 'Unauthorized', 401)
   }
 
   setCached(tokenHash, true, now, now)

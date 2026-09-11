@@ -1,6 +1,6 @@
 'use client'
-import React from 'react'
 
+import React, { useMemo } from 'react'
 import {
   ComposedChart,
   Bar,
@@ -20,7 +20,10 @@ interface SessionTimelineChartProps {
   sessionStartedAt: string
 }
 
-
+interface ToolCallPoint {
+  toolName: string
+  parsedTimestamp: number
+}
 
 interface ChartDataItem {
   relativeTime: string
@@ -31,14 +34,45 @@ interface ChartDataItem {
   toolSummary: string
 }
 
+/** Format cumulative tool-call counts for the chart tooltip. */
+function buildToolSummary(toolCounts: ReadonlyMap<string, number>): string {
+  if (toolCounts.size === 0) return ''
+
+  // Map preserves first-seen order, and Array#sort is stable. Equal-count tools
+  // therefore retain the chronological order in which they first appeared.
+  const sorted = Array.from(toolCounts.entries()).sort((a, b) => b[1] - a[1])
+
+  const displayCount = Math.min(3, sorted.length)
+  const displayItems = sorted.slice(0, displayCount).map(([name, count]) => {
+    return count > 1 ? `${name} x${count}` : name
+  })
+
+  const remaining = sorted.length - displayCount
+  if (remaining > 0) {
+    return `${displayItems.join(', ')} +${remaining} more`
+  }
+
+  return displayItems.join(', ')
+}
+
+/**
+ * Merge chronologically sorted usage and tool events into cumulative chart rows.
+ *
+ * Local copies are sorted in O(N log N + M log M). The forward cursor then
+ * consumes every tool event once instead of filtering all M events for every
+ * one of the N usage rows.
+ */
 function buildChartData(
   usageTimeline: SessionTimelineUsage[],
-  toolCalls: { parsedTimestamp: number; toolName: string }[],
+  toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
   const sortedUsage = usageTimeline
-    .map((usage) => ({ usage, timestamp: Date.parse(usage.timestamp) }))
-    .sort((a, b) => a.timestamp - b.timestamp);
+    .map((usage) => ({
+      usage,
+      parsedTimestamp: Date.parse(usage.timestamp),
+    }))
+    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
 
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
@@ -47,7 +81,7 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map(({ usage, timestamp: currentTimestamp }) => {
+  return sortedUsage.map(({ usage, parsedTimestamp: currentTimestamp }) => {
     while (
       toolIndex < sortedTools.length &&
       sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
@@ -66,31 +100,9 @@ function buildChartData(
       output: usage.outputTokens,
       cost: usage.estimatedCostUsd,
       model: usage.model,
-      toolSummary: getToolSummaryForIndex(cumulativeToolCounts),
+      toolSummary: buildToolSummary(cumulativeToolCounts),
     }
   })
-}
-
-function getToolSummaryForIndex(toolCounts: ReadonlyMap<string, number>): string {
-  if (toolCounts.size === 0) return ''
-
-  // 배열로 변환하여 카운트 내림차순 정렬
-  const sorted = Array.from(toolCounts.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-
-  // 최대 3개까지만 표시
-  const displayCount = Math.min(3, sorted.length)
-  const displayItems = sorted.slice(0, displayCount).map(({ name, count }) => {
-    return count > 1 ? `${name} x${count}` : name
-  })
-
-  const remaining = sorted.length - displayCount
-  if (remaining > 0) {
-    return `${displayItems.join(', ')} +${remaining} more`
-  }
-
-  return displayItems.join(', ')
 }
 
 function CustomTooltip({
@@ -137,29 +149,32 @@ function CustomTooltip({
   )
 }
 
+/** Render token usage, cost, model, and cumulative tool activity over time. */
 export function SessionTimelineChart({
   usageTimeline,
   messages,
   sessionStartedAt,
 }: SessionTimelineChartProps) {
+  // Cache the normalized tool events until the underlying messages change.
+  const toolCalls: ToolCallPoint[] = useMemo(() => {
+    return messages
+      .filter((message) => message.role === 'TOOL')
+      .map((message) => ({
+        toolName: message.toolName ?? 'unknown',
+        parsedTimestamp: Date.parse(message.timestamp),
+      }))
+  }, [messages])
+
+  const chartData = useMemo(
+    () => buildChartData(usageTimeline, toolCalls, sessionStartedAt),
+    [usageTimeline, sessionStartedAt, toolCalls]
+  )
+
   if (usageTimeline.length === 0) {
     return (
       <p className="text-center text-muted-foreground py-8">No timeline data available</p>
     )
   }
-
-  const toolCalls = messages
-    .filter((m) => m.role === 'TOOL')
-    .map((m) => ({
-      parsedTimestamp: Date.parse(m.timestamp),
-      toolName: m.toolName ?? 'unknown',
-    }))
-
-  const chartData: ChartDataItem[] = buildChartData(
-    usageTimeline,
-    toolCalls,
-    sessionStartedAt
-  )
 
   return (
     <ResponsiveContainer width="100%" height={350}>
