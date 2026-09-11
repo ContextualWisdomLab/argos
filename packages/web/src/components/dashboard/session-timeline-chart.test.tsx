@@ -275,4 +275,36 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+
+  it('calculates the chart data robustly with a pre-parsed usage timestamp (Schwartzian transform)', () => {
+    // Tests that our sort map() implementation works properly
+    const usageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 200,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+    const chartData = readChartData()
+    expect(chartData[0]?.input).toBe(100)
+    expect(chartData[1]?.input).toBe(200)
+  })
 })
