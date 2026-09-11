@@ -19,12 +19,15 @@ describe('csvField', () => {
     expect(csvField('-cmd|')).toBe('"\'-cmd|"')
     expect(csvField('@cmd|')).toBe('"\'@cmd|"')
     expect(csvField('\tcmd|')).toBe('"\'\tcmd|"')
+    expect(csvField('\0cmd|')).toBe('"\'\0cmd|"')
   })
 
-  it('neutralizes formula prefixes that follow leading whitespace', () => {
+  it('neutralizes formula prefixes that follow leading ASCII whitespace controls', () => {
     expect(csvField(' =cmd|')).toBe('"\' =cmd|"')
     expect(csvField('  +cmd|')).toBe('"\'  +cmd|"')
     expect(csvField('\t -cmd|')).toBe('"\'\t -cmd|"')
+    expect(csvField('\v=cmd|')).toBe('"\'\v=cmd|"')
+    expect(csvField('\f@cmd|')).toBe('"\'\f@cmd|"')
     expect(csvField('\rcmd|')).toBe('"\'\rcmd|"')
     expect(csvField('\ncmd|')).toBe('"\'\ncmd|"')
   })
