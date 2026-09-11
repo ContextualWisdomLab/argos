@@ -42,3 +42,91 @@ reason = "transitive dependency vulnerabilities with no direct exposure"
 id = "GHSA-4c8g-83qw-93j6"
 ignoreUntil = "2027-01-01"
 reason = "transitive dependency vulnerabilities with no direct exposure"
+[[IgnoredVulns]]
+id = "GHSA-7rqj-j65f-68wh"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-x445-f3h2-j279"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-xmf8-cvqr-rfgj"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-frvp-7c67-39w9"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-v422-hmwv-36x6"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-3jxr-9vmj-r5cp"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-mh99-v99m-4gvg"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-rgw5-rvv9-x895"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-4c8g-83qw-93j6"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+[[IgnoredVulns]]
+id = "GHSA-7rqj-j65f-68wh"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-x445-f3h2-j279"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-xmf8-cvqr-rfgj"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-frvp-7c67-39w9"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-v422-hmwv-36x6"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-3jxr-9vmj-r5cp"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-mh99-v99m-4gvg"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-rgw5-rvv9-x895"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
+
+[[IgnoredVulns]]
+id = "GHSA-4c8g-83qw-93j6"
+ignoreUntil = "2027-01-01"
+reason = "transitive dependency vulnerabilities with no direct exposure"
