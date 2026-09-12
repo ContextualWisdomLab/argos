@@ -10,8 +10,8 @@ describe("SessionFilesSummary", () => {
   it("renders with modified and read files", () => {
     const onOpenFilesTab = vi.fn();
     const files = {
-      modified: [{ path: "test.js", count: 1, lastEventIdx: 0 }],
-      read: [{ path: "test2.js", count: 2, lastEventIdx: 1 }],
+      modified: [{ path: "test.js", count: 1, firstEventIdx: 0, lastEventIdx: 0, lastTimestamp: "2024-01-01" }],
+      read: [{ path: "test2.js", count: 2, firstEventIdx: 1, lastEventIdx: 1, lastTimestamp: "2024-01-01" }],
     };
     render(
       <SessionFilesSummary files={files} onOpenFilesTab={onOpenFilesTab} />
@@ -40,8 +40,8 @@ describe("SessionFilesTab", () => {
   it("renders modified and read files and their aria-labels", () => {
     const onJump = vi.fn();
     const files = {
-      modified: [{ path: "a/b/mod.js", count: 1, lastEventIdx: 5 }],
-      read: [{ path: "x/y/read.js", count: 3, lastEventIdx: 10 }],
+      modified: [{ path: "a/b/mod.js", count: 1, firstEventIdx: 5, lastEventIdx: 5, lastTimestamp: "2024-01-01" }],
+      read: [{ path: "x/y/read.js", count: 3, firstEventIdx: 10, lastEventIdx: 10, lastTimestamp: "2024-01-01" }],
     };
     render(<SessionFilesTab files={files} onJump={onJump} />);
 
