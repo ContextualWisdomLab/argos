@@ -77,6 +77,7 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
+  // ⚡ Bolt Optimization: Use Schwartzian transform to avoid O(N log N) Date.parse() overhead during sorting.
   return sortedUsageWithTimestamp.map(({ original: usage, parsedTimestamp: currentTimestamp }) => {
 
     while (
