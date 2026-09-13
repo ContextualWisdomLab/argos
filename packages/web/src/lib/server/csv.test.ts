@@ -14,6 +14,10 @@ describe('csvField', () => {
     expect(csvField('\t+cmd')).toBe("'\t+cmd")
   })
 
+  it('escapes ASVS null prefix', () => {
+    expect(csvField('\0text')).toBe("'\0text")
+  })
+
   it('escapes full-width macro injection characters', () => {
     expect(csvField('\uff1dcmd')).toBe("'\uff1dcmd")
   })
