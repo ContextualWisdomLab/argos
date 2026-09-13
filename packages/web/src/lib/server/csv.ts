@@ -2,9 +2,12 @@
 export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
-  const formulaPrefix = /^[=+\-@\t\r\n\x00\uFF1D\uFF0B\uFF0D\uFF20]/
+  const trimmed = text.trimStart()
+  const leadingWhitespace = text.slice(0, text.length - trimmed.length)
+  const formulaPrefix = /^[=+\-@\x00\uFF1D\uFF0B\uFF0D\uFF20]/
+  const hasDangerousLeadingControl = /[\t\r\n]/.test(leadingWhitespace)
 
-  if (typeof value !== 'number' && (formulaPrefix.test(text) || formulaPrefix.test(text.trimStart()))) {
+  if (typeof value !== 'number' && (hasDangerousLeadingControl || formulaPrefix.test(trimmed))) {
     text = "'" + text
   }
 
