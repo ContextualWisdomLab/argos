@@ -7,6 +7,7 @@ describe('csvField', () => {
     expect(csvField('+cmd')).toBe("'+cmd")
     expect(csvField('-cmd')).toBe("'-cmd")
     expect(csvField('@cmd')).toBe("'@cmd")
+    expect(csvField('-123')).toBe("'-123")
   })
 
   it('escapes formula and control prefixes after leading whitespace', () => {
@@ -42,6 +43,7 @@ describe('csvField', () => {
     expect(csvField('safe,=1+2')).toBe('"safe,=1+2"')
     expect(csvField('safe",=1+2')).toBe('"safe"",=1+2"')
     expect(csvField('safe\r\n=1+2')).toBe('"safe\r\n=1+2"')
+    expect(csvField('=Danger, "Zone"')).toBe('"\'=Danger, ""Zone"""')
     expect(csvField('hello,world')).toBe('"hello,world"')
     expect(csvField('hello"world')).toBe('"hello""world"')
   })
