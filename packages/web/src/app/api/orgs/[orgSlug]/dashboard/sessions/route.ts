@@ -9,6 +9,7 @@ import {
   assertOrgAccessBySlugOrResponse,
   resolveOrgScopedProjectIds,
 } from '@/lib/server/dashboard-route-helper'
+import { csvField } from '@/lib/server/csv'
 import { canAccessIndividualData, forbiddenByRole } from '@/lib/server/rbac'
 
 export const runtime = 'nodejs'
@@ -71,11 +72,7 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
-}
+
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
   const headers = [
