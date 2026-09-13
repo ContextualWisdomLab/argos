@@ -30,11 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2024-05-24 - [CSV Injection 취약점 방어]
-**Vulnerability:** [CSV 내보내기 기능에 Spreadsheet Macro Injection (CSV Injection) 취약점 발견]
-**Learning:** [사용자 입력 데이터를 CSV로 변환할 때, =, +, -, @ 등의 문자로 시작하는 값은 엑셀과 같은 프로그램에서 매크로나 수식으로 인식될 수 있음]
-**Prevention:** [CSV 필드 값이 수식 시작 문자로 시작할 경우 앞에 작은 따옴표(')를 붙여 단순 텍스트로 인식되도록 이스케이프 처리해야 함]
-## 2026-09-13 - [CSV Injection 취약점 방어]
-**Vulnerability:** [CSV 내보내기 기능에 Spreadsheet Macro Injection (CSV Injection) 취약점 발견]
-**Learning:** [사용자 입력 데이터를 CSV로 변환할 때, =, +, -, @ 등의 문자로 시작하는 값은 엑셀과 같은 프로그램에서 매크로나 수식으로 인식될 수 있음]
-**Prevention:** [CSV 필드 값이 수식 시작 문자로 시작할 경우 앞에 작은 따옴표(')를 붙여 단순 텍스트로 인식되도록 이스케이프 처리해야 함]
+
+## 2026-09-13 - CSV/Formula Injection 방어
+**Vulnerability:** 세션 CSV 내보내기에서 신뢰할 수 없는 문자열이 스프레드시트의 수식 시작 문자로 해석될 수 있었습니다.
+**Learning:** `=`, `+`, `-`, `@`뿐 아니라 탭·CR·LF와 일부 전각 변형도 스프레드시트에서 수식/제어 접두사로 취급될 수 있습니다. CSV 구분자와 따옴표는 RFC 방식으로 별도 이스케이프해야 하며, 숫자 타입 자체를 문자열 수식처럼 변형하면 안 됩니다.
+**Prevention:** 문자열 필드의 위험한 접두사를 텍스트로 중화하고 CSV 따옴표/구분자 이스케이프를 유지합니다. Excel의 저장 후 재열기 동작까지 모든 스프레드시트에서 보편적으로 안전한 단일 방식은 없으므로, 실제 배포 대상 애플리케이션/워크플로에서 회귀 검증합니다.
