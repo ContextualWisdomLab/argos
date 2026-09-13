@@ -16,8 +16,8 @@ describe('csvField', () => {
 
   it('escapes control prefixes themselves', () => {
     expect(csvField('\ttext')).toBe("'\ttext")
-    expect(csvField('\rtext')).toBe('"\'\rtext"')
-    expect(csvField('\ntext')).toBe('"\'\ntext"')
+    expect(csvField('\rtext')).toBe("\"'\rtext\"")
+    expect(csvField('\ntext')).toBe("\"'\ntext\"")
     expect(csvField('\0text')).toBe("'\0text")
   })
 
