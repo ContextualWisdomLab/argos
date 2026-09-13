@@ -9,8 +9,9 @@ describe('csvField', () => {
     expect(csvField('@cmd')).toBe("'@cmd")
   })
 
-  it('escapes formula and control prefixes after ordinary spaces', () => {
+  it('escapes formula and control prefixes after leading whitespace', () => {
     expect(csvField('  =cmd')).toBe("'  =cmd")
+    expect(csvField('\u00a0=cmd')).toBe("'\u00a0=cmd")
     expect(csvField('  \ttext')).toBe("'  \ttext")
   })
 
