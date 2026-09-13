@@ -9,8 +9,8 @@ import { cleanup } from '@testing-library/react';
 global.React = React;
 
 vi.mock('lucide-react', () => ({
-  Copy: () => React.createElement('svg', { 'data-testid': 'copy-icon' }),
-  Check: () => React.createElement('svg', { 'data-testid': 'check-icon' }),
+  Copy: () => React.createElement('svg', { 'data-testid': 'copy-icon', 'aria-hidden': 'true' }),
+  Check: () => React.createElement('svg', { 'data-testid': 'check-icon', 'aria-hidden': 'true' }),
 }));
 
 describe('CopyPromptButton', () => {

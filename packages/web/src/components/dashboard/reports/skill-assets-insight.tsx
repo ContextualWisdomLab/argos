@@ -11,7 +11,7 @@ export function SkillAssetsInsight({ insight }: SkillAssetsInsightProps) {
     <ChartCard
       title={
         <span className="inline-flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-brand" />
+          <Sparkles className="h-4 w-4 text-brand" aria-hidden="true" />
           재사용 자산
         </span>
       }
