@@ -39,11 +39,18 @@ describe('csvField', () => {
     expect(csvField(0)).toBe('0')
   })
 
+  it('does not alter ordinary strings', () => {
+    expect(csvField('normal')).toBe('normal')
+    expect(csvField(' normal')).toBe(' normal')
+    expect(csvField('123')).toBe('123')
+  })
+
   it('keeps separator, quote, and line-break payloads inside one serialized field', () => {
     expect(csvField('safe,=1+2')).toBe('"safe,=1+2"')
     expect(csvField('safe",=1+2')).toBe('"safe"",=1+2"')
     expect(csvField('safe\r\n=1+2')).toBe('"safe\r\n=1+2"')
     expect(csvField('=Danger, "Zone"')).toBe('"\'=Danger, ""Zone"""')
+    expect(csvField('=-"test"')).toBe('"\'=-""test"""')
     expect(csvField('hello,world')).toBe('"hello,world"')
     expect(csvField('hello"world')).toBe('"hello""world"')
   })
