@@ -13,6 +13,7 @@
 
 ### ✨ 추가 기능 (Feature)
 
+- ERD 엔진에 테이블명 변경(`renameTable`), 컬럼명 변경(`renameColumn`), Mermaid 다이어그램 생성(`generateMermaid`) 기능을 추가했습니다.
 - ERD (Entity-Relationship Diagram) 엔진의 코어 모델 클래스(`ERDModel`)를 신규 구현했습니다.
   - 테이블 추가, 컬럼 추가 (이름, 타입, 기본키 및 Null 제약 조건) 기능 제공
   - 참조 테이블 및 컬럼 기반 외래키(Foreign Key) 설정 기능 제공

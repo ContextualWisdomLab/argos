@@ -9,6 +9,48 @@ describe("ERDModel", () => {
   });
 
   describe("Table Management", () => {
+    describe("renameTable", () => {
+      it("should rename a table and update foreign keys", () => {
+        model.addTable("users");
+        model.addColumn("users", { name: "id", type: "integer" });
+        model.addTable("posts");
+        model.addColumn("posts", { name: "user_id", type: "integer" });
+        model.addForeignKey("posts", {
+          columnName: "user_id",
+          referenceTable: "users",
+          referenceColumn: "id",
+        });
+
+        model.renameTable("users", "members");
+
+        expect(model.getTable("users")).toBeUndefined();
+        expect(model.getTable("members")).toBeDefined();
+
+        const postsTable = model.getTable("posts")!;
+        expect(postsTable.foreignKeys[0].referenceTable).toBe("members");
+      });
+
+      it("should throw if old table does not exist", () => {
+        expect(() => model.renameTable("non_existent", "new_name")).toThrowError(
+          "Table 'non_existent' does not exist."
+        );
+      });
+
+      it("should throw if new table already exists", () => {
+        model.addTable("users");
+        model.addTable("members");
+        expect(() => model.renameTable("users", "members")).toThrowError(
+          "Table 'members' already exists."
+        );
+      });
+
+      it("should reject non-snake-case names", () => {
+        model.addTable("users");
+        expect(() => model.renameTable("users", "camelCase")).toThrowError(
+          "Table 'camelCase' must be snake_case."
+        );
+      });
+    });
     it("should add a new table", () => {
       const table = model.addTable("users");
       expect(table.name).toBe("users");
@@ -80,6 +122,62 @@ describe("ERDModel", () => {
   });
 
   describe("Column Management", () => {
+    describe("renameColumn", () => {
+      it("should rename a column and update foreign keys", () => {
+        model.addTable("users");
+        model.addColumn("users", { name: "id", type: "integer" });
+        model.addTable("posts");
+        model.addColumn("posts", { name: "user_id", type: "integer" });
+        model.addForeignKey("posts", {
+          columnName: "user_id",
+          referenceTable: "users",
+          referenceColumn: "id",
+        });
+
+        model.renameColumn("users", "id", "user_id");
+
+        const usersTable = model.getTable("users")!;
+        expect(usersTable.columns.find((c) => c.name === "user_id")).toBeDefined();
+        expect(usersTable.columns.find((c) => c.name === "id")).toBeUndefined();
+
+        const postsTable = model.getTable("posts")!;
+        expect(postsTable.foreignKeys[0].referenceColumn).toBe("user_id");
+
+        model.renameColumn("posts", "user_id", "author_id");
+        const updatedPosts = model.getTable("posts")!;
+        expect(updatedPosts.foreignKeys[0].columnName).toBe("author_id");
+      });
+
+      it("should throw if table does not exist", () => {
+        expect(() => model.renameColumn("non_existent", "id", "new_id")).toThrowError(
+          "Table 'non_existent' does not exist."
+        );
+      });
+
+      it("should throw if old column does not exist", () => {
+        model.addTable("users");
+        expect(() => model.renameColumn("users", "non_existent", "new_id")).toThrowError(
+          "Column 'non_existent' does not exist in table 'users'."
+        );
+      });
+
+      it("should throw if new column already exists", () => {
+        model.addTable("users");
+        model.addColumn("users", { name: "id", type: "integer" });
+        model.addColumn("users", { name: "uuid", type: "integer" });
+        expect(() => model.renameColumn("users", "id", "uuid")).toThrowError(
+          "Column 'uuid' already exists in table 'users'."
+        );
+      });
+
+      it("should reject non-snake-case names", () => {
+        model.addTable("users");
+        model.addColumn("users", { name: "id", type: "integer" });
+        expect(() => model.renameColumn("users", "id", "camelCase")).toThrowError(
+          "Column 'camelCase' must be snake_case."
+        );
+      });
+    });
     it("should add a column to an existing table", () => {
       model.addTable("users");
       model.addColumn("users", { name: "id", type: "integer" });
@@ -318,6 +416,70 @@ describe("ERDModel", () => {
       expect(() => model.removeForeignKey("posts", "user_id")).toThrowError(
         "Foreign key for column 'user_id' does not exist in table 'posts'.",
       );
+    });
+  });
+
+  describe("Mermaid Generation", () => {
+    it("should generate empty string if no tables exist", () => {
+      expect(model.generateMermaid()).toBe("");
+    });
+
+    it("should generate correct Mermaid for plain columns without keys", () => {
+      model.addTable("configs");
+      model.addColumn("configs", {
+        name: "setting",
+        type: "VARCHAR(255)",
+      });
+      const mermaid = model.generateMermaid();
+      const expected = `erDiagram
+  configs {
+    VARCHAR255 setting
+  }`;
+      expect(mermaid).toBe(expected);
+    });
+
+    it("should generate correct Mermaid for tables and foreign keys", () => {
+      model.addTable("users");
+      model.addColumn("users", {
+        name: "id",
+        type: "SERIAL",
+        isPrimaryKey: true,
+      });
+      model.addColumn("users", {
+        name: "name",
+        type: "VARCHAR(255)",
+        isUnique: true,
+      });
+
+      model.addTable("posts");
+      model.addColumn("posts", {
+        name: "id",
+        type: "SERIAL",
+        isPrimaryKey: true,
+      });
+      model.addColumn("posts", {
+        name: "user_id",
+        type: "INTEGER",
+      });
+
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      const mermaid = model.generateMermaid();
+      const expected = `erDiagram
+  users {
+    SERIAL id PK
+    VARCHAR255 name UK
+  }
+  posts {
+    SERIAL id PK
+    INTEGER user_id FK
+  }
+  users ||--o{ posts : "user_id"`;
+      expect(mermaid).toBe(expected);
     });
   });
 
