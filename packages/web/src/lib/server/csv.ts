@@ -1,13 +1,9 @@
-/** Serialize one CSV field while neutralizing spreadsheet formula prefixes. */
 export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
-  const trimmed = text.trimStart()
-  const leadingWhitespace = text.slice(0, text.length - trimmed.length)
-  const formulaPrefix = /^[=+\-@\x00\uFF1D\uFF0B\uFF0D\uFF20]/
-  const hasDangerousLeadingControl = /[\t\r\n]/.test(leadingWhitespace)
 
-  if (typeof value !== 'number' && (hasDangerousLeadingControl || formulaPrefix.test(trimmed))) {
+  // Prevent CSV Injection (Macro Injection)
+  if (typeof value !== 'number' && /^[=+\-@\t\r\n\uFF1D\uFF0B\uFF0D\uFF20]/.test(text.trimStart())) {
     text = "'" + text
   }
 
