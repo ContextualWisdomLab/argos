@@ -22,7 +22,6 @@ export function ContextSection({ title, children, defaultOpen = false }: Context
         type="button"
         id={buttonId}
         onClick={() => setOpen((v) => !v)}
-        aria-label={`${title} 섹션 토글`}
         className={cn(
           'w-full flex items-center justify-between px-4 py-3 text-left',
           'hover:bg-card-elevated transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',

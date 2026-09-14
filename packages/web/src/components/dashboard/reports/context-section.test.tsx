@@ -20,20 +20,20 @@ describe('ContextSection', () => {
     )
 
     // Initially closed
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 토글' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
     // Click to open
-    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 토글' }))
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 토글' })).toHaveAttribute('aria-expanded', 'true')
+    await user.click(screen.getByRole('button', { name: 'Test Title' }))
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'true')
 
-    const region = screen.getByRole('region', { name: 'Test Title 섹션 토글' })
+    const region = screen.getByRole('region', { name: 'Test Title' })
     expect(region).toBeInTheDocument()
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
 
     // Click to close
-    await user.click(screen.getByRole('button', { name: 'Test Title 섹션 토글' }))
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 토글' })).toHaveAttribute('aria-expanded', 'false')
+    await user.click(screen.getByRole('button', { name: 'Test Title' }))
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
@@ -44,8 +44,8 @@ describe('ContextSection', () => {
       </ContextSection>
     )
 
-    expect(screen.getByRole('button', { name: 'Test Title 섹션 토글' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'true')
     expect(screen.getByTestId('test-content')).toBeInTheDocument()
-    expect(screen.getByRole('region', { name: 'Test Title 섹션 토글' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Test Title' })).toBeInTheDocument()
   })
 })
