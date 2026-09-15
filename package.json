@@ -35,7 +35,9 @@
       "minimatch": "^10.0.0",
       "@hono/node-server": "^2.0.5",
       "body-parser": "^2.3.0",
-      "next": "15.5.22"
+      "next": "15.5.22",
+      "browserslist": "4.24.0",
+      "deepmerge-ts": "5.1.0"
     }
   }
 }
