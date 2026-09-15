@@ -107,30 +107,6 @@ export class ERDModel {
     this.tables.delete(name);
   }
 
-  renameTable(oldName: string, newName: string): void {
-    assertSnakeCaseIdentifier("Table", oldName);
-    assertSnakeCaseIdentifier("Table", newName);
-    if (!this.tables.has(oldName)) {
-      throw new Error(`Table '${oldName}' does not exist.`);
-    }
-    if (this.tables.has(newName)) {
-      throw new Error(`Table '${newName}' already exists.`);
-    }
-
-    const table = this.tables.get(oldName)!;
-    table.name = newName;
-    this.tables.set(newName, table);
-    this.tables.delete(oldName);
-
-    for (const t of this.tables.values()) {
-      for (const fk of t.foreignKeys) {
-        if (fk.referenceTable === oldName) {
-          fk.referenceTable = newName;
-        }
-      }
-    }
-  }
-
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier("Table", tableName);
     assertSnakeCaseIdentifier("Column", column.name);
@@ -184,49 +160,6 @@ export class ERDModel {
     table.columns.splice(colIndex, 1);
   }
 
-  renameColumn(tableName: string, oldColName: string, newColName: string): void {
-    assertSnakeCaseIdentifier("Table", tableName);
-    assertSnakeCaseIdentifier("Column", oldColName);
-    assertSnakeCaseIdentifier("Column", newColName);
-
-    const table = this.tables.get(tableName);
-    if (!table) {
-      throw new Error(`Table '${tableName}' does not exist.`);
-    }
-
-    const col = table.columns.find((c) => c.name === oldColName);
-    if (!col) {
-      throw new Error(
-        `Column '${oldColName}' does not exist in table '${tableName}'.`,
-      );
-    }
-
-    if (table.columns.some((c) => c.name === newColName)) {
-      throw new Error(
-        `Column '${newColName}' already exists in table '${tableName}'.`,
-      );
-    }
-
-    col.name = newColName;
-
-    for (const fk of table.foreignKeys) {
-      if (fk.columnName === oldColName) {
-        fk.columnName = newColName;
-      }
-    }
-
-    for (const t of this.tables.values()) {
-      for (const fk of t.foreignKeys) {
-        if (
-          fk.referenceTable === tableName &&
-          fk.referenceColumn === oldColName
-        ) {
-          fk.referenceColumn = newColName;
-        }
-      }
-    }
-  }
-
   addForeignKey(tableName: string, fk: ForeignKey): void {
     assertSnakeCaseIdentifier("Table", tableName);
     assertSnakeCaseIdentifier("Column", fk.columnName);
@@ -269,34 +202,6 @@ export class ERDModel {
       );
     }
     table.foreignKeys.splice(fkIndex, 1);
-  }
-
-  generateMermaid(): string {
-    if (this.tables.size === 0) return "";
-    let mermaid = "erDiagram\n";
-    for (const table of this.tables.values()) {
-      mermaid += `  ${table.name} {\n`;
-      for (const col of table.columns) {
-        const typeSafe = col.type.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_]/g, "");
-
-        const keys: string[] = [];
-        if (col.isPrimaryKey) keys.push("PK");
-        if (table.foreignKeys.some((fk) => fk.columnName === col.name)) keys.push("FK");
-        if (col.isUnique) keys.push("UK");
-
-        const keyStr = keys.length > 0 ? ` ${keys.join(",")}` : "";
-        mermaid += `    ${typeSafe} ${col.name}${keyStr}\n`;
-      }
-      mermaid += "  }\n";
-    }
-
-    for (const table of this.tables.values()) {
-      for (const fk of table.foreignKeys) {
-        mermaid += `  ${fk.referenceTable} ||--o{ ${table.name} : "${fk.columnName}"\n`;
-      }
-    }
-
-    return mermaid.trim();
   }
 
   generateDDL(): string {
