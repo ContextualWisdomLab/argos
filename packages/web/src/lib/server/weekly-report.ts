@@ -70,19 +70,35 @@ function seriesFromRollups(rollups: DailyRollup[]): DailySeriesPoint[] {
   }))
 }
 
+// ⚡ Bolt Optimization:
+// 병목 지점: pickLeader 함수는 1위와 2위를 찾기 위해 매번 전체 배열을 O(N log N)으로 정렬했습니다.
+// 최적화 방법: 전체 정렬 대신 O(N) 순회 알고리즘으로 변경하여 최고의 2개 요소만 찾도록 했습니다.
+// 기대 효과: 리포트 내의 후보군 크기가 커질 때마다 N번 정렬하는 오버헤드를 없애고 실행 시간을 개선합니다.
 function pickLeader(
   candidates: Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }>,
   orderAsc = false,
 ): LeaderEntry | null {
   if (candidates.length === 0) return null
-  const sorted = [...candidates].sort((a, b) => {
+
+  let leader = candidates[0]
+  let runnerUp: typeof leader | null = null
+
+  const isBetter = (a: typeof leader, b: typeof leader) => {
     const diff = orderAsc ? a.value - b.value : b.value - a.value
-    if (diff !== 0) return diff
-    // 동률 시 userId 사전순 (결정적 순서)
-    return a.userId.localeCompare(b.userId)
-  })
-  const leader = sorted[0]
-  const runnerUp = sorted.length >= 2 ? sorted[1] : null
+    if (diff !== 0) return diff < 0
+    return a.userId.localeCompare(b.userId) < 0
+  }
+
+  for (let i = 1; i < candidates.length; i++) {
+    const current = candidates[i]
+    if (isBetter(current, leader)) {
+      runnerUp = leader
+      leader = current
+    } else if (!runnerUp || isBetter(current, runnerUp)) {
+      runnerUp = current
+    }
+  }
+
   return {
     userId: leader.userId,
     userName: leader.userName,
