@@ -7,22 +7,8 @@ import { ZodError } from 'zod'
  * 표준 에러 응답 생성 헬퍼.
  * 모든 API 에러는 { error: { code, message } } shape을 사용한다.
  */
-export function jsonError(
-  code: string,
-  message: string,
-  status: number,
-  details?: unknown,
-): NextResponse {
-  return NextResponse.json(
-    {
-      error: {
-        code,
-        message,
-        ...(details === undefined ? {} : { details }),
-      },
-    },
-    { status },
-  )
+export function jsonError(code: string, message: string, status: number): NextResponse {
+  return NextResponse.json({ error: { code, message } }, { status })
 }
 
 /**
@@ -31,8 +17,7 @@ export function jsonError(
  */
 export function handleRouteError(err: unknown): NextResponse {
   console.error('Route error', {
-    prismaCode:
-      err && typeof err === 'object' ? (err as Record<string, unknown>).code : undefined,
+    prismaCode: (err as Record<string, unknown>).code,
     message: err instanceof Error ? err.message : String(err),
   })
 

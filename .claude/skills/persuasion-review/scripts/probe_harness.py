@@ -33,7 +33,6 @@ def wait_http_ready(url: str, timeout_sec: float) -> bool:
     deadline = time.time() + timeout_sec
     while time.time() < deadline:
         try:
-            # nosemgrep: python.lang.security.audit.dynamic-urllib-use-detected.dynamic-urllib-use-detected -- url is a loopback readiness probe (127.0.0.1:<free_port>) for a process this harness itself spawns in a dev/skill workflow; it is never a remote-attacker-controlled URL.
             urllib.request.urlopen(url, timeout=1).read()
             return True
         except Exception:

@@ -2,6 +2,8 @@
 **Vulnerability:** Hardcoded external URLs (https://argos-ai.xyz/dashboard) and missing critical HTTP Security Headers (X-Frame-Options, Strict-Transport-Security, etc.) were found in the application configuration.
 **Learning:** Hardcoded production URLs in authentication flows (like impersonation) can cause dangerous cross-domain redirects if the application is self-hosted on a different domain. Missing security headers leaves the application vulnerable to basic UI redressing (Clickjacking) and MITM attacks without HSTS.
 **Prevention:** Always use relative paths (e.g., `/dashboard`) or dynamic environment variables (`NEXT_PUBLIC_SITE_URL`) for internal redirects. Always configure standard security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Strict-Transport-Security`) globally via `next.config.ts`.
+<<<<<<< HEAD
+=======
 ## 2025-02-15 - [Host Header Injection 방지]
 **Vulnerability:** `req.nextUrl.origin`을 사용하여 동적으로 URL을 생성하는 부분(비밀번호 초기화 링크 생성, CLI 인증 URL 등)에서 Host Header Injection 취약점이 발생할 수 있었습니다. 악의적인 사용자가 HTTP Host 헤더를 조작하여 피싱 사이트나 악성 스크립트가 호스팅된 서버로의 링크를 사용자에게 보낼 수 있습니다.
 **Learning:** Next.js의 `NextRequest` 객체에서 제공되는 `req.nextUrl.origin`은 클라이언트가 보낸 HTTP Host 헤더의 값에 의존하므로, 안전하지 않은 환경(특히 신뢰할 수 없는 요청)에서 절대적인 URL을 만들 때 사용하면 보안 위험이 있습니다.
@@ -29,4 +31,17 @@
 ## 2025-02-18 - [Fix vulnerable dependencies via pnpm overrides]
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-05-24 - CSV 인젝션 취약점
+**Vulnerability:** 사용자 입력이 포함된 세션 데이터를 CSV로 내보낼 때 CSV Injection (Macro Injection)에 취약했음.
+**Learning:** `csvField` 함수에 숫자형 외의 문자열이 `=`, `+`, `-`, `@` 등의 특수 문자로 시작할 경우 스프레드시트 프로그램에서 수식으로 실행될 수 있음.
+**Prevention:** CSV로 출력되는 필드 값이 위험한 문자로 시작하는 경우 홑따옴표(`'`)를 앞에 붙여 이스케이프 처리해야 함.
+>>>>>>> 4648233 (🛡️ Sentinel: [HIGH] Fix CSV Macro Injection 취약점 수정)
+## 2024-05-24 - CSV 인젝션 취약점
+**Vulnerability:** 사용자 입력이 포함된 세션 데이터를 CSV로 내보낼 때 CSV Injection (Macro Injection)에 취약했음.
+**Learning:** `csvField` 함수에 숫자형 외의 문자열이 `=`, `+`, `-`, `@` 등의 특수 문자로 시작할 경우 스프레드시트 프로그램에서 수식으로 실행될 수 있음.
+**Prevention:** CSV로 출력되는 필드 값이 위험한 문자로 시작하는 경우 홑따옴표(`'`)를 앞에 붙여 이스케이프 처리해야 함.
+## 2026-09-15 - [Fix vulnerable dependencies via pnpm overrides]
+**Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `baseline-browser-mapping`, `browserslist`, `deepmerge-ts`, `next` and `sharp` packages.
+**Learning:** Deeply nested dependencies may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
