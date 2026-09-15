@@ -85,7 +85,7 @@ export function NoOrganizationState({
             CLI 없이 먼저 조직만 만들고 싶다면?
           </div>
           <Button size="sm" variant="outline" onClick={() => setCreateOpen(true)}>
-            <PlusIcon />
+            <PlusIcon aria-hidden="true" />
             조직 수동 생성
           </Button>
         </div>
