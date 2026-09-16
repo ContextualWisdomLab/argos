@@ -95,7 +95,6 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         <button
           onClick={handleAllow}
           disabled={loading}
-          aria-label="로그인 허용"
           className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
         >
           허용
@@ -103,7 +102,6 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         <button
           onClick={handleDeny}
           disabled={loading}
-          aria-label="로그인 거부"
           className="px-6 py-2 rounded-md border border-border bg-background text-foreground font-medium hover:bg-muted disabled:opacity-50 transition-colors"
         >
           거부
