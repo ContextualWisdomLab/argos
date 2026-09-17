@@ -1,6 +1,6 @@
 import type { TimelineEvent, ToolEvent } from "@/lib/timeline-events";
 import { formatDateTime } from "@/lib/format";
-import { User, Bot, Wrench, X } from "lucide-react";
+import { User, Bot, Wrench, X, MousePointerClick } from "lucide-react";
 import { MarkdownContent } from "./markdown-content";
 
 function formatDurationMs(ms: number | null): string {
@@ -103,8 +103,14 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
   if (event === null) {
     return (
       <div className="h-full flex flex-col">
-        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-          Select an event to see details
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
+            <MousePointerClick className="h-6 w-6" aria-hidden="true" />
+          </div>
+          <div className="text-sm font-medium text-foreground">No event selected</div>
+          <div className="text-xs text-muted-foreground">
+            Select an event from the timeline to see details
+          </div>
         </div>
       </div>
     );
