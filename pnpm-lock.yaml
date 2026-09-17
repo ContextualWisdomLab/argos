@@ -101,15 +101,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5
         version: 5.99.0(react@19.2.5)
-      baseline-browser-mapping:
-        specifier: ^2.11.24
-        version: 2.11.24
       bcryptjs:
         specifier: ^2
         version: 2.4.3
-      browserslist:
-        specifier: ^4.24.4
-        version: 4.29.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -119,9 +113,6 @@ importers:
       date-fns:
         specifier: ^4
         version: 4.1.0
-      deepmerge-ts:
-        specifier: ^7.0.0
-        version: 7.1.5
       jose:
         specifier: ^5
         version: 5.10.0
