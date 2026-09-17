@@ -38,3 +38,7 @@
 **Vulnerability:** Known high/critical-severity vulnerabilities discovered by the audit in `next`, `deepmerge-ts`, `browserslist`, and `baseline-browser-mapping`.
 **Learning:** Deeply nested dependencies may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-18 - [Fix vulnerable dependencies via pnpm overrides]
+**Vulnerability:** Known high/critical-severity vulnerabilities discovered by the audit in `deepmerge-ts`, and `sharp`.
+**Learning:** Deeply nested dependencies may expose the application to DoS or logic loops.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
