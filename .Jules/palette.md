@@ -10,6 +10,7 @@
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
 
+
 ## 2024-03-15 - Icon-only UI components and Screen Readers
 **Learning:** Decorative and state-indicating icons (e.g. Chevron arrows in dropdowns, paginations, week-navigators, accordions) can pollute the accessible name of an element when read by screen readers if they are not explicitly hidden from them.
-**Action:** Always include the \`aria-hidden="true"\` attribute on purely visual SVG icons (such as those from lucide-react) to ensure screen readers ignore them and only announce meaningful textual content or ARIA labels.
+**Action:** Always include the `aria-hidden="true"` attribute on purely visual SVG icons (such as those from lucide-react) to ensure screen readers ignore them and only announce meaningful textual content or ARIA labels.
