@@ -183,6 +183,7 @@ function RowView({
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
             )}
+            aria-hidden="true"
           />
         )}
         <span className="truncate">{preview}</span>
