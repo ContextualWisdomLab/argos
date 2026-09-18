@@ -67,12 +67,9 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // [Bolt: Performance Optimization] Use Schwartzian transform (map-sort-map) for usageTimeline sorting.
-  // Impact: Reduces Date.parse() calls from O(N log N) to O(N), significantly reducing GC overhead and processing time for large session data.
-  const sortedUsage = usageTimeline
-    .map((item) => ({ original: item, parsedValue: Date.parse(item.timestamp) }))
-    .sort((a, b) => a.parsedValue - b.parsedValue)
-    .map(({ original }) => original)
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
