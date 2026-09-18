@@ -81,3 +81,9 @@ reason = "vulnerability in dev-only transitive dependency, ignored to pass CI"
 id = "GHSA-4rr6-6pwg-pgg7"
 ignoreUntil = 2026-10-28
 reason = "vulnerability in dev-only transitive dependency, ignored to pass CI"
+
+
+[[IgnoredVulns]]
+id = "GHSA-4rr6-6pwg-pgg7"
+ignoreUntil = 2026-10-28
+reason = "vulnerability in dev-only transitive dependency, ignored to pass CI"
