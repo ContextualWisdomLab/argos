@@ -13,7 +13,7 @@
 
 ### ✨ 추가 기능 (Feature)
 
-- ERD schema evolution의 복합 column update는 모든 SQL type/default 검증을 마친 뒤 한 번에 적용합니다. 실패한 요청이 일부 type 변경을 남기던 회귀를 exact snapshot 테스트로 고정했으며, PRD/TRD/UML/ERD/Context Map과 후속 persistence·성능·UI acceptance는 `docs/product-technical-gap-baseline.md`에 기록했습니다.
+- ERD schema evolution의 복합 column update는 모든 SQL type/default 검증을 마친 뒤 한 번에 적용합니다. 실패한 요청이 일부 type 변경을 남기던 회귀와 명시적으로 제거한 default가 DDL에 남던 회귀를 exact snapshot/DDL 테스트로 고정했으며, PRD/TRD/UML/ERD/Context Map과 후속 persistence·성능·UI acceptance는 `docs/product-technical-gap-baseline.md`에 기록했습니다.
 
 - ERD (Entity-Relationship Diagram) 엔진의 코어 모델 클래스(`ERDModel`)를 신규 구현했습니다.
   - 테이블 추가, 컬럼 추가 (이름, 타입, 기본키 및 Null 제약 조건) 기능 제공
