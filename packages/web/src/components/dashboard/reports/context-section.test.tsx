@@ -2,6 +2,7 @@
 import React from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom/vitest'
 import * as matchers from '@testing-library/jest-dom/matchers'
 expect.extend(matchers)
 
