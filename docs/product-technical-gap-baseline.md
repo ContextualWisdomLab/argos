@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `47813497388d5868cb35930a0083e62212bd10b1`
+Tracked reusable-control evidence: `e2cd410342d51124552afb91fa374d66a10da15a`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -67,7 +67,7 @@ No database entity or relationship is added or changed by argos#651. The surface
 |---|---|---|
 | Deterministic copy and hierarchy | `event-detail.test.tsx` asserts the exact title class and sentence | Source PASS; hosted check pending |
 | Semantics | Null branch contains no synthetic event or dead CTA | Source PASS |
-| Accessibility | Empty-state SVG plus #656 reusable Chevron icons are `aria-hidden`; ContextSection, Pagination, WeekNavigator, and EventList contracts preserve parent names and behavior; Select and browser/AT evidence remain open | Partial |
+| Accessibility | Empty-state SVG plus #656 reusable Chevron icons are `aria-hidden`; ContextSection, Pagination, WeekNavigator, EventList, and Select trigger contracts preserve parent names and behavior; Select scroll and browser/AT evidence remain open | Partial |
 | Responsive layout | 320 px, 768 px, and desktop screenshots absent | FAIL |
 | Pointer, touch, keyboard | Empty state has no interactive control; timeline selection path still needs real-browser replay | Pending |
 | Loading/error/offline/permission/read-only/stale/conflict/retry/busy | Not introduced by the null branch; surrounding timeline states are not evidenced here | Pending |
@@ -81,7 +81,7 @@ No database entity or relationship is added or changed by argos#651. The surface
 | Gap | Required action | Status |
 |---|---|---|
 | Empty-state review findings | Keep RED contract, repair title weight and exact sentence, resolve only after exact-head verification | Repaired; checks pending |
-| Reusable Chevron semantics (#656) | Preserve parent labels, expanded state, page change, Select scrolling, Week navigation and virtualized group disclosure while decorative SVGs remain hidden | Source repair + four focused component contracts; Select and browser/AT pending |
+| Reusable Chevron semantics (#656) | Preserve parent labels, expanded state, page change, Select scrolling, Week navigation and virtualized group disclosure while decorative SVGs remain hidden | Source repair + five focused component contracts; Select scroll and browser/AT pending |
 | Real-browser evidence | Replay selection and null-state transitions in Chromium, Firefox, and WebKit at 320/768/desktop widths; capture screenshots and keyboard/AT results | Open |
 | Eight-locale evidence | Exercise ko/en/ja/zh/vi/es/de/fr with CJK fallback, expansion, and wrapping | Open |
 | Storybook states | Add product-owned normal/empty/loading/error/permission/read-only/offline/stale/conflict/retry/busy stories where applicable | Open |
