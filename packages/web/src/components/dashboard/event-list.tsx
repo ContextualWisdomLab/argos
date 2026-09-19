@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMemo } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
