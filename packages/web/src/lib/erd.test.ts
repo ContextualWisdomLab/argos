@@ -407,4 +407,83 @@ CREATE TABLE posts (
       );
     });
   });
+
+  describe("Mutation Features", () => {
+    beforeEach(() => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+    });
+
+    it("should rename a table and update references", () => {
+      model.renameTable("users", "members");
+      expect(model.getTable("users")).toBeUndefined();
+      const members = model.getTable("members");
+      expect(members?.name).toBe("members");
+      const posts = model.getTable("posts");
+      expect(posts?.foreignKeys[0].referenceTable).toBe("members");
+    });
+
+    it("should rename a column and update references", () => {
+      model.renameColumn("users", "id", "member_id");
+      const users = model.getTable("users");
+      expect(users?.columns[0].name).toBe("member_id");
+      const posts = model.getTable("posts");
+      expect(posts?.foreignKeys[0].referenceTable).toBe("users");
+      expect(posts?.foreignKeys[0].referenceColumn).toBe("member_id");
+    });
+
+    it("should throw errors for missing objects during renames or updates", () => {
+      expect(() =>
+        model.renameColumn("non_existent", "id", "member_id"),
+      ).toThrowError("Table 'non_existent' does not exist.");
+      expect(() => model.updateColumn("non_existent", "id", {})).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should rename a column and update internal foreign keys", () => {
+      model.renameColumn("posts", "user_id", "author_id");
+      const posts = model.getTable("posts");
+      expect(posts?.columns[0].name).toBe("author_id");
+      expect(posts?.foreignKeys[0].columnName).toBe("author_id");
+    });
+
+    it("should update a column properties", () => {
+      model.updateColumn("posts", "user_id", {
+        type: "integer",
+        isNullable: false,
+        isPrimaryKey: true,
+        isUnique: true,
+        defaultValue: "0",
+      });
+      const posts = model.getTable("posts");
+      const col = posts?.columns[0];
+      expect(col?.type).toBe("integer");
+      expect(col?.isNullable).toBe(false);
+      expect(col?.isPrimaryKey).toBe(true);
+      expect(col?.isUnique).toBe(true);
+      expect(col?.defaultValue).toBe("0");
+    });
+
+    it("should throw errors for invalid renames or updates", () => {
+      expect(() =>
+        model.renameTable("non_existent", "new_name"),
+      ).toThrowError();
+      expect(() => model.renameTable("users", "posts")).toThrowError();
+      expect(() =>
+        model.renameColumn("users", "non_existent", "new_name"),
+      ).toThrowError();
+      expect(() => model.renameColumn("users", "id", "id")).toThrowError();
+      expect(() =>
+        model.updateColumn("users", "non_existent", { type: "text" }),
+      ).toThrowError();
+    });
+  });
 });
