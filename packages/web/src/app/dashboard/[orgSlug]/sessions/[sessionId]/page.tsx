@@ -13,7 +13,7 @@ import {
   SessionFilesTab,
 } from '@/components/dashboard/session-files'
 import { useSessionDetail } from '@/hooks/use-dashboard-sessions'
-import { messagesToTimeline, buildTimelineGroups, formatSlashCommandText } from '@/lib/timeline-events'
+import { messagesToTimeline, formatSlashCommandText } from '@/lib/timeline-events'
 import { extractSessionFiles } from '@/lib/session-files'
 import {
   formatTokens,
@@ -46,7 +46,6 @@ export default function OrgSessionDetailPage({
     () => (data ? messagesToTimeline(data.messages) : []),
     [data],
   )
-  const groups = useMemo(() => buildTimelineGroups(events), [events])
   const files = useMemo(() => extractSessionFiles(events), [events])
   const [selectedIdx, setSelectedIdx] = useState<number | null>(0)
   const safeIdx =
@@ -222,7 +221,6 @@ export default function OrgSessionDetailPage({
             <div className="px-4 pt-3 pb-2">
               <SessionActivityRibbon
                 events={events}
-                groups={groups}
                 selectedIdx={safeIdx}
                 onSelect={setSelectedIdx}
                 sessionStartedAt={data.startedAt}
@@ -234,7 +232,6 @@ export default function OrgSessionDetailPage({
               <div className="border-r border-border min-h-0 overflow-hidden">
                 <EventList
                   events={events}
-                  groups={groups}
                   selectedIdx={safeIdx ?? -1}
                   onSelect={setSelectedIdx}
                   sessionStartedAt={data.startedAt}

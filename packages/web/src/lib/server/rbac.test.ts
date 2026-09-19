@@ -66,11 +66,10 @@ describe('forbiddenByRole', () => {
     expect(res.status).toBe(403)
   })
 
-  it('응답 body 는 문서화된 { error: { code, message } } shape 을 사용한다', async () => {
+  it('응답 body 의 error 필드는 항상 "forbidden"', async () => {
     const res = forbiddenByRole('MEMBER', 'MANAGER 이상')
     const body = await res.json()
-    expect(body.error.code).toBe('FORBIDDEN')
-    expect(typeof body.error.message).toBe('string')
+    expect(body.error).toBe('forbidden')
   })
 
   it.each<OrgRole>(['OWNER', 'MANAGER', 'MEMBER', 'VIEWER'])(
@@ -78,14 +77,14 @@ describe('forbiddenByRole', () => {
     async (role) => {
       const res = forbiddenByRole(role, 'MANAGER 이상')
       const body = await res.json()
-      expect(body.error.message).toContain(role)
+      expect(body.message).toContain(role)
     }
   )
 
   it('필요 권한 설명을 message 에 포함한다', async () => {
     const res = forbiddenByRole('VIEWER', 'OWNER만')
     const body = await res.json()
-    expect(body.error.message).toContain('OWNER만')
+    expect(body.message).toContain('OWNER만')
   })
 
   it('Content-Type 이 application/json (프론트가 JSON 으로 파싱 가능)', () => {
