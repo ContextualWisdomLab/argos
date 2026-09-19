@@ -9,4 +9,3 @@ packages:
 # duplicate-declaration error under pnpm 10.
 overrides:
   ip-address: 10.1.1
-  qs: 6.15.2
