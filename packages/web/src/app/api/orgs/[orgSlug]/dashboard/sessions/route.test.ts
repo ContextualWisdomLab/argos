@@ -39,11 +39,11 @@ describe('Sessions API Route', () => {
     vi.resetAllMocks()
 
     // Default successful auth and access
-    vi.mocked(authHelper.requireAuth).mockResolvedValue({ userId: 'user-1' } as any)
+    vi.mocked(authHelper.requireAuth).mockResolvedValue({ userId: 'user-1' } as never)
     vi.mocked(dashboardRouteHelper.assertOrgAccessBySlugOrResponse).mockResolvedValue({
       org: { id: 'org-1' },
       role: 'ADMIN'
-    } as any)
+    } as never)
     vi.mocked(rbac.canAccessIndividualData).mockReturnValue(true)
     vi.mocked(dashboardRouteHelper.resolveOrgScopedProjectIds).mockResolvedValue(['proj-1'])
   })
@@ -60,7 +60,7 @@ describe('Sessions API Route', () => {
       endedAt: null,
     }
 
-    vi.mocked(dbLib.db.claudeSession.findMany).mockResolvedValue([mockSession] as any)
+    vi.mocked(dbLib.db.claudeSession.findMany).mockResolvedValue([mockSession] as never)
 
     const req = new NextRequest('http://localhost/api/orgs/org-1/dashboard/sessions?format=csv&from=2025-01-01&to=2025-01-02')
 
@@ -88,7 +88,7 @@ describe('Sessions API Route', () => {
       title: 'Safe Title'
     }
 
-    vi.mocked(dbLib.db.claudeSession.findMany).mockResolvedValue([mockSession] as any)
+    vi.mocked(dbLib.db.claudeSession.findMany).mockResolvedValue([mockSession] as never)
 
     const req = new NextRequest('http://localhost/api/orgs/org-1/dashboard/sessions?format=csv&from=2025-01-01&to=2025-01-02')
 
