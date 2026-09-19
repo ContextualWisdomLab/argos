@@ -107,9 +107,9 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/50">
             <MousePointerClick className="h-6 w-6" aria-hidden="true" />
           </div>
-          <div className="text-sm font-medium text-foreground">No event selected</div>
+          <div className="text-sm font-bold text-foreground">No event selected</div>
           <div className="text-xs text-muted-foreground">
-            Select an event from the timeline to see details
+            Select an event from the timeline to see details.
           </div>
         </div>
       </div>
