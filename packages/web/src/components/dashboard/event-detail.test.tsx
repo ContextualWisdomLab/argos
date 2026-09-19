@@ -1,3 +1,4 @@
+import React from "react";
 /** @vitest-environment jsdom */
 
 import { cleanup, render, screen } from "@testing-library/react";

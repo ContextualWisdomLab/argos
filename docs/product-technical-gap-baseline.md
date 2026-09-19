@@ -1,9 +1,9 @@
 # Product–Technical Gap Baseline
 
-Status: **Proposed**  
-Last evidence refresh: 2026-09-20  
-Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)  
-Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)  
+Status: **Proposed**
+Last evidence refresh: 2026-09-20
+Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
+Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop

@@ -1,3 +1,4 @@
+import React from "react";
 import type { TimelineEvent, ToolEvent } from "@/lib/timeline-events";
 import { formatDateTime } from "@/lib/format";
 import { User, Bot, Wrench, X, MousePointerClick } from "lucide-react";
