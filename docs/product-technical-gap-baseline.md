@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `e2cd410342d51124552afb91fa374d66a10da15a`
+Tracked reusable-control evidence: `70a9d5d31532e27dd8de676acedb515a5acfe574`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
