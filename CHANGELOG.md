@@ -21,7 +21,6 @@
 
 ### 🎨 변경 사항 (UX / 접근성)
 
-- Select, Pagination, WeekNavigator, ContextSection, EventList의 장식용 Chevron을 접근성 트리에서 숨겼습니다. ContextSection·Pagination·WeekNavigator·EventList·Select trigger 회귀 테스트는 부모 control의 이름과 expanded/page-change/navigation/group-disclosure 동작을 고정합니다. Select scroll control 동작과 실제 browser/AT 검증은 아직 완료로 주장하지 않습니다.
 - 세션 활동 리본은 시각적으로 현재인 이벤트를 토글 버튼으로 오인시키지 않고 `aria-current`로 노출하며, 병합된 도구 실행은 `Expand … group` 다음 행동과 포함 이벤트 수를 명확히 안내합니다.
 - 프로젝트 이름 변경·삭제 버튼과 텍스트가 이름을 제공하는 프로젝트 생성 버튼의 장식 아이콘을 접근성 트리에서 숨기고, 버튼의 기존 접근 가능한 이름이 유지되는지 렌더링 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
