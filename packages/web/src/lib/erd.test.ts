@@ -472,6 +472,16 @@ CREATE TABLE posts (
       expect(col?.defaultValue).toBe("0");
     });
 
+    it("should remove an existing default when explicitly cleared", () => {
+      model.updateColumn("posts", "user_id", { defaultValue: "0" });
+      model.updateColumn("posts", "user_id", { defaultValue: undefined });
+
+      expect(model.getTable("posts")?.columns[0]).not.toHaveProperty(
+        "defaultValue",
+      );
+      expect(model.generateDDL()).not.toContain(" DEFAULT ");
+    });
+
     it("should not partially apply column updates when validation fails", () => {
       const before = model.getTable("posts")?.columns[0];
 
