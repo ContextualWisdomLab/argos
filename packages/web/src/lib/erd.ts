@@ -317,12 +317,14 @@ export class ERDModel {
 
     if (updates.type !== undefined) {
       assertSafeSqlType(updates.type);
-      column.type = updates.type;
     }
     if (updates.defaultValue !== undefined) {
       assertSafeSqlDefaultValue(updates.defaultValue);
-      column.defaultValue = updates.defaultValue;
     }
+
+    if (updates.type !== undefined) column.type = updates.type;
+    if (updates.defaultValue !== undefined)
+      column.defaultValue = updates.defaultValue;
     if (updates.isPrimaryKey !== undefined)
       column.isPrimaryKey = updates.isPrimaryKey;
     if (updates.isNullable !== undefined)
