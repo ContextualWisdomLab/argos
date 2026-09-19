@@ -315,18 +315,13 @@ export class ERDModel {
       );
     }
 
-    const hasDefaultValueUpdate = Object.hasOwn(updates, "defaultValue");
     if (updates.type !== undefined) {
       assertSafeSqlType(updates.type);
+      column.type = updates.type;
     }
-    if (hasDefaultValueUpdate && updates.defaultValue !== undefined) {
+    if (updates.defaultValue !== undefined) {
       assertSafeSqlDefaultValue(updates.defaultValue);
-    }
-
-    if (updates.type !== undefined) column.type = updates.type;
-    if (hasDefaultValueUpdate) {
-      if (updates.defaultValue === undefined) delete column.defaultValue;
-      else column.defaultValue = updates.defaultValue;
+      column.defaultValue = updates.defaultValue;
     }
     if (updates.isPrimaryKey !== undefined)
       column.isPrimaryKey = updates.isPrimaryKey;

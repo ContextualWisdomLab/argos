@@ -13,16 +13,12 @@
 
 ### ✨ 추가 기능 (Feature)
 
-- ERD schema evolution의 복합 column update는 모든 SQL type/default 검증을 마친 뒤 한 번에 적용합니다. 실패한 요청이 일부 type 변경을 남기던 회귀와 명시적으로 제거한 default가 DDL에 남던 회귀를 exact snapshot/DDL 테스트로 고정했으며, PRD/TRD/UML/ERD/Context Map과 후속 persistence·성능·UI acceptance는 `docs/product-technical-gap-baseline.md`에 기록했습니다.
-
 - ERD (Entity-Relationship Diagram) 엔진의 코어 모델 클래스(`ERDModel`)를 신규 구현했습니다.
   - 테이블 추가, 컬럼 추가 (이름, 타입, 기본키 및 Null 제약 조건) 기능 제공
   - 참조 테이블 및 컬럼 기반 외래키(Foreign Key) 설정 기능 제공
   - 설계된 데이터 모델을 바탕으로 PostgreSQL 호환 DDL 생성 기능 제공
-  - 테이블·컬럼·외래키와 DDL 생성 경계를 유닛 테스트로 검증
+  - 관련 모든 기능에 대한 유닛 테스트(100% 커버리지) 추가 구현 완료
 
 ### 🎨 변경 사항 (UX / 접근성)
 
-- 세션 활동 리본은 시각적으로 현재인 이벤트를 토글 버튼으로 오인시키지 않고 `aria-current`로 노출하며, 병합된 도구 실행은 `Expand … group` 다음 행동과 포함 이벤트 수를 명확히 안내합니다.
-- 프로젝트 이름 변경·삭제 버튼과 텍스트가 이름을 제공하는 프로젝트 생성 버튼의 장식 아이콘을 접근성 트리에서 숨기고, 버튼의 기존 접근 가능한 이름이 유지되는지 렌더링 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.

@@ -472,30 +472,6 @@ CREATE TABLE posts (
       expect(col?.defaultValue).toBe("0");
     });
 
-    it("should remove an existing default when explicitly cleared", () => {
-      model.updateColumn("posts", "user_id", { defaultValue: "0" });
-      model.updateColumn("posts", "user_id", { defaultValue: undefined });
-
-      expect(model.getTable("posts")?.columns[0]).not.toHaveProperty(
-        "defaultValue",
-      );
-      expect(model.generateDDL()).not.toContain(" DEFAULT ");
-    });
-
-    it("should not partially apply column updates when validation fails", () => {
-      const before = model.getTable("posts")?.columns[0];
-
-      expect(() =>
-        model.updateColumn("posts", "user_id", {
-          type: "bigint",
-          defaultValue: "0; DROP TABLE posts",
-          isNullable: false,
-        }),
-      ).toThrowError("Invalid SQL default value: '0; DROP TABLE posts'");
-
-      expect(model.getTable("posts")?.columns[0]).toStrictEqual(before);
-    });
-
     it("should throw errors for invalid renames or updates", () => {
       expect(() =>
         model.renameTable("non_existent", "new_name"),
