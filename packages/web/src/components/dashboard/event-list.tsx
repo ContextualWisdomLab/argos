@@ -171,7 +171,7 @@ function RowView({
           bg,
         )}
       >
-        <Icon className="h-3 w-3 text-background" aria-hidden="true" />
+        <Icon className="h-3 w-3 text-background" />
       </span>
       <span className="w-20 shrink-0 text-sm font-medium truncate">
         {label}
@@ -179,7 +179,6 @@ function RowView({
       <span className="flex-1 min-w-0 flex items-center gap-1 text-sm text-muted-foreground">
         {chevron !== undefined && (
           <ChevronRight
-            aria-hidden="true"
             className={cn(
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",

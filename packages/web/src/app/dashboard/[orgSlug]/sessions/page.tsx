@@ -214,7 +214,7 @@ function SessionsContent({
         onClick={downloadCsv}
         disabled={isCsvDownloading || !authSession?.argosToken}
       >
-        <Download data-icon="inline-start" className="size-4" aria-hidden="true" />
+        <Download data-icon="inline-start" className="size-4" />
         {isCsvDownloading ? 'Downloading...' : 'Download CSV'}
       </Button>
       <DateRangePicker />
@@ -332,7 +332,7 @@ function SessionsContent({
                     <td className="py-3 px-2 w-10">
                       <button
                         type="button"
-                        aria-label="Delete session"
+                        aria-label="세션 삭제"
                         onClick={(e) => {
                           e.stopPropagation()
                           setSessionToDelete(session)
@@ -343,7 +343,7 @@ function SessionsContent({
                           'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
                         )}
                       >
-                        <Trash2 className="size-4" aria-hidden="true" />
+                        <Trash2 className="size-4" />
                       </button>
                     </td>
                   </tr>

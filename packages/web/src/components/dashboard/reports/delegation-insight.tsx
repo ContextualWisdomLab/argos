@@ -15,7 +15,7 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
       <ChartCard
         title={
           <span className="inline-flex items-center gap-2">
-            <Wand2 className="h-4 w-4 text-brand-2" aria-hidden="true" />
+            <Wand2 className="h-4 w-4 text-brand-2" />
             위임 활용
           </span>
         }
@@ -34,7 +34,7 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
     <ChartCard
       title={
         <span className="inline-flex items-center gap-2">
-          <Wand2 className="h-4 w-4 text-brand-2" aria-hidden="true" />
+          <Wand2 className="h-4 w-4 text-brand-2" />
           위임 활용
         </span>
       }
@@ -65,7 +65,7 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
                   className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-card-elevated transition-colors font-mono truncate max-w-[12rem]"
                 >
                   <span className="truncate">{sid.slice(0, 10)}…</span>
-                  <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  <ArrowUpRight className="h-3 w-3 shrink-0" />
                 </Link>
               ))}
             </div>

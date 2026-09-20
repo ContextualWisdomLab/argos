@@ -87,7 +87,6 @@ describe('SessionActivityRibbon accessibility semantics', () => {
 
     const firstEvent = screen.getByRole('button', { name: 'Event 1' })
     expect(firstEvent).toHaveAttribute('aria-current', 'true')
-    expect(firstEvent).toHaveAccessibleName('Event 1')
     expect(firstEvent).not.toHaveAttribute('aria-pressed')
     expect(currentEventButtons()).toEqual([firstEvent])
 
@@ -106,7 +105,6 @@ describe('SessionActivityRibbon accessibility semantics', () => {
     const secondEvent = screen.getByRole('button', { name: 'Event 2' })
     expect(screen.getByRole('button', { name: 'Event 1' })).not.toHaveAttribute('aria-current')
     expect(secondEvent).toHaveAttribute('aria-current', 'true')
-    expect(secondEvent).toHaveAccessibleName('Event 2')
     expect(currentEventButtons()).toEqual([secondEvent])
   })
 
@@ -116,7 +114,6 @@ describe('SessionActivityRibbon accessibility semantics', () => {
 
     const expand = screen.getByRole('button', { name: 'Expand Read group, 2 events' })
     expect(expand).not.toHaveAttribute('aria-expanded')
-    expect(expand).toHaveAccessibleName('Expand Read group, 2 events')
 
     fireEvent.click(expand)
     expect(onToggleGroup).toHaveBeenCalledWith(1)
