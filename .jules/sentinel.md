@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2026-09-02 - [Windows CLI auth URL command-shell injection]
+**Vulnerability:** The Windows CLI browser launcher passed the server-provided `authUrl` through `cmd.exe /c start` with `windowsVerbatimArguments: true`. A selected-character caret escape attempted to neutralize shell syntax, but untrusted network data still crossed a command-interpreter boundary whose quoting and expansion grammar was the security control.
+**Learning:** Shell escaping is not the right abstraction when the product only needs to launch one fixed program with an untrusted URL argument. MITRE CWE-78 recommends structured execution mechanisms that keep data separate from command syntax, and Node.js documents that `windowsVerbatimArguments` disables its normal Windows argument quoting/escaping.
+**Prevention:** Do not invoke `cmd.exe` for browser authentication URLs. Validate the URL as `http:` or `https:` and spawn a fixed OS launcher directly with the URL as one argv element. Preserve this invariant with a regression containing shell metacharacters, environment-expansion syntax, and quotes. References: https://cwe.mitre.org/data/definitions/78.html and https://nodejs.org/api/child_process.html.
