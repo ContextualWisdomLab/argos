@@ -394,6 +394,114 @@ CREATE TABLE posts (
     });
   });
 
+  describe("Table Modification", () => {
+    it("should rename a table and update references", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      model.renameTable("users", "accounts");
+
+      expect(model.getTable("users")).toBeUndefined();
+      const accountsTable = model.getTable("accounts");
+      expect(accountsTable).toBeDefined();
+      expect(accountsTable?.name).toBe("accounts");
+
+      const postsTable = model.getTable("posts");
+      expect(postsTable?.foreignKeys[0].referenceTable).toBe("accounts");
+    });
+
+    it("should throw when renaming a non-existent table", () => {
+      expect(() => model.renameTable("non_existent", "new_name")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when renaming to an existing table name", () => {
+      model.addTable("users");
+      model.addTable("accounts");
+      expect(() => model.renameTable("users", "accounts")).toThrowError(
+        "Table 'accounts' already exists.",
+      );
+    });
+
+    it("should reject non-snake-case new table names", () => {
+      model.addTable("users");
+      expect(() => model.renameTable("users", "UsersTable")).toThrowError(
+        "Table 'UsersTable' must be snake_case.",
+      );
+      expect(() => model.renameTable("UsersTable", "new_name")).toThrowError(
+        "Table 'UsersTable' must be snake_case.",
+      );
+    });
+  });
+
+  describe("Column Modification", () => {
+    it("should rename a column and update references", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      model.renameColumn("users", "id", "user_id");
+
+      const usersTable = model.getTable("users");
+      expect(usersTable?.columns[0].name).toBe("user_id");
+
+      const postsTable = model.getTable("posts");
+      expect(postsTable?.foreignKeys[0].referenceColumn).toBe("user_id");
+
+      model.renameColumn("posts", "user_id", "author_id");
+      const updatedPostsTable = model.getTable("posts");
+      expect(updatedPostsTable?.columns[0].name).toBe("author_id");
+      expect(updatedPostsTable?.foreignKeys[0].columnName).toBe("author_id");
+    });
+
+    it("should throw when renaming column in a non-existent table", () => {
+      expect(() => model.renameColumn("non_existent", "id", "new_id")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when renaming a non-existent column", () => {
+      model.addTable("users");
+      expect(() => model.renameColumn("users", "non_existent", "new_id")).toThrowError(
+        "Column 'non_existent' does not exist in table 'users'.",
+      );
+    });
+
+    it("should throw when renaming to an existing column name", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addColumn("users", { name: "email", type: "varchar" });
+      expect(() => model.renameColumn("users", "id", "email")).toThrowError(
+        "Column 'email' already exists in table 'users'.",
+      );
+    });
+
+    it("should reject non-snake-case new column names", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      expect(() => model.renameColumn("users", "id", "userId")).toThrowError(
+        "Column 'userId' must be snake_case.",
+      );
+      expect(() => model.renameColumn("users", "userId", "new_id")).toThrowError(
+        "Column 'userId' must be snake_case.",
+      );
+    });
+  });
+
   describe("Coverage Edge Cases", () => {
     it("should throw when removing column from non-existent table", () => {
       expect(() => model.removeColumn("non_existent", "id")).toThrowError(

@@ -107,6 +107,30 @@ export class ERDModel {
     this.tables.delete(name);
   }
 
+  renameTable(oldName: string, newName: string): void {
+    assertSnakeCaseIdentifier("Table", oldName);
+    assertSnakeCaseIdentifier("Table", newName);
+    if (!this.tables.has(oldName)) {
+      throw new Error(`Table '${oldName}' does not exist.`);
+    }
+    if (this.tables.has(newName)) {
+      throw new Error(`Table '${newName}' already exists.`);
+    }
+
+    const table = this.tables.get(oldName)!;
+    table.name = newName;
+    this.tables.delete(oldName);
+    this.tables.set(newName, table);
+
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === oldName) {
+          fk.referenceTable = newName;
+        }
+      }
+    }
+  }
+
   addColumn(tableName: string, column: Column): void {
     assertSnakeCaseIdentifier("Table", tableName);
     assertSnakeCaseIdentifier("Column", column.name);
@@ -124,6 +148,46 @@ export class ERDModel {
       );
     }
     table.columns.push(structuredClone(column));
+  }
+
+  renameColumn(tableName: string, oldColumnName: string, newColumnName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", oldColumnName);
+    assertSnakeCaseIdentifier("Column", newColumnName);
+
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+
+    const column = table.columns.find((c) => c.name === oldColumnName);
+    if (!column) {
+      throw new Error(
+        `Column '${oldColumnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+
+    if (table.columns.some((c) => c.name === newColumnName)) {
+      throw new Error(
+        `Column '${newColumnName}' already exists in table '${tableName}'.`,
+      );
+    }
+
+    column.name = newColumnName;
+
+    for (const fk of table.foreignKeys) {
+      if (fk.columnName === oldColumnName) {
+        fk.columnName = newColumnName;
+      }
+    }
+
+    for (const t of this.tables.values()) {
+      for (const fk of t.foreignKeys) {
+        if (fk.referenceTable === tableName && fk.referenceColumn === oldColumnName) {
+          fk.referenceColumn = newColumnName;
+        }
+      }
+    }
   }
 
   removeColumn(tableName: string, columnName: string): void {
