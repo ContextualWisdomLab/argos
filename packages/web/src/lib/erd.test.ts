@@ -392,6 +392,93 @@ CREATE TABLE posts (
 );`;
       expect(ddl).toBe(expected);
     });
+
+    it("should generate correct DDL for tables with indices", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "SERIAL", isPrimaryKey: true });
+      model.addColumn("users", { name: "email", type: "VARCHAR(255)" });
+      model.addIndex("users", { name: "idx_users_email", columnName: "email", isUnique: true });
+
+      const ddl = model.generateDDL();
+      const expected = `CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255)
+);
+
+CREATE UNIQUE INDEX idx_users_email ON users (email);`;
+      expect(ddl).toBe(expected);
+    });
+  });
+
+  describe("Index Management", () => {
+    beforeEach(() => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addColumn("users", { name: "email", type: "varchar" });
+    });
+
+    it("should add an index successfully", () => {
+      model.addIndex("users", {
+        name: "idx_users_email",
+        columnName: "email",
+        isUnique: true,
+      });
+      const table = model.getTable("users");
+      expect(table?.indices.length).toBe(1);
+      expect(table?.indices[0].name).toBe("idx_users_email");
+    });
+
+    it("should throw when adding index to non-existent table", () => {
+      expect(() => {
+        model.addIndex("non_existent", {
+          name: "idx_test",
+          columnName: "id",
+        });
+      }).toThrowError("Table 'non_existent' does not exist.");
+    });
+
+    it("should throw when index column does not exist", () => {
+      expect(() => {
+        model.addIndex("users", {
+          name: "idx_non_existent",
+          columnName: "non_existent_col",
+        });
+      }).toThrowError("Column 'non_existent_col' does not exist in table 'users'.");
+    });
+
+    it("should throw when adding duplicate index name", () => {
+      model.addIndex("users", { name: "idx_email", columnName: "email" });
+      expect(() => {
+        model.addIndex("users", { name: "idx_email", columnName: "id" });
+      }).toThrowError("Index 'idx_email' already exists in table 'users'.");
+    });
+
+    it("should reject non-snake-case index names", () => {
+      expect(() => {
+        model.addIndex("users", {
+          name: "idxUsersEmail",
+          columnName: "email",
+        });
+      }).toThrowError("Index 'idxUsersEmail' must be snake_case.");
+    });
+
+    it("should remove an index", () => {
+      model.addIndex("users", { name: "idx_email", columnName: "email" });
+      model.removeIndex("users", "idx_email");
+      expect(model.getTable("users")?.indices.length).toBe(0);
+    });
+
+    it("should throw when removing index from non-existent table", () => {
+      expect(() => model.removeIndex("non_existent", "idx")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when removing non-existent index", () => {
+      expect(() => model.removeIndex("users", "non_existent_idx")).toThrowError(
+        "Index 'non_existent_idx' does not exist in table 'users'.",
+      );
+    });
   });
 
   describe("Coverage Edge Cases", () => {
@@ -404,6 +491,16 @@ CREATE TABLE posts (
     it("should throw when removing foreign key from non-existent table", () => {
       expect(() => model.removeForeignKey("non_existent", "id")).toThrowError(
         "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when removing a column with an index constraint", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "email", type: "varchar" });
+      model.addIndex("users", { name: "idx_email", columnName: "email" });
+
+      expect(() => model.removeColumn("users", "email")).toThrowError(
+        "Cannot remove column 'email' because it is used in an index.",
       );
     });
   });

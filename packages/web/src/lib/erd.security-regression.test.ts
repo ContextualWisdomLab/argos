@@ -61,6 +61,7 @@ describe("ERDModel security regressions", () => {
       name: "users",
       columns: [],
       foreignKeys: [],
+      indices: [],
     });
     if (!fetched) throw new Error("users table should exist");
 
@@ -79,6 +80,7 @@ describe("ERDModel security regressions", () => {
       name: "users",
       columns: [],
       foreignKeys: [],
+      indices: [],
     });
   });
 
