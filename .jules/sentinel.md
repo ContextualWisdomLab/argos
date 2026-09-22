@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-09-22 - [CSV Injection 방지]
+**Vulnerability:** [사용자 입력값이 CSV 파일로 직접 출력될 때 수식(Formula) 시작 문자로 시작하는 값이 포함될 경우, 스프레드시트 매크로 인젝션 취약점이 발생할 수 있음]
+**Learning:** [타입이 number가 아닌 값에 대해 엑셀에서 수식으로 해석될 수 있는 문자(=, +, -, @ 등) 및 이들의 전각 문자가 맨 앞에 올 경우, 이를 차단하기 위한 처리 과정이 필요함을 확인]
+**Prevention:** [CSV 출력 시 입력값이 문자열일 경우 시작 문자를 검사하여 수식 관련 문자일 경우 맨 앞에 싱글 쿼트(')를 붙이도록(prepending) 하는 함수(`csvField` 등)를 적용하여 방지]
