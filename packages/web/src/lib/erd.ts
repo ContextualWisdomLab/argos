@@ -83,6 +83,11 @@ export class ERDModel {
     if (this.tables.has(name)) {
       throw new Error(`Table '${name}' already exists.`);
     }
+    for (const table of this.tables.values()) {
+      if (table.indices.some((index) => index.name === name)) {
+        throw new Error(`Table '${name}' conflicts with an existing relation name.`);
+      }
+    }
     const table: Table = { name, columns: [], foreignKeys: [], indices: [] };
     this.tables.set(name, table);
     return structuredClone(table);
@@ -234,6 +239,15 @@ export class ERDModel {
 
     if (table.indices.some((idx) => idx.name === index.name)) {
       throw new Error(`Index '${index.name}' already exists in table '${tableName}'.`);
+    }
+
+    if (this.tables.has(index.name)) {
+      throw new Error(`Index '${index.name}' conflicts with an existing relation name.`);
+    }
+    for (const existingTable of this.tables.values()) {
+      if (existingTable.indices.some((idx) => idx.name === index.name)) {
+        throw new Error(`Index '${index.name}' conflicts with an existing relation name.`);
+      }
     }
 
     table.indices.push(structuredClone(index));
