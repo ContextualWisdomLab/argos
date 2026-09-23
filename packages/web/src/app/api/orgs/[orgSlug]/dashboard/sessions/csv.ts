@@ -4,7 +4,7 @@ export function csvField(value: string | number | null | undefined) {
   if (typeof value === 'string') {
     // Keep formula-like text inert when the CSV is opened in spreadsheet software.
     const trimmed = value.trimStart()
-    if (/^[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(trimmed)) {
+    if (/^[=+\-@\t\r\n\0\uff1d\uff0b\uff0d\uff20]/.test(trimmed)) {
       value = `'${value}`
     }
   }
