@@ -100,8 +100,16 @@ export class ERDModel {
 
     const table = this.tables.get(oldName)!;
     table.name = newName;
-    this.tables.set(newName, table);
-    this.tables.delete(oldName);
+
+    const newTables = new Map<string, Table>();
+    for (const [key, val] of this.tables.entries()) {
+      if (key === oldName) {
+        newTables.set(newName, table);
+      } else {
+        newTables.set(key, val);
+      }
+    }
+    this.tables = newTables;
 
     for (const t of this.tables.values()) {
       for (const fk of t.foreignKeys) {

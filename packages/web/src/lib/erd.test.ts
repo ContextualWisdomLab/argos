@@ -99,6 +99,31 @@ describe("ERDModel", () => {
       expect(postsTable?.foreignKeys[0].referenceTable).toBe("accounts");
     });
 
+    it("should preserve table order in generateDDL after renaming", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      model.renameTable("users", "accounts");
+
+      const ddl = model.generateDDL();
+      const expected = `CREATE TABLE accounts (
+  id integer
+);
+
+CREATE TABLE posts (
+  user_id integer,
+  FOREIGN KEY (user_id) REFERENCES accounts(id)
+);`;
+      expect(ddl).toBe(expected);
+    });
+
     it("should throw when renaming a non-existent table", () => {
       expect(() => model.renameTable("non_existent", "accounts")).toThrowError(
         "Table 'non_existent' does not exist.",
