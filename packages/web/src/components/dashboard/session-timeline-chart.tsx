@@ -67,11 +67,9 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // ⚡ Bolt: Use a Schwartzian transform (map-sort-map) to avoid repeatedly parsing dates during sort
-  // This changes the O(N log N) Date.parse() calls to O(N) calls, improving performance for large timelines
-  const sortedUsage = usageTimeline
-    .map(usage => ({ usage, parsedTimestamp: Date.parse(usage.timestamp) }))
-    .sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -79,7 +77,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map(({ usage, parsedTimestamp: currentTimestamp }) => {
+  return sortedUsage.map((usage) => {
+    const currentTimestamp = Date.parse(usage.timestamp)
 
     while (
       toolIndex < sortedTools.length &&
