@@ -67,9 +67,8 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // ⚡ Bolt: sort 함수 내에서 비용이 큰 Date.parse 호출을 피하기 위해 ISO 타임스탬프를 직접 문자열로 비교합니다.
-  const sortedUsage = [...usageTimeline].sort((a, b) =>
-    a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
