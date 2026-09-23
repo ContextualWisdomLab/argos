@@ -73,13 +73,7 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
 
 function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
-  let text = String(value)
-
-  // Spreadsheet applications may evaluate ASCII formula prefixes in untrusted text cells.
-  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r\n]/.test(text)) {
-    text = "'" + text
-  }
-
+  const text = String(value)
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
