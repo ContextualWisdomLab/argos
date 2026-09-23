@@ -1,6 +1,6 @@
-import { Prisma } from '@prisma/client'
-import { aggregateSkillCountsForRange } from './skill-aggregation'
-import { db } from './db'
+import { Prisma } from "@prisma/client";
+import { aggregateSkillCountsForRange } from "./skill-aggregation";
+import { db } from "./db";
 
 // ─── Cache invalidation threshold ─────────────────────────────────────────────
 // 이 시각 이전에 계산된 daily rollup 은 skillCounts 가 구 정의(events.isSkillCall=true only)로
@@ -9,91 +9,106 @@ import { db } from './db'
 // NOTE: 다음 skillCounts 정의 변경 시 이 상수를 갱신하고 재배포한다.
 // 배포 race 가드: 머지·rolling deploy + 캐시 전파 슬립을 흡수하도록 머지 시각보다
 // 충분히 미래로 둔다 (배포 슬립 24~48h). 임계 이전 row 는 stale 판정 → 자연 재계산.
-export const SKILL_COUNTS_INVALIDATION_AT = new Date('2026-05-17T00:00:00Z')
+export const SKILL_COUNTS_INVALIDATION_AT = new Date("2026-05-17T00:00:00Z");
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface DailyRollup {
-  date: string // YYYY-MM-DD (UTC day)
-  sessionCount: number
-  turnCount: number
-  activeUserCount: number
-  activeUserIds: string[]
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  cacheCreationTokens: number
-  estimatedCostUsd: number
-  skillCounts: Record<string, number>
-  agentCounts: Record<string, number>
-  modelTokens: Record<string, number>
-  userStats: DailyUserStat[]
+  date: string; // YYYY-MM-DD (UTC day)
+  sessionCount: number;
+  turnCount: number;
+  activeUserCount: number;
+  activeUserIds: string[];
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  estimatedCostUsd: number;
+  skillCounts: Record<string, number>;
+  agentCounts: Record<string, number>;
+  modelTokens: Record<string, number>;
+  userStats: DailyUserStat[];
 }
 
 export interface DailyUserStat {
-  userId: string
-  name: string
-  avatarUrl: string | null
-  sessionCount: number
-  inputTokens: number
-  outputTokens: number
-  estimatedCostUsd: number
-  skillCalls: number
-  agentCalls: number
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  sessionCount: number;
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
+  skillCalls: number;
+  agentCalls: number;
 }
 
 // ─── Day boundary helpers ──────────────────────────────────────────────────
 
 /** UTC 자정 시작 Date */
 function utcDayStart(date: Date): Date {
-  return new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    0, 0, 0, 0,
-  ))
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 }
 
 /** UTC 자정 끝 Date (다음날 시작 직전) */
 function utcDayEnd(date: Date): Date {
-  return new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    23, 59, 59, 999,
-  ))
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
 }
 
 /** half-open 경계용: date 의 UTC 다음날 자정 (toExclusive = utcDayStart + 1day) */
 function utcDayStartNextDay(date: Date): Date {
-  return new Date(Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate() + 1,
-    0, 0, 0, 0,
-  ))
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() + 1,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 }
 
 /** YYYY-MM-DD (UTC) */
 function toDateKey(date: Date): string {
-  return date.toISOString().slice(0, 10)
+  return date.toISOString().slice(0, 10);
 }
 
 /** 범위 내 모든 UTC 날짜 (start, end 포함) */
 function enumerateUtcDates(from: Date, to: Date): Date[] {
-  const days: Date[] = []
-  const cur = utcDayStart(from)
-  const end = utcDayStart(to)
+  const days: Date[] = [];
+  const cur = utcDayStart(from);
+  const end = utcDayStart(to);
   while (cur.getTime() <= end.getTime()) {
-    days.push(new Date(cur))
-    cur.setUTCDate(cur.getUTCDate() + 1)
+    days.push(new Date(cur));
+    cur.setUTCDate(cur.getUTCDate() + 1);
   }
-  return days
+  return days;
 }
 
 /** 현재 시점의 UTC 오늘 00:00 (캐시 경계) */
 function utcTodayStart(): Date {
-  return utcDayStart(new Date())
+  return utcDayStart(new Date());
 }
 
 // ─── Today's live rollup in-memory cache (per-process) ─────────────────────
@@ -101,35 +116,41 @@ function utcTodayStart(): Date {
 // 같은 프로세스 내에서 30초간 결과를 공유해 summary/usage/users가 중복 계산하지 않도록 한다.
 // Vercel serverless는 인스턴스당 per-instance라 best-effort 성격.
 
-const TODAY_ROLLUP_TTL_MS = 30_000
-const todayRollupCache = new Map<string, { expiresAt: number; rollup: DailyRollup }>()
+const TODAY_ROLLUP_TTL_MS = 30_000;
+const todayRollupCache = new Map<
+  string,
+  { expiresAt: number; rollup: DailyRollup }
+>();
 
 function todayCacheKey(projectId: string, dayStart: Date): string {
-  return `${projectId}:${dayStart.toISOString()}`
+  return `${projectId}:${dayStart.toISOString()}`;
 }
 
 async function computeDailyRollupCachedForToday(
   projectId: string,
   date: Date,
 ): Promise<DailyRollup> {
-  const key = todayCacheKey(projectId, utcDayStart(date))
-  const now = Date.now()
-  const entry = todayRollupCache.get(key)
+  const key = todayCacheKey(projectId, utcDayStart(date));
+  const now = Date.now();
+  const entry = todayRollupCache.get(key);
   if (entry && entry.expiresAt > now) {
-    return entry.rollup
+    return entry.rollup;
   }
-  const rollup = await computeDailyRollup(projectId, date)
-  todayRollupCache.set(key, { expiresAt: now + TODAY_ROLLUP_TTL_MS, rollup })
-  return rollup
+  const rollup = await computeDailyRollup(projectId, date);
+  todayRollupCache.set(key, { expiresAt: now + TODAY_ROLLUP_TTL_MS, rollup });
+  return rollup;
 }
 
 // ─── Core: compute one day's rollup from raw tables ────────────────────────
 
-async function computeDailyRollup(projectId: string, date: Date): Promise<DailyRollup> {
-  const from = utcDayStart(date)
-  const to = utcDayEnd(date)
+async function computeDailyRollup(
+  projectId: string,
+  date: Date,
+): Promise<DailyRollup> {
+  const from = utcDayStart(date);
+  const to = utcDayEnd(date);
   // half-open 경계: helper 는 [fromInclusive, toExclusive) を 要求
-  const toExclusive = utcDayStartNextDay(date)
+  const toExclusive = utcDayStartNextDay(date);
 
   const [
     sessionCount,
@@ -147,17 +168,19 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
     db.event.count({
       where: {
         projectId,
-        eventType: 'STOP',
+        eventType: "STOP",
         timestamp: { gte: from, lte: to },
       },
     }),
-    db.$queryRaw<Array<{
-      inputTokens: bigint | null
-      outputTokens: bigint | null
-      cacheReadTokens: bigint | null
-      cacheCreationTokens: bigint | null
-      estimatedCostUsd: number | null
-    }>>`
+    db.$queryRaw<
+      Array<{
+        inputTokens: bigint | null;
+        outputTokens: bigint | null;
+        cacheReadTokens: bigint | null;
+        cacheCreationTokens: bigint | null;
+        estimatedCostUsd: number | null;
+      }>
+    >`
       SELECT
         SUM(input_tokens)::bigint           AS "inputTokens",
         SUM(output_tokens)::bigint          AS "outputTokens",
@@ -173,7 +196,7 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
     // skill-aggregation.ts 가 단일 출처 (skills route 와 공유)
     aggregateSkillCountsForRange([projectId], from, toExclusive),
     db.event.groupBy({
-      by: ['agentType'],
+      by: ["agentType"],
       where: {
         projectId,
         isAgentCall: true,
@@ -195,17 +218,19 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
     // user-level 집계는 각 테이블을 user_id로 먼저 GROUP BY한 뒤 LEFT JOIN한다.
     // 직접 JOIN하면 usage_records × sessions × events 만큼 cartesian fan-out이 일어나
     // SUM/COUNT가 곱셈으로 부풀려지고, 쿼리가 DB statement_timeout에 걸린다.
-    db.$queryRaw<Array<{
-      id: string
-      name: string
-      avatar_url: string | null
-      session_count: bigint
-      input_tokens: bigint | null
-      output_tokens: bigint | null
-      cost_usd: number | null
-      skill_calls: bigint
-      agent_calls: bigint
-    }>>`
+    db.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        avatar_url: string | null;
+        session_count: bigint;
+        input_tokens: bigint | null;
+        output_tokens: bigint | null;
+        cost_usd: number | null;
+        skill_calls: bigint;
+        agent_calls: bigint;
+      }>
+    >`
       WITH ur_agg AS (
         SELECT
           user_id,
@@ -262,28 +287,28 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
         AND timestamp >= ${from}
         AND timestamp <= ${to}
     `,
-  ])
+  ]);
 
-  const totals = usageTotals[0]
-  const activeUserIds = activeUserRows.map(r => r.user_id)
+  const totals = usageTotals[0];
+  const activeUserIds = activeUserRows.map((r) => r.user_id);
 
   // skillCountRows: Array<{ skillName: string; callCount: number }> from UNION helper
-  const skillCounts: Record<string, number> = {}
+  const skillCounts: Record<string, number> = {};
   for (const row of skillCountRows) {
-    skillCounts[row.skillName] = row.callCount
+    skillCounts[row.skillName] = row.callCount;
   }
 
-  const agentCounts: Record<string, number> = {}
+  const agentCounts: Record<string, number> = {};
   for (const row of agentGroups) {
-    if (row.agentType) agentCounts[row.agentType] = row._count.id
+    if (row.agentType) agentCounts[row.agentType] = row._count.id;
   }
 
-  const modelTokens: Record<string, number> = {}
+  const modelTokens: Record<string, number> = {};
   for (const row of modelGroups) {
-    if (row.model) modelTokens[row.model] = Number(row.totalTokens ?? 0)
+    if (row.model) modelTokens[row.model] = Number(row.totalTokens ?? 0);
   }
 
-  const userStats: DailyUserStat[] = userStatsRaw.map(u => ({
+  const userStats: DailyUserStat[] = userStatsRaw.map((u) => ({
     userId: u.id,
     name: u.name,
     avatarUrl: u.avatar_url,
@@ -293,7 +318,7 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
     estimatedCostUsd: Number(u.cost_usd ?? 0),
     skillCalls: Number(u.skill_calls),
     agentCalls: Number(u.agent_calls),
-  }))
+  }));
 
   return {
     date: toDateKey(date),
@@ -310,33 +335,35 @@ async function computeDailyRollup(projectId: string, date: Date): Promise<DailyR
     agentCounts,
     modelTokens,
     userStats,
-  }
+  };
 }
 
 // ─── DB row ↔ in-memory DailyRollup ────────────────────────────────────────
 
 function rowToRollup(row: {
-  date: Date
-  sessionCount: number
-  turnCount: number
-  activeUserCount: number
-  activeUserIds: Prisma.JsonValue
-  inputTokens: bigint
-  outputTokens: bigint
-  cacheReadTokens: bigint
-  cacheCreationTokens: bigint
-  estimatedCostUsd: number
-  skillCounts: Prisma.JsonValue
-  agentCounts: Prisma.JsonValue
-  modelTokens: Prisma.JsonValue
-  userStats: Prisma.JsonValue
+  date: Date;
+  sessionCount: number;
+  turnCount: number;
+  activeUserCount: number;
+  activeUserIds: Prisma.JsonValue;
+  inputTokens: bigint;
+  outputTokens: bigint;
+  cacheReadTokens: bigint;
+  cacheCreationTokens: bigint;
+  estimatedCostUsd: number;
+  skillCounts: Prisma.JsonValue;
+  agentCounts: Prisma.JsonValue;
+  modelTokens: Prisma.JsonValue;
+  userStats: Prisma.JsonValue;
 }): DailyRollup {
   return {
     date: toDateKey(row.date),
     sessionCount: row.sessionCount,
     turnCount: row.turnCount,
     activeUserCount: row.activeUserCount,
-    activeUserIds: Array.isArray(row.activeUserIds) ? (row.activeUserIds as string[]) : [],
+    activeUserIds: Array.isArray(row.activeUserIds)
+      ? (row.activeUserIds as string[])
+      : [],
     inputTokens: Number(row.inputTokens),
     outputTokens: Number(row.outputTokens),
     cacheReadTokens: Number(row.cacheReadTokens),
@@ -346,11 +373,15 @@ function rowToRollup(row: {
     agentCounts: (row.agentCounts as Record<string, number>) ?? {},
     modelTokens: (row.modelTokens as Record<string, number>) ?? {},
     userStats: (row.userStats as unknown as DailyUserStat[]) ?? [],
-  }
+  };
 }
 
-async function upsertRollup(projectId: string, date: Date, rollup: DailyRollup): Promise<void> {
-  const dayStart = utcDayStart(date)
+async function upsertRollup(
+  projectId: string,
+  date: Date,
+  rollup: DailyRollup,
+): Promise<void> {
+  const dayStart = utcDayStart(date);
   const data = {
     sessionCount: rollup.sessionCount,
     turnCount: rollup.turnCount,
@@ -366,12 +397,12 @@ async function upsertRollup(projectId: string, date: Date, rollup: DailyRollup):
     modelTokens: rollup.modelTokens as Prisma.InputJsonValue,
     userStats: rollup.userStats as unknown as Prisma.InputJsonValue,
     computedAt: new Date(),
-  }
+  };
   await db.dailyProjectStat.upsert({
     where: { projectId_date: { projectId, date: dayStart } },
     create: { projectId, date: dayStart, ...data },
     update: data,
-  })
+  });
 }
 
 // ─── Public: ensure rollups exist for [from, to], return daily rollups ─────
@@ -391,20 +422,20 @@ export async function getDailyRollupsForProjects(
   from: Date,
   to: Date,
 ): Promise<DailyRollup[]> {
-  if (projectIds.length === 0) return []
+  if (projectIds.length === 0) return [];
 
   const perProject = await Promise.all(
     projectIds.map((pid) => getDailyRollups(pid, from, to)),
-  )
+  );
 
   // date-key 기준으로 병합
-  const byDate = new Map<string, DailyRollup>()
-  const userSetsByDate = new Map<string, Set<string>>()
-  const userStatsByDate = new Map<string, Map<string, AggregatedUser>>()
+  const byDate = new Map<string, DailyRollup>();
+  const userSetsByDate = new Map<string, Set<string>>();
+  const userStatsByDate = new Map<string, Map<string, AggregatedUser>>();
 
   for (const rollups of perProject) {
     for (const r of rollups) {
-      const prev = byDate.get(r.date)
+      const prev = byDate.get(r.date);
       if (!prev) {
         byDate.set(r.date, {
           date: r.date,
@@ -421,48 +452,60 @@ export async function getDailyRollupsForProjects(
           agentCounts: { ...r.agentCounts },
           modelTokens: { ...r.modelTokens },
           userStats: [], // 나중에 Map에서 변환
-        })
+        });
 
-        userSetsByDate.set(r.date, new Set(r.activeUserIds))
-        userStatsByDate.set(r.date, new Map(r.userStats.map((u) => [u.userId, { ...u }])))
+        userSetsByDate.set(r.date, new Set(r.activeUserIds));
+        userStatsByDate.set(
+          r.date,
+          new Map(r.userStats.map((u) => [u.userId, { ...u }])),
+        );
       } else {
-        prev.sessionCount += r.sessionCount
-        prev.turnCount += r.turnCount
-        prev.inputTokens += r.inputTokens
-        prev.outputTokens += r.outputTokens
-        prev.cacheReadTokens += r.cacheReadTokens
-        prev.cacheCreationTokens += r.cacheCreationTokens
-        prev.estimatedCostUsd += r.estimatedCostUsd
+        prev.sessionCount += r.sessionCount;
+        prev.turnCount += r.turnCount;
+        prev.inputTokens += r.inputTokens;
+        prev.outputTokens += r.outputTokens;
+        prev.cacheReadTokens += r.cacheReadTokens;
+        prev.cacheCreationTokens += r.cacheCreationTokens;
+        prev.estimatedCostUsd += r.estimatedCostUsd;
 
         // activeUserIds: 합집합 (지연된 Set 변환)
-        const userSet = userSetsByDate.get(r.date)!
-        for (const u of r.activeUserIds) userSet.add(u)
+        const userSet = userSetsByDate.get(r.date)!;
+        for (const u of r.activeUserIds) userSet.add(u);
 
-        // [Bolt: Performance Optimization] Use Object.keys() instead of Object.entries() in hot paths.
-        // Impact: Avoids array allocation for each key-value pair, significantly reducing GC overhead when aggregating large daily rollups.
-        for (const k of Object.keys(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
+        // [Bolt: Performance Optimization] Use for...in loops instead of Object.keys() in hot paths.
+        // Impact: Completely avoids array allocations, significantly reducing GC overhead when aggregating large daily rollups.
+        for (const k in r.skillCounts) {
+          if (Object.hasOwn(r.skillCounts, k)) {
+            prev.skillCounts[k] =
+              (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!;
+          }
         }
-        for (const k of Object.keys(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!
+        for (const k in r.agentCounts) {
+          if (Object.hasOwn(r.agentCounts, k)) {
+            prev.agentCounts[k] =
+              (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!;
+          }
         }
-        for (const k of Object.keys(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
+        for (const k in r.modelTokens) {
+          if (Object.hasOwn(r.modelTokens, k)) {
+            prev.modelTokens[k] =
+              (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!;
+          }
         }
 
         // userStats: userId 기준 sum (지연된 Map 변환)
-        const userMap = userStatsByDate.get(r.date)!
+        const userMap = userStatsByDate.get(r.date)!;
         for (const u of r.userStats) {
-          const prevU = userMap.get(u.userId)
+          const prevU = userMap.get(u.userId);
           if (!prevU) {
-            userMap.set(u.userId, { ...u })
+            userMap.set(u.userId, { ...u });
           } else {
-            prevU.sessionCount += u.sessionCount
-            prevU.inputTokens += u.inputTokens
-            prevU.outputTokens += u.outputTokens
-            prevU.estimatedCostUsd += u.estimatedCostUsd
-            prevU.skillCalls += u.skillCalls
-            prevU.agentCalls += u.agentCalls
+            prevU.sessionCount += u.sessionCount;
+            prevU.inputTokens += u.inputTokens;
+            prevU.outputTokens += u.outputTokens;
+            prevU.estimatedCostUsd += u.estimatedCostUsd;
+            prevU.skillCalls += u.skillCalls;
+            prevU.agentCalls += u.agentCalls;
           }
         }
       }
@@ -471,14 +514,14 @@ export async function getDailyRollupsForProjects(
 
   // 지연된 Set/Map을 Array로 변환하고 activeUserCount 계산
   for (const r of byDate.values()) {
-    r.activeUserIds = Array.from(userSetsByDate.get(r.date)!)
-    r.activeUserCount = r.activeUserIds.length
-    r.userStats = Array.from(userStatsByDate.get(r.date)!.values())
+    r.activeUserIds = Array.from(userSetsByDate.get(r.date)!);
+    r.activeUserCount = r.activeUserIds.length;
+    r.userStats = Array.from(userStatsByDate.get(r.date)!.values());
   }
 
-  const result = Array.from(byDate.values())
-  result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-  return result
+  const result = Array.from(byDate.values());
+  result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return result;
 }
 
 /**
@@ -492,112 +535,124 @@ export async function getDailyRollups(
   from: Date,
   to: Date,
 ): Promise<DailyRollup[]> {
-  const today = utcTodayStart()
+  const today = utcTodayStart();
 
   // 캐시 대상: [from, min(to, today-1ms)]
-  const cacheUpperBound = to.getTime() < today.getTime()
-    ? utcDayStart(to)
-    : new Date(today.getTime() - 1)
+  const cacheUpperBound =
+    to.getTime() < today.getTime()
+      ? utcDayStart(to)
+      : new Date(today.getTime() - 1);
 
-  const cachedResults: Map<string, DailyRollup> = new Map()
+  const cachedResults: Map<string, DailyRollup> = new Map();
 
   if (cacheUpperBound.getTime() >= utcDayStart(from).getTime()) {
-    const fromDay = utcDayStart(from)
-    const toDay = utcDayStart(cacheUpperBound)
+    const fromDay = utcDayStart(from);
+    const toDay = utcDayStart(cacheUpperBound);
 
     const existing = await db.dailyProjectStat.findMany({
       where: {
         projectId,
         date: { gte: fromDay, lte: toDay },
       },
-    })
+    });
 
     for (const row of existing) {
       // Stale 가드: SKILL_COUNTS_INVALIDATION_AT 이전에 계산된 row 는 구 정의(isSkillCall=true only) 임.
       // fresh 한 row 만 cache hit 으로 처리하고, stale row 는 missingDays 로 낙하 → 자연 재계산.
       // computedAt 단일 조건만 사용 (skillCounts === '{}' 같은 합성 조건 없음).
       if (row.computedAt < SKILL_COUNTS_INVALIDATION_AT) {
-        continue // stale → missingDays 에서 재계산됨
+        continue; // stale → missingDays 에서 재계산됨
       }
-      const rollup = rowToRollup(row)
-      cachedResults.set(rollup.date, rollup)
+      const rollup = rowToRollup(row);
+      cachedResults.set(rollup.date, rollup);
     }
 
-    const allDays = enumerateUtcDates(fromDay, toDay)
-    const missingDays = allDays.filter(d => !cachedResults.has(toDateKey(d)))
+    const allDays = enumerateUtcDates(fromDay, toDay);
+    const missingDays = allDays.filter((d) => !cachedResults.has(toDateKey(d)));
 
     // 날짜 병렬도 4로 cold rollup 계산. 하루당 내부 쿼리 8개 × 4 = 최대 32 concurrent.
     // 서로 다른 (projectId, date) primary key이므로 upsert 간 충돌은 없다.
-    const DAY_CONCURRENCY = 4
+    const DAY_CONCURRENCY = 4;
     for (let i = 0; i < missingDays.length; i += DAY_CONCURRENCY) {
-      const batch = missingDays.slice(i, i + DAY_CONCURRENCY)
+      const batch = missingDays.slice(i, i + DAY_CONCURRENCY);
       const computedBatch = await Promise.all(
         batch.map(async (day) => {
-          const computed = await computeDailyRollup(projectId, day)
-          await upsertRollup(projectId, day, computed)
-          return computed
+          const computed = await computeDailyRollup(projectId, day);
+          await upsertRollup(projectId, day, computed);
+          return computed;
         }),
-      )
+      );
       for (const computed of computedBatch) {
-        cachedResults.set(computed.date, computed)
+        cachedResults.set(computed.date, computed);
       }
     }
   }
 
   // 오늘(또는 to가 오늘) → live 계산 (DB 캐시 없음, 30초 메모리 캐시만)
-  let liveToday: DailyRollup | null = null
+  let liveToday: DailyRollup | null = null;
   if (to.getTime() >= today.getTime()) {
-    liveToday = await computeDailyRollupCachedForToday(projectId, today)
+    liveToday = await computeDailyRollupCachedForToday(projectId, today);
   }
 
-  const result: DailyRollup[] = []
-  for (const [, r] of cachedResults) result.push(r)
-  if (liveToday) result.push(liveToday)
-  result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-  return result
+  const result: DailyRollup[] = [];
+  for (const [, r] of cachedResults) result.push(r);
+  if (liveToday) result.push(liveToday);
+  result.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return result;
 }
 
 // ─── Aggregation helpers for endpoints ─────────────────────────────────────
 
 export interface AggregatedSummary {
-  sessionCount: number
-  turnCount: number
-  activeUserCount: number
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  cacheCreationTokens: number
-  estimatedCostUsd: number
-  topSkills: Array<{ skillName: string; callCount: number }>
-  topAgents: Array<{ agentType: string; callCount: number }>
-  modelShare: Array<{ model: string; totalTokens: number }>
+  sessionCount: number;
+  turnCount: number;
+  activeUserCount: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  estimatedCostUsd: number;
+  topSkills: Array<{ skillName: string; callCount: number }>;
+  topAgents: Array<{ agentType: string; callCount: number }>;
+  modelShare: Array<{ model: string; totalTokens: number }>;
 }
 
 export interface AggregateSummaryOptions {
   /** Top-N skills to include. Default 5. */
-  topSkillsN?: number
+  topSkillsN?: number;
   /** Top-N agents to include. Default 5. */
-  topAgentsN?: number
+  topAgentsN?: number;
 }
 
 /** @internal */
 export function normalizeAggregateSummaryOptions(
   input?: number | AggregateSummaryOptions,
 ): { topSkillsN: number; topAgentsN: number } {
-  if (typeof input === 'number') return { topSkillsN: input, topAgentsN: input }
-  return { topSkillsN: input?.topSkillsN ?? 5, topAgentsN: input?.topAgentsN ?? 5 }
+  if (typeof input === "number")
+    return { topSkillsN: input, topAgentsN: input };
+  return {
+    topSkillsN: input?.topSkillsN ?? 5,
+    topAgentsN: input?.topAgentsN ?? 5,
+  };
 }
 
 // TS overloads — explicit 3-way signature (Critique R2 #5 / Decision-4)
-export function aggregateSummary(rollups: DailyRollup[]): AggregatedSummary
+export function aggregateSummary(rollups: DailyRollup[]): AggregatedSummary;
 /** @deprecated Pass an AggregateSummaryOptions object. topN maps to both topSkillsN and topAgentsN. */
-export function aggregateSummary(rollups: DailyRollup[], topN: number): AggregatedSummary
-export function aggregateSummary(rollups: DailyRollup[], opts: AggregateSummaryOptions): AggregatedSummary
+export function aggregateSummary(
+  rollups: DailyRollup[],
+  topN: number,
+): AggregatedSummary;
+export function aggregateSummary(
+  rollups: DailyRollup[],
+  opts: AggregateSummaryOptions,
+): AggregatedSummary;
 export function aggregateSummary(
   rollups: DailyRollup[],
   optsOrTopN?: number | AggregateSummaryOptions,
 ): AggregatedSummary {
-  const { topSkillsN, topAgentsN } = normalizeAggregateSummaryOptions(optsOrTopN)
+  const { topSkillsN, topAgentsN } =
+    normalizeAggregateSummaryOptions(optsOrTopN);
 
   const totals = {
     sessionCount: 0,
@@ -607,25 +662,38 @@ export function aggregateSummary(
     cacheReadTokens: 0,
     cacheCreationTokens: 0,
     estimatedCostUsd: 0,
-  }
-  const skillCounts: Record<string, number> = {}
-  const agentCounts: Record<string, number> = {}
-  const modelTokens: Record<string, number> = {}
-  const activeUsers = new Set<string>()
+  };
+  const skillCounts: Record<string, number> = {};
+  const agentCounts: Record<string, number> = {};
+  const modelTokens: Record<string, number> = {};
+  const activeUsers = new Set<string>();
 
   for (const r of rollups) {
-    totals.sessionCount += r.sessionCount
-    totals.turnCount += r.turnCount
-    totals.inputTokens += r.inputTokens
-    totals.outputTokens += r.outputTokens
-    totals.cacheReadTokens += r.cacheReadTokens
-    totals.cacheCreationTokens += r.cacheCreationTokens
-    totals.estimatedCostUsd += r.estimatedCostUsd
-    for (const u of r.activeUserIds) activeUsers.add(u)
-    // [Bolt: Performance Optimization] Object.keys() iterations avoid internal array tuples, reducing heap thrashing
-    for (const k of Object.keys(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
-    for (const k of Object.keys(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!
-    for (const k of Object.keys(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!
+    totals.sessionCount += r.sessionCount;
+    totals.turnCount += r.turnCount;
+    totals.inputTokens += r.inputTokens;
+    totals.outputTokens += r.outputTokens;
+    totals.cacheReadTokens += r.cacheReadTokens;
+    totals.cacheCreationTokens += r.cacheCreationTokens;
+    totals.estimatedCostUsd += r.estimatedCostUsd;
+    for (const u of r.activeUserIds) activeUsers.add(u);
+    // [Bolt: Performance Optimization] Use for...in loops instead of Object.keys() in hot paths.
+    // Impact: Completely avoids array allocations, significantly reducing GC overhead when aggregating large daily rollups.
+    for (const k in r.skillCounts) {
+      if (Object.hasOwn(r.skillCounts, k)) {
+        skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!;
+      }
+    }
+    for (const k in r.agentCounts) {
+      if (Object.hasOwn(r.agentCounts, k)) {
+        agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!;
+      }
+    }
+    for (const k in r.modelTokens) {
+      if (Object.hasOwn(r.modelTokens, k)) {
+        modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!;
+      }
+    }
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —
@@ -633,24 +701,24 @@ export function aggregateSummary(
   const topSkills = Object.entries(skillCounts)
     .map(([skillName, callCount]) => ({ skillName, callCount }))
     .sort((a, b) => {
-      if (b.callCount !== a.callCount) return b.callCount - a.callCount
-      return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0
+      if (b.callCount !== a.callCount) return b.callCount - a.callCount;
+      return a.skillName < b.skillName ? -1 : a.skillName > b.skillName ? 1 : 0;
     })
-    .slice(0, topSkillsN)
+    .slice(0, topSkillsN);
 
   // Deterministic tie-break: callCount DESC, agentType ASC (codepoint binary).
   const topAgents = Object.entries(agentCounts)
     .map(([agentType, callCount]) => ({ agentType, callCount }))
     .sort((a, b) => {
-      if (b.callCount !== a.callCount) return b.callCount - a.callCount
-      return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0
+      if (b.callCount !== a.callCount) return b.callCount - a.callCount;
+      return a.agentType < b.agentType ? -1 : a.agentType > b.agentType ? 1 : 0;
     })
-    .slice(0, topAgentsN)
+    .slice(0, topAgentsN);
 
   const modelShare = Object.entries(modelTokens)
     .filter(([, v]) => v > 0)
     .map(([model, totalTokens]) => ({ model, totalTokens }))
-    .sort((a, b) => b.totalTokens - a.totalTokens)
+    .sort((a, b) => b.totalTokens - a.totalTokens);
 
   return {
     ...totals,
@@ -658,39 +726,41 @@ export function aggregateSummary(
     topSkills,
     topAgents,
     modelShare,
-  }
+  };
 }
 
 export interface DailySeriesPoint {
-  date: string
-  inputTokens: number
-  outputTokens: number
-  cacheReadTokens: number
-  cacheCreationTokens: number
-  estimatedCostUsd: number
+  date: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+  estimatedCostUsd: number;
 }
 
-export function aggregateUsageSeries(rollups: DailyRollup[]): DailySeriesPoint[] {
-  return rollups.map(r => ({
+export function aggregateUsageSeries(
+  rollups: DailyRollup[],
+): DailySeriesPoint[] {
+  return rollups.map((r) => ({
     date: r.date,
     inputTokens: r.inputTokens,
     outputTokens: r.outputTokens,
     cacheReadTokens: r.cacheReadTokens,
     cacheCreationTokens: r.cacheCreationTokens,
     estimatedCostUsd: r.estimatedCostUsd,
-  }))
+  }));
 }
 
 export interface AggregatedUser {
-  userId: string
-  name: string
-  avatarUrl: string | null
-  sessionCount: number
-  inputTokens: number
-  outputTokens: number
-  estimatedCostUsd: number
-  skillCalls: number
-  agentCalls: number
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+  sessionCount: number;
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
+  skillCalls: number;
+  agentCalls: number;
 }
 
 /**
@@ -699,21 +769,21 @@ export interface AggregatedUser {
  * (=실제로 해당 기간에 usage/session/event이 있는 사용자)
  */
 export function aggregateUserStats(rollups: DailyRollup[]): AggregatedUser[] {
-  const map = new Map<string, AggregatedUser>()
+  const map = new Map<string, AggregatedUser>();
   for (const r of rollups) {
     for (const u of r.userStats) {
-      const prev = map.get(u.userId)
+      const prev = map.get(u.userId);
       if (!prev) {
-        map.set(u.userId, { ...u })
+        map.set(u.userId, { ...u });
       } else {
-        prev.sessionCount += u.sessionCount
-        prev.inputTokens += u.inputTokens
-        prev.outputTokens += u.outputTokens
-        prev.estimatedCostUsd += u.estimatedCostUsd
-        prev.skillCalls += u.skillCalls
-        prev.agentCalls += u.agentCalls
+        prev.sessionCount += u.sessionCount;
+        prev.inputTokens += u.inputTokens;
+        prev.outputTokens += u.outputTokens;
+        prev.estimatedCostUsd += u.estimatedCostUsd;
+        prev.skillCalls += u.skillCalls;
+        prev.agentCalls += u.agentCalls;
       }
     }
   }
-  return Array.from(map.values())
+  return Array.from(map.values());
 }
