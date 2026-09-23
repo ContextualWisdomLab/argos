@@ -67,14 +67,8 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // [Bolt: Performance Optimization] Use Schwartzian transform to avoid O(N log N) redundant Date.parse() calls during sorting.
-  // We keep the parsed timestamp to reuse it in the mapping phase, completely eliminating redundant parsing.
-  const decoratedUsage = usageTimeline.map(usage => ({
-    usage,
-    parsedTimestamp: Date.parse(usage.timestamp)
-  }));
-  const sortedDecoratedUsage = decoratedUsage.sort(
-    (a, b) => a.parsedTimestamp - b.parsedTimestamp
+  const sortedUsage = [...usageTimeline].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
@@ -83,7 +77,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedDecoratedUsage.map(({ usage, parsedTimestamp: currentTimestamp }) => {
+  return sortedUsage.map((usage) => {
+    const currentTimestamp = Date.parse(usage.timestamp)
 
     while (
       toolIndex < sortedTools.length &&
