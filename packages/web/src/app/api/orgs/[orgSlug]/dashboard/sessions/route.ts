@@ -75,8 +75,8 @@ function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
 
-  // Prevent CSV Injection (Macro Injection)
-  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
+  // Spreadsheet applications may evaluate ASCII formula prefixes in untrusted text cells.
+  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r\n]/.test(text)) {
     text = "'" + text
   }
 
