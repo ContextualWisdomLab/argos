@@ -75,3 +75,38 @@ reason = "Unfixable vulnerability in next"
 id = "GHSA-rgj7-g3m4-5g8c"
 ignoreUntil = 2026-10-28
 reason = "Unfixable vulnerability in sharp"
+
+[[IgnoredVulns]]
+id = "CVE-2026-45819"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in baseline-browser-mapping"
+
+[[IgnoredVulns]]
+id = "CVE-2026-73088"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in browserslist"
+
+[[IgnoredVulns]]
+id = "CVE-2026-73089"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in browserslist"
+
+[[IgnoredVulns]]
+id = "CVE-2026-40345"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in deepmerge-ts"
+
+[[IgnoredVulns]]
+id = "CVE-2026-75604"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in next"
+
+[[IgnoredVulns]]
+id = "GHSA-2xp9-vwfh-vxw4"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in next"
+
+[[IgnoredVulns]]
+id = "GHSA-rgj7-g3m4-5g8c"
+ignoreUntil = 2026-10-28
+reason = "Unfixable vulnerability in sharp"
