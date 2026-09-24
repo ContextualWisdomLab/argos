@@ -2,6 +2,7 @@
 
 import { signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
+import { LogOut } from 'lucide-react'
 import { ProjectFilter } from './project-filter'
 
 export function OrgHeader({ orgName }: { orgName?: string }) {
@@ -20,6 +21,7 @@ export function OrgHeader({ orgName }: { orgName?: string }) {
             onClick={() => signOut({ callbackUrl: '/login' })}
             aria-label="Sign out of your account"
           >
+            <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
             Sign out
           </Button>
         </div>
