@@ -275,4 +275,41 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+
+  it('parses each usage timestamp once before sorting', () => {
+    const timestamps = [
+      '2023-01-01T00:04:00.000Z',
+      '2023-01-01T00:01:00.000Z',
+      '2023-01-01T00:03:00.000Z',
+      '2023-01-01T00:02:00.000Z',
+    ]
+    const usageTimeline: SessionTimelineUsage[] = timestamps.map((timestamp, index) => ({
+      timestamp,
+      inputTokens: 100 + index,
+      outputTokens: 50 + index,
+      estimatedCostUsd: 0.001 + index * 0.001,
+      model: 'gpt-4',
+      isSubagent: false,
+    }))
+    const parseSpy = vi.spyOn(Date, 'parse')
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    const usageParseCalls = parseSpy.mock.calls
+      .map(([value]) => value)
+      .filter((value): value is string => typeof value === 'string' && timestamps.includes(value))
+
+    expect(usageParseCalls).toHaveLength(timestamps.length)
+    for (const timestamp of timestamps) {
+      expect(usageParseCalls.filter((value) => value === timestamp)).toHaveLength(1)
+    }
+
+    parseSpy.mockRestore()
+  })
 })

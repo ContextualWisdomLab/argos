@@ -67,9 +67,6 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  // ⚡ Bolt: Use Schwartzian transform (map-sort-map) to avoid repeated Date.parse() in Array#sort comparator
-  // Parsing dates inside sort is O(N log N), which degrades performance for large arrays.
-  // Pre-parsing in O(N) improves performance.
   const parsedUsage = usageTimeline.map((u) => ({
     original: u,
     parsedTimestamp: Date.parse(u.timestamp),
