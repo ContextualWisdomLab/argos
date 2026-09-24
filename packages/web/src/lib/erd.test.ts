@@ -32,6 +32,13 @@ describe("ERDModel", () => {
       );
     });
 
+    it("should reject table names that exceed the maximum length", () => {
+      const longName = "a".repeat(64);
+      expect(() => model.addTable(longName)).toThrowError(
+        `Table '${longName}' exceeds the maximum length of 63 characters.`,
+      );
+    });
+
     it("should return undefined for non-existent table", () => {
       expect(model.getTable("non_existent")).toBeUndefined();
     });
@@ -139,6 +146,16 @@ describe("ERDModel", () => {
       expect(() =>
         model.addColumn("users", { name: "created__at", type: "timestamp" }),
       ).toThrowError("Column 'created__at' must be snake_case.");
+    });
+
+    it("should reject column names that exceed the maximum length", () => {
+      model.addTable("users");
+      const longName = "a".repeat(64);
+      expect(() =>
+        model.addColumn("users", { name: longName, type: "integer" }),
+      ).toThrowError(
+        `Column '${longName}' exceeds the maximum length of 63 characters.`,
+      );
     });
 
     it("should reject invalid SQL default values", () => {
@@ -321,6 +338,33 @@ describe("ERDModel", () => {
     });
   });
 
+  describe("Row Level Security Management", () => {
+    it("should enable RLS for an existing table", () => {
+      model.addTable("users");
+      model.enableRLS("users");
+      expect(model.getTable("users")?.enableRowLevelSecurity).toBe(true);
+    });
+
+    it("should disable RLS for an existing table", () => {
+      model.addTable("users");
+      model.enableRLS("users");
+      model.disableRLS("users");
+      expect(model.getTable("users")?.enableRowLevelSecurity).toBe(false);
+    });
+
+    it("should throw when enabling RLS for a non-existent table", () => {
+      expect(() => model.enableRLS("non_existent")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when disabling RLS for a non-existent table", () => {
+      expect(() => model.disableRLS("non_existent")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+  });
+
   describe("DDL Generation", () => {
     it("should generate empty string if no tables exist", () => {
       expect(model.generateDDL()).toBe("");
@@ -351,6 +395,23 @@ describe("ERDModel", () => {
   name VARCHAR(255) UNIQUE NOT NULL,
   active BOOLEAN DEFAULT TRUE
 );`;
+      expect(ddl).toBe(expected);
+    });
+
+    it("should generate correct DDL for a table with RLS enabled", () => {
+      model.addTable("users");
+      model.addColumn("users", {
+        name: "id",
+        type: "SERIAL",
+        isPrimaryKey: true,
+      });
+      model.enableRLS("users");
+
+      const ddl = model.generateDDL();
+      const expected = `CREATE TABLE users (
+  id SERIAL PRIMARY KEY
+);
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;`;
       expect(ddl).toBe(expected);
     });
 
