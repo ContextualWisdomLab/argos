@@ -38,3 +38,7 @@
 **Vulnerability:** The initial overrides left a vulnerability in `deepmerge-ts@7.1.6` leading to stack exhaustion.
 **Learning:** Checking the `dependency-review` output requires attention to the specific vulnerable version constraints. I successfully updated `deepmerge-ts` to `^8.0.2` via `pnpm.overrides` and tested correctly.
 **Prevention:** Verify vulnerability reports directly in `pnpm-lock.yaml` tree and ensure the resolved version is past the fixed version identified by advisory databases.
+## 2026-09-25 - Fix dependency vulnerabilities (trivy scan)
+**Vulnerability:** CRITICAL/HIGH vulnerabilities found in dependencies: `next`, `browserslist`, `deepmerge-ts` through the `dependency-review` scan.
+**Learning:** Overriding dependencies without downloading standalone binaries (`trivy`) to the root ensures a clean Git history and focuses on fixing the target issues. `deepmerge-ts` needs to be `^8.0.2` or later to fix the stack exhaustion issue.
+**Prevention:** Always ensure temporary artifacts and binaries used during exploration are removed using `git reset HEAD <file>` and `rm <file>`. Do not commit binaries or download them into the repository.
