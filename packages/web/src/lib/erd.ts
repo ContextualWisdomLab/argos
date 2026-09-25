@@ -13,10 +13,17 @@ export interface ForeignKey {
   referenceColumn: string;
 }
 
+export interface Index {
+  name: string;
+  columnName: string;
+  isUnique?: boolean;
+}
+
 export interface Table {
   name: string;
   columns: Column[];
   foreignKeys: ForeignKey[];
+  indices: Index[];
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/;
@@ -76,7 +83,7 @@ export class ERDModel {
     if (this.tables.has(name)) {
       throw new Error(`Table '${name}' already exists.`);
     }
-    const table: Table = { name, columns: [], foreignKeys: [] };
+    const table: Table = { name, columns: [], foreignKeys: [], indices: [] };
     this.tables.set(name, table);
     return structuredClone(table);
   }
@@ -144,6 +151,11 @@ export class ERDModel {
         `Cannot remove column '${columnName}' because it is used in a foreign key.`,
       );
     }
+    if (table.indices.some((idx) => idx.columnName === columnName)) {
+      throw new Error(
+        `Cannot remove column '${columnName}' because it is used in an index.`,
+      );
+    }
     for (const t of this.tables.values()) {
       if (
         t.foreignKeys.some(
@@ -204,6 +216,46 @@ export class ERDModel {
     table.foreignKeys.splice(fkIndex, 1);
   }
 
+  addIndex(tableName: string, index: Index): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Column", index.columnName);
+    assertSnakeCaseIdentifier("Index", index.name);
+
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+
+    if (!table.columns.some((c) => c.name === index.columnName)) {
+      throw new Error(
+        `Column '${index.columnName}' does not exist in table '${tableName}'.`,
+      );
+    }
+
+    if (table.indices.some((idx) => idx.name === index.name)) {
+      throw new Error(`Index '${index.name}' already exists in table '${tableName}'.`);
+    }
+
+    table.indices.push(structuredClone(index));
+  }
+
+  removeIndex(tableName: string, indexName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    assertSnakeCaseIdentifier("Index", indexName);
+
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+
+    const idxIndex = table.indices.findIndex((idx) => idx.name === indexName);
+    if (idxIndex === -1) {
+      throw new Error(`Index '${indexName}' does not exist in table '${tableName}'.`);
+    }
+
+    table.indices.splice(idxIndex, 1);
+  }
+
   generateDDL(): string {
     let ddl = "";
     for (const table of this.tables.values()) {
@@ -232,6 +284,14 @@ export class ERDModel {
       const allDefs = [...columnDefs, ...fkDefs];
       ddl += allDefs.join(",\n");
       ddl += "\n);\n\n";
+
+      for (const idx of table.indices) {
+        if (idx.isUnique) {
+          ddl += `CREATE UNIQUE INDEX ${idx.name} ON ${table.name} (${idx.columnName});\n\n`;
+        } else {
+          ddl += `CREATE INDEX ${idx.name} ON ${table.name} (${idx.columnName});\n\n`;
+        }
+      }
     }
     return ddl.trim();
   }
