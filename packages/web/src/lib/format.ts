@@ -67,9 +67,9 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
+  // [Bolt: Performance Optimization] Use Date.parse() instead of new Date().getTime()
+  // Impact: Avoids allocating Date objects, reducing memory pressure and GC overhead during large list renders.
+  const diffMs = Date.parse(timestamp) - Date.parse(baseTimestamp)
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {
