@@ -10,6 +10,7 @@ import {
   resolveOrgScopedProjectIds,
 } from '@/lib/server/dashboard-route-helper'
 import { canAccessIndividualData, forbiddenByRole } from '@/lib/server/rbac'
+import { csvField } from '@/lib/server/csv-helper'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -69,18 +70,6 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
       name: session.project.name,
     },
   }
-}
-
-function csvField(value: string | number | null | undefined) {
-  if (value === null || value === undefined) return ''
-  let text = String(value)
-
-  // Prevent CSV Injection (Macro Injection)
-  if (typeof value !== 'number' && /^[\s]*[=+\-@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text)) {
-    text = "'" + text
-  }
-
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
