@@ -77,6 +77,73 @@ describe("ERDModel", () => {
         "Cannot remove table 'employees' because it is referenced by table 'employees'.",
       );
     });
+
+    it("should rename a table and update foreign key references", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      model.renameTable("users", "accounts");
+
+      expect(model.getTable("users")).toBeUndefined();
+      const accountsTable = model.getTable("accounts");
+      expect(accountsTable?.name).toBe("accounts");
+
+      const postsTable = model.getTable("posts");
+      expect(postsTable?.foreignKeys[0].referenceTable).toBe("accounts");
+    });
+
+    it("should preserve table order in generateDDL after renaming", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "user_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "user_id",
+        referenceTable: "users",
+        referenceColumn: "id",
+      });
+
+      model.renameTable("users", "accounts");
+
+      const ddl = model.generateDDL();
+      const expected = `CREATE TABLE accounts (
+  id integer
+);
+
+CREATE TABLE posts (
+  user_id integer,
+  FOREIGN KEY (user_id) REFERENCES accounts(id)
+);`;
+      expect(ddl).toBe(expected);
+    });
+
+    it("should throw when renaming a non-existent table", () => {
+      expect(() => model.renameTable("non_existent", "accounts")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when renaming a table to an existing table name", () => {
+      model.addTable("users");
+      model.addTable("accounts");
+      expect(() => model.renameTable("users", "accounts")).toThrowError(
+        "Table 'accounts' already exists.",
+      );
+    });
+
+    it("should reject non-snake-case names during rename", () => {
+      model.addTable("users");
+      expect(() => model.renameTable("users", "UserAccounts")).toThrowError(
+        "Table 'UserAccounts' must be snake_case.",
+      );
+    });
   });
 
   describe("Column Management", () => {
@@ -218,6 +285,56 @@ describe("ERDModel", () => {
 
       expect(() => model.removeColumn("users", "id")).toThrowError(
         "Cannot remove column 'id' because it is referenced by table 'posts'.",
+      );
+    });
+
+    it("should rename a column and update foreign keys", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "user_id", type: "integer" });
+      model.addTable("posts");
+      model.addColumn("posts", { name: "author_id", type: "integer" });
+      model.addForeignKey("posts", {
+        columnName: "author_id",
+        referenceTable: "users",
+        referenceColumn: "user_id",
+      });
+
+      model.renameColumn("users", "user_id", "id");
+      expect(model.getTable("users")?.columns[0].name).toBe("id");
+      expect(model.getTable("posts")?.foreignKeys[0].referenceColumn).toBe("id");
+
+      model.renameColumn("posts", "author_id", "user_id");
+      expect(model.getTable("posts")?.columns[0].name).toBe("user_id");
+      expect(model.getTable("posts")?.foreignKeys[0].columnName).toBe("user_id");
+    });
+
+    it("should throw when renaming a column on a non-existent table", () => {
+      expect(() => model.renameColumn("non_existent", "id", "new_id")).toThrowError(
+        "Table 'non_existent' does not exist.",
+      );
+    });
+
+    it("should throw when renaming a non-existent column", () => {
+      model.addTable("users");
+      expect(() => model.renameColumn("users", "non_existent", "id")).toThrowError(
+        "Column 'non_existent' does not exist in table 'users'.",
+      );
+    });
+
+    it("should throw when renaming a column to an already existing name", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      model.addColumn("users", { name: "email", type: "varchar" });
+      expect(() => model.renameColumn("users", "id", "email")).toThrowError(
+        "Column 'email' already exists in table 'users'.",
+      );
+    });
+
+    it("should reject non-snake-case names during column rename", () => {
+      model.addTable("users");
+      model.addColumn("users", { name: "id", type: "integer" });
+      expect(() => model.renameColumn("users", "id", "userId")).toThrowError(
+        "Column 'userId' must be snake_case.",
       );
     });
   });
