@@ -21,7 +21,7 @@ export function OrgHeader({ orgName }: { orgName?: string }) {
             onClick={() => signOut({ callbackUrl: '/login' })}
             aria-label="Sign out of your account"
           >
-            <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+            <LogOut className="size-4 mr-1.5" aria-hidden="true" />
             Sign out
           </Button>
         </div>
