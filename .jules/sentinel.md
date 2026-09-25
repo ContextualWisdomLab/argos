@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-09-25 - Fix dependency vulnerabilities
+**Vulnerability:** Found 7 vulnerabilities including CRITICAL ones in `next` and HIGH ones in `browserslist` and `sharp` across `package.json` dependencies.
+**Learning:** `pnpm-lock.yaml` contained older versions of indirect or direct dependencies that needed overriding via `pnpm.overrides` to ensure a secure build in monorepo setups utilizing `pnpm 9`.
+**Prevention:** Regularly audit the `package.json` and `pnpm.overrides` to keep critical packages such as `next`, `sharp`, and `browserslist` updated to their secure versions.
