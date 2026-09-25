@@ -34,3 +34,7 @@
 **Vulnerability:** Found 7 vulnerabilities including CRITICAL ones in `next` and HIGH ones in `browserslist` and `sharp` across `package.json` dependencies.
 **Learning:** `pnpm-lock.yaml` contained older versions of indirect or direct dependencies that needed overriding via `pnpm.overrides` to ensure a secure build in monorepo setups utilizing `pnpm 9`.
 **Prevention:** Regularly audit the `package.json` and `pnpm.overrides` to keep critical packages such as `next`, `sharp`, and `browserslist` updated to their secure versions.
+## 2026-09-25 - Fix dependency vulnerabilities (deepmerge-ts)
+**Vulnerability:** The initial overrides left a vulnerability in `deepmerge-ts@7.1.6` leading to stack exhaustion.
+**Learning:** Checking the `dependency-review` output requires attention to the specific vulnerable version constraints. I successfully updated `deepmerge-ts` to `^8.0.2` via `pnpm.overrides` and tested correctly.
+**Prevention:** Verify vulnerability reports directly in `pnpm-lock.yaml` tree and ensure the resolved version is past the fixed version identified by advisory databases.
