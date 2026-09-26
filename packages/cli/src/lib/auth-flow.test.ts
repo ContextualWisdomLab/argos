@@ -44,7 +44,7 @@ describe('auth-flow', () => {
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc|whoami;test<x>y(z)^' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
@@ -52,9 +52,24 @@ describe('auth-flow', () => {
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
+      ['/c', 'start', '""', 'http://example.com/^&calc^|whoami^;test^<x^>y^(z^)^^'],
       { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
     )
+  })
+
+  it('ignores non-http(s) urls to prevent command injection', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
