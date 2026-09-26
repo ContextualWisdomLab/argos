@@ -9,6 +9,7 @@
 ## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
-## 2023-10-25 - Decorational Icon Accessibility Pattern
-**Learning:** Found a pattern across the app where decorative/state-indicating icons (like `lucide-react` icons inside buttons or tooltips) lack `aria-hidden="true"`. This pollutes the accessible name announced by screen readers when there is already visible text or an `aria-label` providing the same information.
-**Action:** When adding or reviewing UI components that use decorative icons alongside text or explicit labels, ensure `aria-hidden="true"` is consistently applied to the SVG/icon elements.
+
+## 2024-11-21 - 장식용 아이콘 접근성 패턴
+**Learning:** 앱 전반에 걸쳐 장식용 또는 상태를 나타내는 아이콘(버튼이나 툴팁 내부의 `lucide-react` 아이콘 등)에 `aria-hidden="true"`가 누락된 패턴을 발견했습니다. 이는 이미 화면에 텍스트나 `aria-label`이 정보를 제공하고 있을 때, 스크린 리더가 읽어주는 접근성 이름을 불필요하게 오염시킵니다.
+**Action:** 텍스트나 명시적인 라벨과 함께 장식용 아이콘을 사용하는 UI 컴포넌트를 추가하거나 검토할 때, 해당 SVG/아이콘 요소에 `aria-hidden="true"`를 일관되게 적용하도록 합니다.
