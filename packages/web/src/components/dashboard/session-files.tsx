@@ -1,3 +1,4 @@
+import React from 'react';
 import { Eye, Pencil, FileText } from 'lucide-react'
 import type { FileEntry, SessionFiles } from '@/lib/session-files'
 
@@ -18,6 +19,7 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
+          aria-label={`${modifiedCount}개 파일 수정됨`}
           className="inline-flex items-center gap-1.5 rounded-full bg-success/15 px-2.5 py-1 text-success hover:bg-success/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success"
         >
           <Pencil className="h-3 w-3" aria-hidden="true" />
@@ -29,6 +31,7 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
         <button
           type="button"
           onClick={onOpenFilesTab}
+          aria-label={`${readCount}개 파일 읽음`}
           className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-muted-foreground hover:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Eye className="h-3 w-3" aria-hidden="true" />
@@ -69,6 +72,7 @@ function FileRow({ entry, unit, onJump, tone }: FileRowProps) {
       type="button"
       onClick={() => onJump(entry.lastEventIdx)}
       title={`${entry.path} — jump to last ${unit}`}
+      aria-label={`${entry.path}의 마지막 ${unit}(으)로 이동`}
       className="group w-full text-left flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <FileText className={`h-4 w-4 shrink-0 ${iconTone}`} aria-hidden="true" />
