@@ -23,7 +23,7 @@ describe("DateRangePicker", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-26T12:00:00Z"));
+    vi.setSystemTime(new Date(2026, 8, 26, 12, 0, 0));
     mockPush = vi.fn();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
