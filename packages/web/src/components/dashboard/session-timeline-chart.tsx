@@ -63,13 +63,20 @@ function buildChartData(
   for (let i = 0; i < usageWithTime.length; i++) {
     const u = usageWithTime[i]!
     const currentTimestamp = u.parsedTimestamp
+    const prevTimestamp = i > 0 ? usageWithTime[i - 1]!.parsedTimestamp : 0
     const counts = new Map<string, number>()
 
-    // Consume tools that fall on or before the current usage timestamp
-    while (toolIndex < toolsWithTime.length && toolsWithTime[toolIndex]!.parsedTimestamp <= currentTimestamp) {
-      const name = toolsWithTime[toolIndex]!.toolName
-      counts.set(name, (counts.get(name) || 0) + 1)
+    // Skip tools that fall before or on the previous usage timestamp
+    while (toolIndex < toolsWithTime.length && toolsWithTime[toolIndex]!.parsedTimestamp <= prevTimestamp) {
       toolIndex++
+    }
+
+    // Consume tools that fall on or before the current usage timestamp and after prevTimestamp
+    let innerToolIndex = toolIndex;
+    while (innerToolIndex < toolsWithTime.length && toolsWithTime[innerToolIndex]!.parsedTimestamp <= currentTimestamp) {
+      const name = toolsWithTime[innerToolIndex]!.toolName
+      counts.set(name, (counts.get(name) || 0) + 1)
+      innerToolIndex++
     }
 
     let toolSummary = ''
