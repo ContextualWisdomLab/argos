@@ -275,4 +275,26 @@ describe('SessionTimelineChart', () => {
     expect(usageTimeline.map(({ timestamp }) => timestamp)).toEqual(originalUsageOrder)
     expect(messages.map(({ timestamp }) => timestamp)).toEqual(originalMessageOrder)
   })
+
+  it('parses each usage timestamp once before sorting', () => {
+    const usageTimeline: SessionTimelineUsage[] = [4, 1, 3, 2].map((minute) => ({
+      timestamp: `2023-01-01T00:0${minute}:00.000Z`,
+      inputTokens: minute,
+      outputTokens: 0,
+      estimatedCostUsd: 0,
+      model: null,
+      isSubagent: false,
+    }))
+    const parseTimestamp = vi.spyOn(Date, 'parse')
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={[]}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    expect(parseTimestamp).toHaveBeenCalledTimes(usageTimeline.length)
+  })
 })
