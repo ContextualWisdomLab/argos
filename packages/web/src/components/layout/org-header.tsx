@@ -1,6 +1,8 @@
 'use client'
 
 import { signOut } from 'next-auth/react'
+import { Loader2 } from 'lucide-react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ProjectFilter } from './project-filter'
 
@@ -15,15 +17,34 @@ export function OrgHeader({ orgName }: { orgName?: string }) {
         </div>
         <div className="flex items-center gap-2">
           <ProjectFilter />
-          <Button
-            variant="outline"
-            onClick={() => signOut({ callbackUrl: '/login' })}
-            aria-label="Sign out of your account"
-          >
-            Sign out
-          </Button>
+                    <SignOutButton />
         </div>
       </div>
     </header>
   )
+}
+
+
+function SignOutButton() {
+  const [loading, setLoading] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      onClick={async () => {
+        setLoading(true);
+        await signOut({ callbackUrl: '/login' });
+      }}
+      disabled={loading}
+      aria-label="Sign out of your account"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          Signing out...
+        </>
+      ) : (
+        'Sign out'
+      )}
+    </Button>
+  );
 }
