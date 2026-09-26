@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMemo } from "react";
 import { List, type RowComponentProps } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
@@ -183,6 +184,7 @@ function RowView({
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
             )}
+            aria-hidden="true"
           />
         )}
         <span className="truncate">{preview}</span>
