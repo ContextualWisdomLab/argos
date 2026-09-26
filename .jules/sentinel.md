@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-08-27 - 🛡️ Fix deepmerge-ts vulnerability (CVE-2026-40345)
+**Vulnerability:** OSV-Scanner detected a High severity vulnerability (CVE-2026-40345) in `deepmerge-ts` v7.1.5 via a GitHub CI check suite failure.
+**Learning:** CI 파이프라인에서 트리비/OSV-Scanner가 하위 종속성에 있는 취약점을 발견하면, 최상단 `package.json`의 `pnpm.overrides` 필드를 사용하여 안전한 버전(v8.0.0)으로 덮어쓰고 강제로 패치할 수 있습니다.
+**Prevention:** 향후 심층 종속성 취약점 보고서를 해결할 때도 동일하게 `pnpm.overrides`를 활용하여 버전을 고정하고, `pnpm install`을 실행하여 `pnpm-lock.yaml`을 갱신합니다.
