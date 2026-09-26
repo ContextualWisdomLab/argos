@@ -94,7 +94,7 @@ argos#651 remains **Draft/Proposed** until exact-head CI and security checks are
 
 ## Date-range picker acceptance — argos#694
 
-Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `62bad62679776aabb14be6589f49734b9d7be3e7`.
+Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `dc0cc1be0635c86b30bd31e0e38bb61ae716e337`.
 
 ### PRD / TRD
 
@@ -128,5 +128,5 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 ### Gap / Action / status
 
 - RED commits `cbedd54a…`, `29a693eb…`, and `17d25db…` fixed exact URL, default selection, and timezone-stable evidence before production.
-- GREEN production `a923e14c…` aligns default and click calculations; CHANGELOG recovery `084e6460…` preserves all prior entries.
+- GREEN production `a923e14c…` aligns default and click calculations. Repeated successor regression was restored test-first at `063224e2…`, production at `d82ca821…`, and full CHANGELOG history at `dc0cc1be…`.
 - argos#694 remains **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
