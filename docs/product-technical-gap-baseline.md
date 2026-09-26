@@ -92,9 +92,9 @@ No database entity or relationship is added or changed by argos#651. The surface
 
 argos#651 remains **Draft/Proposed** until exact-head CI and security checks are terminal GREEN, current-head independent review exists, unresolved review threads are repaired, and applicable browser, accessibility, responsive, locale, recovery, and performance rows pass. No release or GitHub Pages publication is claimed.
 
-## Date-range picker acceptance — argos#694
+## Date-range picker acceptance — argos#701
 
-Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `dc0cc1be0635c86b30bd31e0e38bb61ae716e337`.
+Product source is now the stable complete-carryover successor argos#701; this documentation lane records evidence only. Product evidence exact: `3c4973f64667a9a26c47a5d33d670161a185c425`. The predecessor argos#694 remains open Draft at repeated-regression head `33078e3707db57f2357dba3c8328f92fd8f98b55`; it is not treated as completed until protected-main integration proves complete carryover.
 
 ### PRD / TRD
 
@@ -128,5 +128,5 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 ### Gap / Action / status
 
 - RED commits `cbedd54a…`, `29a693eb…`, and `17d25db…` fixed exact URL, default selection, and timezone-stable evidence before production.
-- GREEN production `a923e14c…` aligns default and click calculations. Repeated successor regression was restored test-first at `063224e2…`, production at `d82ca821…`, and full CHANGELOG history at `dc0cc1be…`.
-- argos#694 remains **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
+- GREEN production `a923e14c…` aligns default and click calculations. After the fourth same-branch regression, stable successor argos#701 started from predecessor head `33078e37…` and restored the complete verified delta test-first at `566d631e…`, production at `fb672e71…`, and full CHANGELOG history at `3c4973f…`.
+- argos#701 and predecessor argos#694 remain **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
