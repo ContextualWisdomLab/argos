@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-28 - [Fix Command Injection in Windows CLI Browser Launch]
+**Vulnerability:** Command injection was possible on Windows via `cmd.exe start` because only `&` was escaped using `^&`, allowing bypass via other shell metacharacters like `|`, `;`, `<`, `>`, `(`, `)`, and `^`.
+**Learning:** When using `windowsVerbatimArguments: true` with `spawn('cmd.exe')`, all normal Node.js escaping is bypassed. Escaping just `&` is insufficient, as `cmd.exe` processes other metacharacters which can be injected via malicious URLs.
+**Prevention:** Properly escape all shell metacharacters (`&`, `|`, `;`, `<`, `>`, `(`, `)`, `^`) with a caret (`^`) (e.g., `url.replace(/([&|;<>()^])/g, '^$1')`) rather than just rejecting URLs or partially escaping them.
