@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { subDays, format, differenceInDays } from 'date-fns'
+import { subDays, format, differenceInDays, isValid, parseISO } from 'date-fns'
 import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -25,8 +25,10 @@ function DateRangePickerContent() {
   const defaultFrom = currentFrom || format(sevenDaysAgo, 'yyyy-MM-dd')
   const defaultTo = currentTo || format(today, 'yyyy-MM-dd')
 
-  const fromDate = new Date(defaultFrom)
-  const toDate = new Date(defaultTo)
+  const parsedFromDate = parseISO(defaultFrom)
+  const parsedToDate = parseISO(defaultTo)
+  const fromDate = isValid(parsedFromDate) ? parsedFromDate : sevenDaysAgo
+  const toDate = isValid(parsedToDate) ? parsedToDate : today
   const daysDiff = differenceInDays(toDate, fromDate)
 
   const isToday = format(toDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
