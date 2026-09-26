@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { List, type RowComponentProps } from "react-window";
+import { useMemo, memo } from "react";
+import { List, type RowComponentProps, areEqual } from "react-window";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
 import { formatElapsedHms } from "@/lib/format";
 import {
@@ -139,7 +139,9 @@ type RowViewProps = {
   chevron?: "collapsed" | "expanded";
 };
 
-function RowView({
+// Optimization: Memoize RowView to prevent unnecessary re-renders when other rows update.
+// Expected impact: Reduces React render time for large event lists.
+const RowView = memo(function RowView({
   label,
   preview,
   time,
@@ -192,7 +194,7 @@ function RowView({
       </span>
     </button>
   );
-}
+})
 
 type RowProps = {
   rows: FlatRow[];
@@ -202,7 +204,9 @@ type RowProps = {
   onToggleGroup: (firstIdx: number) => void;
 };
 
-function Row({
+// Optimization: Memoize Row for react-window, passing areEqual to correctly skip re-renders.
+// Expected impact: Significantly reduces CPU usage and re-renders during scrolling and selection.
+const Row = memo(function Row({
   index,
   style,
   rows,
@@ -250,7 +254,7 @@ function Row({
       />
     </div>
   );
-}
+}, areEqual)
 
 export function EventList({
   events,
