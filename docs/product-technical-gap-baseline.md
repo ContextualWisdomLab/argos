@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `70a9d5d31532e27dd8de676acedb515a5acfe574`
+Tracked reusable-control evidence: `656cb7e19684fe5e7b613c3c1799d433a82f541e`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -135,13 +135,13 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 
 ## 2026-09-27 decorative-control reconciliation
 
-Canonical product writer #656 exact `f99900b9947a431ba5ef1c8ecc45c575fd111478` preserves the five reusable controls and restores seven deleted evidence blobs with ordinary commits. Compared with verified `70a9d5d…`, the only effective changes are one additional decorative-icon boundary each in EventList, WeekNavigator, and Pagination; focused tests, CHANGELOG, and Palette guidance are blob-restored.
+Canonical product writer #656 exact `656cb7e19684fe5e7b613c3c1799d433a82f541e` preserves the five reusable controls. Successor `7c0fa348…` deleted 226 lines of focused behavior tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence; seven ordinary-forward commits restored the verified blobs. Compared with verified `f99900b9…`, the current head is eight commits ahead with `files: []`.
 
 | Surface | Exact evidence | Status |
 |---|---|---|
 | ContextSection, EventList, WeekNavigator, Pagination, SelectTrigger | Component contracts preserve accessible names, disclosure/navigation/page-change behavior, and decorative SVG boundaries | Source PASS; hosted/browser/AT pending |
-| Duplicate writer #663 | Exact `8e87e48…`; two valid icon additions plus broad formatting churn, no focused tests | Draft; preserve until protected carryover |
-| Back control #664 | Exact `14e2ff8…`; one source-neutral empty successor after `6b154d3…`, same one hard-coded English label, no history-empty or eight-locale contract | Draft / FAIL |
+| Duplicate writer #663 | Exact `44ad7d31…`; one source-neutral successor after `8e87e48…`, two valid icon additions plus broad formatting churn, no focused tests | Draft; preserve until protected carryover |
+| Back control #664 | Exact `a0ea614d…`; two source-neutral successors after `6b154d3…`, same one hard-coded English label, no history-empty or eight-locale contract | Draft / FAIL |
 | Checks and approval | #656 and both sibling heads have queued checks; no current independent approval | FAIL |
 | Real interaction and locale | Pointer/touch/keyboard, AT, 320/768/desktop and ko/en/ja/zh/vi/es/de/fr absent | FAIL |
 
