@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `205b5651a35a1aed7198043bda533765324b4b48`
+Tracked reusable-control evidence: `1c113c20473e22ba3245450f161262133a62fa83`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -135,7 +135,7 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 
 ## 2026-09-27 decorative-control reconciliation
 
-Canonical product writer #656 exact `205b5651a35a1aed7198043bda533765324b4b48` preserves the five reusable controls. Successor `40a2f80a…` repeated the same seven-blob regression by deleting 196 focused-test lines, weakening two remaining contracts, and removing Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored the verified blobs. Compared with verified `a84efedc…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding. Ready sibling #702 exact `83ffacc6…` is Draft/Proposed because it duplicates only four product files and does not carry EventList, focused behavior contracts, CHANGELOG or this ledger. Preserve it until protected integration proves complete carryover.
+Canonical product writer #656 exact `1c113c20473e22ba3245450f161262133a62fa83` preserves the five reusable controls. Successor `c208826e…`, titled as an empty CI retrigger, deleted three complete focused tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored every verified blob. Compared with verified `205b5651…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding. Draft sibling #702 exact `d3936f05…` now also carries EventList plus duplicate guidance/CHANGELOG, but still lacks #656's focused behavior contracts and this canonical ledger. Preserve it until protected integration proves complete semantic and test carryover.
 
 | Surface | Exact evidence | Status |
 |---|---|---|
@@ -161,3 +161,19 @@ Do not close #663 or merge #664 on overlap alone. First prove protected integrat
 | Hosted admission | Exact-head CI/Security/Semgrep/CodeQL and current independent approval | Queued / absent |
 
 Keep the memoization only if the fixed-workload profile is positive without semantic regression; remove it if the effect is absent or negative.
+
+
+## Markdown rendering memoization hypothesis — argos#704
+
+[argos#704](https://github.com/ContextualWisdomLab/argos/pull/704) is Draft/Proposed at exact head `ba525a295c206853027bbffec6788e84409908c5`. The product branch preserves a static Markdown renderer map and proposed `React.memo` boundary. Guidance and CHANGELOG now describe this as a bounded hypothesis, not completed performance work.
+
+| Concern | Required evidence | Status |
+|---|---|---|
+| Semantic parity | Headings, lists, links, tables, inline/block code, raw-HTML suppression and fallback output on a fixed corpus | FAIL — no focused current-head contract |
+| Causal performance | Same parent-update workload before/after; render count, React commit duration and main-thread time | FAIL |
+| Measurement design | Browser/hardware, sample size, warm-up, failure denominator, median and p95 | FAIL |
+| Large Markdown | Fixed large corpus, heap/GC, scrolling and selection behavior | FAIL |
+| Accessibility/responsive | Structured exact-value alternative, keyboard/AT, 320/768/desktop and reduced-motion evidence | FAIL |
+| Hosted admission | Exact-head CI/Security/Semgrep/CodeQL and independent current-head approval | PENDING |
+
+Keep memoization only if measured benefit is positive without semantic regression; remove it when the comparator cost or update pattern eliminates the benefit.
