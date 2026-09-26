@@ -130,4 +130,3 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 - RED commits `cbedd54a…`, `29a693eb…`, and `17d25db…` fixed exact URL, default selection, and timezone-stable evidence before production.
 - GREEN production `a923e14c…` aligns default and click calculations; CHANGELOG recovery `084e6460…` preserves all prior entries.
 - argos#694 remains **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
-
