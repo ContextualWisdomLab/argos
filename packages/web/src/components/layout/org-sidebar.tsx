@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { OrgSwitcher } from './org-switcher'
+import { LogOut } from 'lucide-react'
 import { CreateOrgModal } from '@/components/org/create-org-modal'
 import { useOrgs } from '@/hooks/use-orgs'
 
@@ -124,9 +125,10 @@ export function OrgSidebar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
             aria-label="Log out of your account"
           >
+            <LogOut className="size-4" aria-hidden="true" />
             Log Out
           </button>
         </div>
@@ -152,9 +154,10 @@ export function OrgSidebar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
+            className="flex items-center gap-1.5 px-3 py-1 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50"
             aria-label="Log out of your account"
           >
+            <LogOut className="size-3.5" aria-hidden="true" />
             Logout
           </button>
         </div>

@@ -1,6 +1,10 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- 레이아웃 컴포넌트(`org-header.tsx`, `org-sidebar.tsx`)의 로그아웃 버튼에 직관적인 시각적 피드백을 제공하기 위해 `LogOut` 아이콘 추가
+- 아이콘 요소에 `aria-hidden="true"` 속성을 추가하여 스크린 리더 환경의 접근성 유지 및 향상
+
 
 ### 🛡️ 보안 (Security)
 
