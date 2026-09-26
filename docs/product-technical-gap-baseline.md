@@ -146,3 +146,18 @@ Canonical product writer #656 exact `205b5651a35a1aed7198043bda533765324b4b48` p
 | Real interaction and locale | Pointer/touch/keyboard, AT, 320/768/desktop and ko/en/ja/zh/vi/es/de/fr absent | FAIL |
 
 Do not close #663 or merge #664 on overlap alone. First prove protected integration or complete semantic/test carryover, then refresh this exact-head matrix.
+
+
+## Event-list row memoization hypothesis — argos#703
+
+[argos#703](https://github.com/ContextualWisdomLab/argos/pull/703) is Draft/Proposed at exact head `1fcc30a9b84020946cbcdde49b33cb7af97df16e`. The product branch preserves the proposed `React.memo` / `areEqual` delta, while its guidance now treats memoization as a measurable hypothesis rather than an unconditional rule.
+
+| Concern | Required evidence | Status |
+|---|---|---|
+| Behavior parity | Exact selected row, group disclosure, pointer/keyboard selection and virtualized scroll contracts | Existing component coverage is partial; current-head parity test absent |
+| Causal performance | Fixed event corpus; render count, main-thread time and React commit duration for selection and scrolling | FAIL |
+| Measurement design | Environment, sample size, warm-up, failure denominator, median and p95 | FAIL |
+| Responsive/accessibility | 320/768/desktop, reduced motion, AT, touch and keyboard replay | FAIL |
+| Hosted admission | Exact-head CI/Security/Semgrep/CodeQL and current independent approval | Queued / absent |
+
+Keep the memoization only if the fixed-workload profile is positive without semantic regression; remove it if the effect is absent or negative.
