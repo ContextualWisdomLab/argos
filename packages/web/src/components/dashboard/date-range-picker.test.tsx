@@ -53,6 +53,9 @@ describe("DateRangePicker", () => {
     expect(screen.getByRole("button", { name: "Last 30 days" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Last 90 days" })).toBeDefined();
     expect(screen.getByRole("button", { name: "All time" })).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Last 7 days" }).getAttribute("aria-pressed"),
+    ).toBe("true");
   });
 
   it("updates URL when a preset is clicked", () => {
