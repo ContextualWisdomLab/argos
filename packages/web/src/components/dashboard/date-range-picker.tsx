@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { subDays, format, differenceInDays } from 'date-fns'
+import { subDays, format, differenceInDays, isValid, parseISO } from 'date-fns'
 import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -20,13 +20,15 @@ function DateRangePickerContent() {
   const currentTo = searchParams.get('to')
 
   const today = new Date()
-  const sevenDaysAgo = subDays(today, 7)
+  const sevenDaysAgo = subDays(today, 6)
 
   const defaultFrom = currentFrom || format(sevenDaysAgo, 'yyyy-MM-dd')
   const defaultTo = currentTo || format(today, 'yyyy-MM-dd')
 
-  const fromDate = new Date(defaultFrom)
-  const toDate = new Date(defaultTo)
+  const parsedFromDate = parseISO(defaultFrom)
+  const parsedToDate = parseISO(defaultTo)
+  const fromDate = isValid(parsedFromDate) ? parsedFromDate : sevenDaysAgo
+  const toDate = isValid(parsedToDate) ? parsedToDate : today
   const daysDiff = differenceInDays(toDate, fromDate)
 
   const isToday = format(toDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
@@ -44,7 +46,7 @@ function DateRangePickerContent() {
 
   const handlePreset = (days: number) => {
     const to = format(today, 'yyyy-MM-dd')
-    const from = format(subDays(today, days), 'yyyy-MM-dd')
+    const from = format(subDays(today, days - 1), 'yyyy-MM-dd')
 
     const newParams = new URLSearchParams(searchParams.toString())
     newParams.set('from', from)
@@ -63,6 +65,9 @@ function DateRangePickerContent() {
             key={preset.days}
             type="button"
             aria-pressed={activePreset === preset.days}
+            aria-label={
+              preset.days === 3650 ? 'All time' : `Last ${preset.days} days`
+            }
             onClick={() => handlePreset(preset.days)}
             className={cn(
               'px-3 py-1 text-xs font-medium rounded-md transition-colors',
