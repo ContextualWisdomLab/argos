@@ -74,7 +74,10 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
 function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   const text = String(value)
-  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
+  // Prevent CSV Injection (Macro Injection)
+  const needsEscaping = /^[=\+\-\@\t\r\n\uff1d\uff0b\uff0d\uff20]/.test(text.trimStart())
+  const mitigatedText = (needsEscaping && typeof value !== 'number') ? `'${text}` : text
+  return /[",\r\n]/.test(mitigatedText) ? `"${mitigatedText.replaceAll('"', '""')}"` : mitigatedText
 }
 
 function buildSessionsCsv(sessions: SessionWithInclude[]) {
