@@ -10,6 +10,7 @@
 
 - 세션 타임라인의 사용량 시점마다 전체 도구 이벤트를 다시 필터링하던 중첩 스캔을 정렬된 로컬 복사본과 단일 순방향 커서로 교체했습니다. 이후 시점의 도구 요약은 이전 호출을 누락하지 않고 누적되며, 반복 도구 횟수·표시 개수 상한·입력 배열 불변성을 실제 차트 데이터 회귀 테스트로 고정했습니다.
 - 가상화 이벤트 목록에서 모든 visible row가 동일한 세션 시작 시각 문자열을 반복 파싱하던 경로를 제거했습니다. 세션 anchor는 prop이 바뀔 때만 `Date.parse`로 계산하고 숫자 값을 행에 전달하며, elapsed-time 동작은 순수 formatter와 invalid/negative 시간 회귀 테스트로 고정했습니다.
+- Markdown renderer map을 모듈 상수로 재사용하고 `MarkdownContent` memoization을 제안했습니다. 이는 프로파일 전 단계의 bounded hypothesis이며, 고정 corpus의 render count·commit duration·main-thread median/p95와 동작 parity가 확인되기 전에는 성능 개선 완료로 주장하지 않습니다.
 
 ### ✨ 추가 기능 (Feature)
 
