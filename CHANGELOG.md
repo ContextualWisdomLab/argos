@@ -10,6 +10,7 @@
 
 - 세션 타임라인의 사용량 시점마다 전체 도구 이벤트를 다시 필터링하던 중첩 스캔을 정렬된 로컬 복사본과 단일 순방향 커서로 교체했습니다. 이후 시점의 도구 요약은 이전 호출을 누락하지 않고 누적되며, 반복 도구 횟수·표시 개수 상한·입력 배열 불변성을 실제 차트 데이터 회귀 테스트로 고정했습니다.
 - 가상화 이벤트 목록에서 모든 visible row가 동일한 세션 시작 시각 문자열을 반복 파싱하던 경로를 제거했습니다. 세션 anchor는 prop이 바뀔 때만 `Date.parse`로 계산하고 숫자 값을 행에 전달하며, elapsed-time 동작은 순수 formatter와 invalid/negative 시간 회귀 테스트로 고정했습니다.
+- Markdown renderer map을 모듈 상수로 재사용하고 `MarkdownContent` memoization을 제안했습니다. 이는 프로파일 전 단계의 bounded hypothesis이며, 고정 corpus의 render count·commit duration·main-thread median/p95와 동작 parity가 확인되기 전에는 성능 개선 완료로 주장하지 않습니다.
 
 ### ✨ 추가 기능 (Feature)
 
@@ -24,5 +25,3 @@
 - 세션 활동 리본은 시각적으로 현재인 이벤트를 토글 버튼으로 오인시키지 않고 `aria-current`로 노출하며, 병합된 도구 실행은 `Expand … group` 다음 행동과 포함 이벤트 수를 명확히 안내합니다.
 - 프로젝트 이름 변경·삭제 버튼과 텍스트가 이름을 제공하는 프로젝트 생성 버튼의 장식 아이콘을 접근성 트리에서 숨기고, 버튼의 기존 접근 가능한 이름이 유지되는지 렌더링 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
-
-- `MarkdownContent` 컴포넌트에서 `ReactMarkdown`에 전달되는 `components` 객체를 컴포넌트 외부 상수로 분리하고, `MarkdownContent` 컴포넌트를 `React.memo`로 감싸서 고정된 부모 업데이트 워크로드 하에서 불필요한 리렌더링을 방지했습니다.
