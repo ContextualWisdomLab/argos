@@ -91,3 +91,43 @@ No database entity or relationship is added or changed by argos#651. The surface
 ## Release decision
 
 argos#651 remains **Draft/Proposed** until exact-head CI and security checks are terminal GREEN, current-head independent review exists, unresolved review threads are repaired, and applicable browser, accessibility, responsive, locale, recovery, and performance rows pass. No release or GitHub Pages publication is claimed.
+
+## Date-range picker acceptance — argos#694
+
+Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `084e64600ed053a831b22c5fe6bdf637eb98c312`.
+
+### PRD / TRD
+
+The operator must understand 7/30/90/all-time presets through an accessible name and must see the activated preset remain selected. The product-owned `DateRangePicker` computes inclusive calendar ranges, preserves unrelated query parameters, removes stale pagination, and exposes selection with `aria-pressed`. Presentation state never replaces the URL query contract.
+
+### Context Map / UML / ERD
+
+```mermaid
+flowchart LR
+  Operator -->|select preset| Picker[Date Range Picker]
+  Picker -->|from/to query| Router[Dashboard Router]
+  Router -->|released query contract| ReadModel[Dashboard Read Model]
+```
+
+Sequence: select preset → compute inclusive `from`/`to` → delete `page` → push query → rerender matching `aria-pressed`. No database entity or relationship changes; this is a presentation/query-boundary repair.
+
+### Exact-head acceptance matrix
+
+| Concern | Exact evidence | Status |
+|---|---|---|
+| Determinism | Fixed local-calendar fixture expects 30-day URL `2026-08-28..2026-09-26` | Source PASS; hosted pending |
+| Semantics | Default 7-day range and click path both use inclusive day count | Source PASS |
+| Accessibility | Four buttons have exact accessible names and `aria-pressed` contracts | Source PASS; browser/AT pending |
+| Query persistence | Existing parameters are copied; stale `page` is removed | Existing component contract; browser reload pending |
+| Responsive / touch / keyboard | 320/768/desktop screenshots and real pointer/touch/keyboard replay absent | FAIL |
+| Locales | ko/en/ja/zh/vi/es/de/fr names, wrapping, and fallback are not implemented/evidenced | FAIL |
+| Loading/error/offline/stale/conflict/retry/busy | Suspense fallback exists; remaining states lack product evidence | Pending |
+| Large-data performance | Dashboard refresh median/p95 and p95 ≤20 ms page target absent | FAIL |
+| Import/export and recovery | Not a mutation surface; URL reload/back-forward recovery absent | Pending |
+
+### Gap / Action / status
+
+- RED commits `cbedd54a…`, `29a693eb…`, and `17d25db…` fixed exact URL, default selection, and timezone-stable evidence before production.
+- GREEN production `a923e14c…` aligns default and click calculations; CHANGELOG recovery `084e6460…` preserves all prior entries.
+- argos#694 remains **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
+
