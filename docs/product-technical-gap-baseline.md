@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `656cb7e19684fe5e7b613c3c1799d433a82f541e`
+Tracked reusable-control evidence: `a84efedca16939f3c7c2c8da03156c3941f425e1`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -135,7 +135,7 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 
 ## 2026-09-27 decorative-control reconciliation
 
-Canonical product writer #656 exact `656cb7e19684fe5e7b613c3c1799d433a82f541e` preserves the five reusable controls. Successor `7c0fa348…` deleted 226 lines of focused behavior tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence; seven ordinary-forward commits restored the verified blobs. Compared with verified `f99900b9…`, the current head is eight commits ahead with `files: []`.
+Canonical product writer #656 exact `a84efedca16939f3c7c2c8da03156c3941f425e1` preserves the five reusable controls. Successor `cec871fc…` repeated the same regression by deleting 196 focused-test lines, weakening two remaining contracts, and removing Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored the verified blobs. Compared with verified `656cb7e1…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding.
 
 | Surface | Exact evidence | Status |
 |---|---|---|
