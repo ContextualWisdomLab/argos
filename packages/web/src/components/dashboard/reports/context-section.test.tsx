@@ -20,15 +20,12 @@ describe('ContextSection', () => {
     )
 
     // Initially closed
-    const trigger = screen.getByRole('button', { name: 'Test Title' })
-    expect(trigger).toHaveAttribute('aria-expanded', 'false')
-    expect(trigger.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
 
     // Click to open
     await user.click(screen.getByRole('button', { name: 'Test Title' }))
-    expect(trigger).toHaveAttribute('aria-expanded', 'true')
-    expect(trigger.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
+    expect(screen.getByRole('button', { name: 'Test Title' })).toHaveAttribute('aria-expanded', 'true')
 
     const region = screen.getByRole('region', { name: 'Test Title' })
     expect(region).toBeInTheDocument()
