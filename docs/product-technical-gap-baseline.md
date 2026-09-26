@@ -94,7 +94,7 @@ argos#651 remains **Draft/Proposed** until exact-head CI and security checks are
 
 ## Date-range picker acceptance — argos#701
 
-Product source is now the stable complete-carryover successor argos#701; this documentation lane records evidence only. Product evidence exact: `3c4973f64667a9a26c47a5d33d670161a185c425`. The predecessor argos#694 remains open Draft at repeated-regression head `33078e3707db57f2357dba3c8328f92fd8f98b55`; it is not treated as completed until protected-main integration proves complete carryover.
+Product source is now the stable complete-carryover successor argos#701; this documentation lane records evidence only. Product evidence exact: `04d8afe8258112bd870c5f44e29430495d96284a`. The predecessor argos#694 remains open Draft at repeated-regression head `81696ffa29f3fc9722f2bf3779ee75aba428aa50`; it is not treated as completed until protected-`developmental` integration proves complete carryover.
 
 ### PRD / TRD
 
@@ -124,11 +124,11 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 | Loading/error/offline/stale/conflict/retry/busy | Suspense fallback exists; remaining states lack product evidence | Pending |
 | Large-data performance | Dashboard refresh median/p95 and p95 ≤20 ms page target absent | FAIL |
 | Import/export and recovery | Not a mutation surface; URL reload/back-forward recovery absent | Pending |
-| Hosted validation | Stable successor argos#701 exact `3c4973f…` has zero PR workflow runs after retarget to canonical `developmental` | FAIL; `.github` trigger/required-check ownership repair needed |
+| Hosted validation | Stable successor argos#701 exact `04d8afe…` has CI, Security Scan, SAST Semgrep, and CodeQL PR runs queued after a meaningful RED→GREEN synchronize | FAIL until all exact-head runs are terminal GREEN |
 
 ### Gap / Action / status
 
 - RED commits `cbedd54a…`, `29a693eb…`, and `17d25db…` fixed exact URL, default selection, and timezone-stable evidence before production.
-- GREEN production `a923e14c…` aligns default and click calculations. After the fourth same-branch regression, stable successor argos#701 started from predecessor head `33078e37…` and restored the complete verified delta test-first at `566d631e…`, production at `fb672e71…`, and full CHANGELOG history at `3c4973f…`.
+- GREEN production `a923e14c…` aligns default and click calculations. After the fourth same-branch regression, stable successor argos#701 started from predecessor head `33078e37…` and restored the complete verified delta test-first at `566d631e…`, production at `fb672e71…`, and full CHANGELOG history at `3c4973f…`. Malformed URL dates are fixed by source-level RED `4facf856…`, fail-closed `parseISO`/`isValid` GREEN `d63dc2fe…`, and CHANGELOG evidence `04d8afe…`.
 - argos#701 and predecessor argos#694 remain **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
-- Route the zero-run successor condition to the `.github` CI owner: verify pull-request branch filters and required-check registration for canonical `developmental`; do not use an empty retrigger commit as evidence.
+- Preserve the meaningful synchronize evidence at argos#701@`04d8afe…`; do not use empty retrigger commits. `developmental` already includes the correct pull-request branch filter, so the prior zero-run condition was caused by base retarget alone not emitting a default workflow activity.
