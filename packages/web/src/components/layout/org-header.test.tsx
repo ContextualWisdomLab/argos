@@ -1,15 +1,14 @@
 import '@testing-library/jest-dom/vitest';
-/** @jsxImportSource react */
-/**
- * @vitest-environment jsdom
- */
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
-afterEach(() => { cleanup(); });
 import React from 'react'; globalThis.React = React;
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { OrgHeader } from './org-header'
+/**
+ * @vitest-environment jsdom
+ */
+afterEach(() => { cleanup(); });
 
 // Mock next-auth/react
 vi.mock('next-auth/react', () => ({
