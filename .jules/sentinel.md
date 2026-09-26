@@ -30,3 +30,15 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-05-28 - [CSV 인젝션 취약점 수정]
+**Vulnerability:** CSV 내보내기 기능에 사용자 입력값이 그대로 삽입되어 CSV 인젝션(매크로 인젝션) 취약점이 존재했습니다.
+**Learning:** '='나 '+'와 같은 문자로 시작하는 값은 스프레드시트 프로그램에서 수식으로 해석되어 악성 매크로를 실행시킬 위험이 있습니다.
+**Prevention:** CSV 값을 생성할 때 숫자 타입이 아니면서 특정 위험 문자들로 시작하는 경우에는 앞에 따옴표(')를 추가하여 일반 문자열로 인식하게 방어해야 합니다.
+## 2025-02-18 - [Fix vulnerable dependencies via pnpm overrides]
+**Vulnerability:** Known high/critical-severity vulnerabilities discovered by the audit in `next`, `deepmerge-ts`, `browserslist`, and `baseline-browser-mapping`.
+**Learning:** Deeply nested dependencies may expose the application to DoS or logic loops.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-18 - [Fix vulnerable dependencies via pnpm overrides]
+**Vulnerability:** Known high/critical-severity vulnerabilities discovered by the audit in `deepmerge-ts`, and `sharp`.
+**Learning:** Deeply nested dependencies may expose the application to DoS or logic loops.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
