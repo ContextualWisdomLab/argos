@@ -30,15 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2026-09-25 - Fix dependency vulnerabilities
-**Vulnerability:** Found 7 vulnerabilities including CRITICAL ones in `next` and HIGH ones in `browserslist` and `sharp` across `package.json` dependencies.
-**Learning:** `pnpm-lock.yaml` contained older versions of indirect or direct dependencies that needed overriding via `pnpm.overrides` to ensure a secure build in monorepo setups utilizing `pnpm 9`.
-**Prevention:** Regularly audit the `package.json` and `pnpm.overrides` to keep critical packages such as `next`, `sharp`, and `browserslist` updated to their secure versions.
-## 2026-09-25 - Fix dependency vulnerabilities (deepmerge-ts)
-**Vulnerability:** The initial overrides left a vulnerability in `deepmerge-ts@7.1.6` leading to stack exhaustion.
-**Learning:** Checking the `dependency-review` output requires attention to the specific vulnerable version constraints. I successfully updated `deepmerge-ts` to `^8.0.2` via `pnpm.overrides` and tested correctly.
-**Prevention:** Verify vulnerability reports directly in `pnpm-lock.yaml` tree and ensure the resolved version is past the fixed version identified by advisory databases.
-## 2026-09-25 - Fix dependency vulnerabilities (trivy scan)
-**Vulnerability:** CRITICAL/HIGH vulnerabilities found in dependencies: `next`, `browserslist`, `deepmerge-ts` through the `dependency-review` scan.
-**Learning:** Overriding dependencies without downloading standalone binaries (`trivy`) to the root ensures a clean Git history and focuses on fixing the target issues. `deepmerge-ts` needs to be `^8.0.2` or later to fix the stack exhaustion issue.
-**Prevention:** Always ensure temporary artifacts and binaries used during exploration are removed using `git reset HEAD <file>` and `rm <file>`. Do not commit binaries or download them into the repository.
+## 2026-09-26 - Fix URL encoding vulnerability
+**Vulnerability:** Found a lack of URL encoding in CLI auth polling in `auth-flow.ts`.
+**Learning:** Hardcoded interpolations of state variables could allow injection if the state format changes in the future.
+**Prevention:** Always use `encodeURIComponent` when embedding untrusted or dynamically generated state variables in URLs.
