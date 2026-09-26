@@ -2,6 +2,7 @@ import type { TimelineEvent, ToolEvent } from "@/lib/timeline-events";
 import { formatDateTime } from "@/lib/format";
 import { User, Bot, Wrench, X } from "lucide-react";
 import { MarkdownContent } from "./markdown-content";
+import { Button } from "@/components/ui/button";
 
 function formatDurationMs(ms: number | null): string {
   if (ms === null) return "—";
@@ -135,14 +136,17 @@ export function EventDetail({ event, onClose }: EventDetailProps) {
             {formatDateTime(event.timestamp)}
           </span>
           {onClose && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={onClose}
               aria-label="Close event details"
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              title="Close event details"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
