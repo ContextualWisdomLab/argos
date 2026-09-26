@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   state: string
@@ -36,7 +37,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
   async function handleDeny() {
     setLoading(true)
     try {
-      await fetch(`/api/auth/cli-callback`, {
+      const res = await fetch(`/api/auth/cli-callback`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${argosToken}`,
@@ -44,6 +45,7 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
         },
         body: JSON.stringify({ state, denied: true }),
       })
+      if (!res.ok) throw new Error('Failed')
       setStatus('denied')
     } catch {
       setStatus('error')
@@ -92,20 +94,21 @@ export function CliAuthClient({ state, userName, userEmail, argosToken }: Props)
       </div>
 
       <div className="flex gap-3">
-        <button
+        <Button
           onClick={handleAllow}
           disabled={loading}
-          className="px-6 py-2 rounded-md bg-primary text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors"
+          className="px-6 py-2 h-auto"
         >
           허용
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
           onClick={handleDeny}
           disabled={loading}
-          className="px-6 py-2 rounded-md border border-border bg-background text-foreground font-medium hover:bg-muted disabled:opacity-50 transition-colors"
+          className="px-6 py-2 h-auto"
         >
           거부
-        </button>
+        </Button>
       </div>
     </div>
   )
