@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `9f93a8e5c7d4f374bbb19a94ab2819267f690068`
+Tracked reusable-control evidence: `095d5c1c6847a7b7730c1fee21877899933399dc`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -67,7 +67,7 @@ No database entity or relationship is added or changed by argos#651. The surface
 |---|---|---|
 | Deterministic copy and hierarchy | `event-detail.test.tsx` asserts the exact title class and sentence | Source PASS; hosted check pending |
 | Semantics | Null branch contains no synthetic event or dead CTA | Source PASS |
-| Accessibility | Empty-state SVG plus #656 reusable Chevron icons are `aria-hidden`; ContextSection, Pagination, WeekNavigator, EventList, and Select trigger contracts preserve parent names and behavior; Select scroll and browser/AT evidence remain open | Partial |
+| Accessibility | Empty-state SVG plus #656 reusable Chevron icons are `aria-hidden`; ContextSection, Pagination, WeekNavigator, EventList, and Select trigger contracts preserve parent names and behavior; Select scroll-button icon assertions exist; real scroll behavior and browser/AT evidence remain open | Partial |
 | Responsive layout | 320 px, 768 px, and desktop screenshots absent | FAIL |
 | Pointer, touch, keyboard | Empty state has no interactive control; timeline selection path still needs real-browser replay | Pending |
 | Loading/error/offline/permission/read-only/stale/conflict/retry/busy | Not introduced by the null branch; surrounding timeline states are not evidenced here | Pending |
@@ -81,7 +81,7 @@ No database entity or relationship is added or changed by argos#651. The surface
 | Gap | Required action | Status |
 |---|---|---|
 | Empty-state review findings | Keep RED contract, repair title weight and exact sentence, resolve only after exact-head verification | Repaired; checks pending |
-| Reusable Chevron semantics (#656) | Preserve parent labels, expanded state, page change, Select scrolling, Week navigation and virtualized group disclosure while decorative SVGs remain hidden | Source repair + five focused component contracts; Select scroll and browser/AT pending |
+| Reusable Chevron semantics (#656) | Preserve parent labels, expanded state, page change, Select scrolling, Week navigation and virtualized group disclosure while decorative SVGs remain hidden | Source repair + five behavior contracts + Select scroll-icon assertions; real Select scroll and browser/AT pending |
 | Real-browser evidence | Replay selection and null-state transitions in Chromium, Firefox, and WebKit at 320/768/desktop widths; capture screenshots and keyboard/AT results | Open |
 | Eight-locale evidence | Exercise ko/en/ja/zh/vi/es/de/fr with CJK fallback, expansion, and wrapping | Open |
 | Storybook states | Add product-owned normal/empty/loading/error/permission/read-only/offline/stale/conflict/retry/busy stories where applicable | Open |
@@ -135,7 +135,7 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 
 ## 2026-09-27 decorative-control reconciliation
 
-Canonical product writer #656 exact `9f93a8e5c7d4f374bbb19a94ab2819267f690068` preserves the five reusable controls. Successor `4c60defb…`, titled as comprehensive Select testing, again deleted three complete focused tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored every verified blob. Compared with verified `1c113c20…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding. Draft sibling #702 exact `d3936f05…` now also carries EventList plus duplicate guidance/CHANGELOG, but still lacks #656's focused behavior contracts and this canonical ledger. Preserve it until protected integration proves complete semantic and test carryover.
+Canonical product writer #656 exact `095d5c1c6847a7b7730c1fee21877899933399dc` preserves the five reusable controls. Successor `9eb17008…` added Select scroll-button icon assertions but deleted EventList, WeekNavigator, and Pagination tests, weakened ContextSection and Select exact-name coverage, and removed evidence boundaries. Seven ordinary-forward commits restored the valid blobs while retaining the new Select assertions, exact combobox name, and cleanup contract. No product delta was discarded.
 
 | Surface | Exact evidence | Status |
 |---|---|---|
@@ -165,7 +165,7 @@ Keep the memoization only if the fixed-workload profile is positive without sema
 
 ## Markdown rendering memoization hypothesis — argos#704
 
-[argos#704](https://github.com/ContextualWisdomLab/argos/pull/704) is Draft/Proposed at exact head `135c4184c4ff403b04fc278c46355476d9340d64`. The product branch preserves a static Markdown renderer map and proposed `React.memo` boundary. Guidance and CHANGELOG again describe this as a bounded hypothesis after successor `56fa2850…` removed the measurement and rollback boundary; the restoration head is three commits ahead of the prior evidence with `files: []`.
+[argos#704](https://github.com/ContextualWisdomLab/argos/pull/704) is Draft/Proposed at exact head `cee7112d5f63c8d76c281c7180009447bfd8d2f1`. The product branch preserves a static Markdown renderer map and proposed `React.memo` boundary. Successor `b0f0f016…`, titled as a Draft-notification acknowledgement, removed the measurement and rollback boundary; two ordinary-forward commits restored both exact evidence blobs.
 
 | Concern | Required evidence | Status |
 |---|---|---|
@@ -181,7 +181,7 @@ Keep memoization only if measured benefit is positive without semantic regressio
 
 ## Modal async-button busy lifecycle — argos#706
 
-[argos#706](https://github.com/ContextualWisdomLab/argos/pull/706) is Draft/Proposed at exact head `662049437f43fbf007c861fca0e448ebe62de92f`. It adds decorative `Loader2` indicators to five create/delete/rename surfaces while preserving the existing pending guard and visible state text.
+[argos#706](https://github.com/ContextualWisdomLab/argos/pull/706) is Draft/Proposed at exact head `f99b6a90c7b0fe8825ee8b49fd0e5eb27f08f22b`. It adds decorative `Loader2` indicators to five create/delete/rename surfaces while preserving the existing pending guard and visible state text. The latest successor advanced one commit with `files: []`; no source evidence changed.
 
 | Concern | Required evidence | Status |
 |---|---|---|
