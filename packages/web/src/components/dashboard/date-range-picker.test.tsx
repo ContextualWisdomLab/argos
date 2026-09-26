@@ -126,6 +126,23 @@ describe("DateRangePicker", () => {
     expect(buttonAll.getAttribute("aria-pressed")).toBe("true");
   });
 
+  it("falls back to the default range for malformed URL dates", () => {
+    mockSearchParams = new URLSearchParams({
+      from: "not-a-date",
+      to: "also-not-a-date",
+    });
+    vi.mocked(useSearchParams).mockReturnValue(
+      mockSearchParams as unknown as ReturnType<typeof useSearchParams>,
+    );
+
+    render(<DateRangePicker />);
+
+    expect(screen.getByText("Sep 20 ~ Sep 26")).toBeDefined();
+    expect(
+      screen.getByRole("button", { name: "Last 7 days" }).getAttribute("aria-pressed"),
+    ).toBe("true");
+  });
+
   it("returns null for activePreset if not today", () => {
     const today = new Date();
     mockSearchParams = new URLSearchParams({
