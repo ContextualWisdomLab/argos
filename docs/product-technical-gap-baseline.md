@@ -141,7 +141,7 @@ Canonical product writer #656 exact `f99900b9947a431ba5ef1c8ecc45c575fd111478` p
 |---|---|---|
 | ContextSection, EventList, WeekNavigator, Pagination, SelectTrigger | Component contracts preserve accessible names, disclosure/navigation/page-change behavior, and decorative SVG boundaries | Source PASS; hosted/browser/AT pending |
 | Duplicate writer #663 | Exact `8e87e48…`; two valid icon additions plus broad formatting churn, no focused tests | Draft; preserve until protected carryover |
-| Back control #664 | Exact `6b154d3…`; one hard-coded English label, no history-empty or eight-locale contract | Draft / FAIL |
+| Back control #664 | Exact `14e2ff8…`; one source-neutral empty successor after `6b154d3…`, same one hard-coded English label, no history-empty or eight-locale contract | Draft / FAIL |
 | Checks and approval | #656 and both sibling heads have queued checks; no current independent approval | FAIL |
 | Real interaction and locale | Pointer/touch/keyboard, AT, 320/768/desktop and ko/en/ja/zh/vi/es/de/fr absent | FAIL |
 
