@@ -1,14 +1,18 @@
-import 'server-only'
+import "server-only";
 
-import { subWeeks } from 'date-fns'
-import { db } from './db'
-import { getWeekRangeForDate, formatWeekLabel, type WeekRange } from './week-range'
+import { subWeeks } from "date-fns";
+import { db } from "./db";
+import {
+  getWeekRangeForDate,
+  formatWeekLabel,
+  type WeekRange,
+} from "./week-range";
 import {
   getDailyRollupsForProjects,
   aggregateSummary,
   aggregateUserStats,
   type DailyRollup,
-} from './daily-rollup'
+} from "./daily-rollup";
 import type {
   WeeklyReport,
   WeekMeta,
@@ -18,23 +22,25 @@ import type {
   WeeklyTrendContext,
   LeaderEntry,
   DailySeriesPoint,
-} from '@/types/reports'
+} from "@/types/reports";
 
 // ─── Week utilities ────────────────────────────────────────────────────────
 // 순수 week 계산 로직은 week-range.ts 로 분리 (vitest 테스트 가능).
 // 기존 호출자 호환을 위해 동일 경로에서 re-export 한다.
 
-export { getWeekRangeForDate, parseWeekParam } from './week-range'
-export type { WeekRange } from './week-range'
+export { getWeekRangeForDate, parseWeekParam } from "./week-range";
+export type { WeekRange } from "./week-range";
 
 /** 직전 완료 주 (기본값). 현재 주는 진행 중이므로 제외 */
 export function getDefaultWeekRange(): WeekRange {
-  return getWeekRangeForDate(subWeeks(new Date(), 1))
+  return getWeekRangeForDate(subWeeks(new Date(), 1));
 }
 
 function buildWeekMeta(week: WeekRange, isFirst: boolean): WeekMeta {
-  const now = new Date()
-  const isCurrent = now.getTime() >= week.start.getTime() && now.getTime() <= week.end.getTime()
+  const now = new Date();
+  const isCurrent =
+    now.getTime() >= week.start.getTime() &&
+    now.getTime() <= week.end.getTime();
   return {
     label: formatWeekLabel(week.start, week.end),
     isoKey: week.isoKey,
@@ -42,21 +48,26 @@ function buildWeekMeta(week: WeekRange, isFirst: boolean): WeekMeta {
     endISO: week.end.toISOString(),
     isCurrent,
     isFirst,
-  }
+  };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function percentDelta(current: number, prev: number): number {
-  if (prev === 0) return current === 0 ? 0 : 100
-  return Math.round(((current - prev) / prev) * 1000) / 10  // 소수점 1자리
+  if (prev === 0) return current === 0 ? 0 : 100;
+  return Math.round(((current - prev) / prev) * 1000) / 10; // 소수점 1자리
 }
 
 function totalTokensFromRollups(rollups: DailyRollup[]): number {
   return rollups.reduce(
-    (sum, r) => sum + r.inputTokens + r.outputTokens + r.cacheReadTokens + r.cacheCreationTokens,
+    (sum, r) =>
+      sum +
+      r.inputTokens +
+      r.outputTokens +
+      r.cacheReadTokens +
+      r.cacheCreationTokens,
     0,
-  )
+  );
 }
 
 function seriesFromRollups(rollups: DailyRollup[]): DailySeriesPoint[] {
@@ -67,38 +78,43 @@ function seriesFromRollups(rollups: DailyRollup[]): DailySeriesPoint[] {
     cacheReadTokens: r.cacheReadTokens,
     cacheCreationTokens: r.cacheCreationTokens,
     estimatedCostUsd: r.estimatedCostUsd,
-  }))
+  }));
 }
 
 function pickLeader(
-  candidates: Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }>,
+  candidates: Array<{
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    value: number;
+  }>,
   orderAsc = false,
 ): LeaderEntry | null {
-  if (candidates.length === 0) return null
+  if (candidates.length === 0) return null;
   const sorted = [...candidates].sort((a, b) => {
-    const diff = orderAsc ? a.value - b.value : b.value - a.value
-    if (diff !== 0) return diff
+    const diff = orderAsc ? a.value - b.value : b.value - a.value;
+    if (diff !== 0) return diff;
     // 동률 시 userId 사전순 (결정적 순서)
-    return a.userId.localeCompare(b.userId)
-  })
-  const leader = sorted[0]
-  const runnerUp = sorted.length >= 2 ? sorted[1] : null
+    return a.userId.localeCompare(b.userId);
+  });
+  const leader = sorted[0];
+  const runnerUp = sorted.length >= 2 ? sorted[1] : null;
   return {
     userId: leader.userId,
     userName: leader.userName,
     avatarUrl: leader.avatarUrl,
     value: leader.value,
     runnerUpValue: runnerUp ? runnerUp.value : null,
-  }
+  };
 }
 
 // ─── Sub-queries that need raw SQL ─────────────────────────────────────────
 
 interface DiversityRow {
-  user_id: string
-  name: string
-  avatar_url: string | null
-  diversity: bigint
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  diversity: bigint;
 }
 
 /** 사용자별 distinct skillName 개수 — aggregateUserStats 에 없어서 별도 쿼리 */
@@ -107,8 +123,15 @@ async function queryTopSkillDiversityByUser(
   start: Date,
   end: Date,
   eligibleUserIds: string[],
-): Promise<Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }>> {
-  if (projectIds.length === 0 || eligibleUserIds.length === 0) return []
+): Promise<
+  Array<{
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    value: number;
+  }>
+> {
+  if (projectIds.length === 0 || eligibleUserIds.length === 0) return [];
   const rows = await db.$queryRaw<DiversityRow[]>`
     SELECT
       u.id            AS user_id,
@@ -124,20 +147,20 @@ async function queryTopSkillDiversityByUser(
       AND e.timestamp <= ${end}
       AND e.user_id = ANY(${eligibleUserIds}::text[])
     GROUP BY u.id, u.name, u.avatar_url
-  `
+  `;
   return rows.map((r) => ({
     userId: r.user_id,
     userName: r.name,
     avatarUrl: r.avatar_url,
     value: Number(r.diversity),
-  }))
+  }));
 }
 
 interface TokenRow {
-  user_id: string
-  name: string
-  avatar_url: string | null
-  total_tokens: bigint
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  total_tokens: bigint;
 }
 
 /** 사용자별 총 토큰 (input + output + cache_read) — cache_read 포함이 aggregateUserStats 에 없어 별도 쿼리 */
@@ -146,8 +169,15 @@ async function queryTopTokenUsageByUser(
   start: Date,
   end: Date,
   eligibleUserIds: string[],
-): Promise<Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }>> {
-  if (projectIds.length === 0 || eligibleUserIds.length === 0) return []
+): Promise<
+  Array<{
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    value: number;
+  }>
+> {
+  if (projectIds.length === 0 || eligibleUserIds.length === 0) return [];
   const rows = await db.$queryRaw<TokenRow[]>`
     SELECT
       u.id         AS user_id,
@@ -161,20 +191,20 @@ async function queryTopTokenUsageByUser(
       AND ur.timestamp <= ${end}
       AND ur.user_id = ANY(${eligibleUserIds}::text[])
     GROUP BY u.id, u.name, u.avatar_url
-  `
+  `;
   return rows.map((r) => ({
     userId: r.user_id,
     userName: r.name,
     avatarUrl: r.avatar_url,
     value: Number(r.total_tokens),
-  }))
+  }));
 }
 
 interface ConciseRow {
-  user_id: string
-  name: string
-  avatar_url: string | null
-  avg_human_msg: number
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  avg_human_msg: number;
 }
 
 /**
@@ -186,8 +216,15 @@ async function queryConciseSessionLeaders(
   projectIds: string[],
   start: Date,
   end: Date,
-): Promise<Array<{ userId: string; userName: string; avatarUrl: string | null; value: number }>> {
-  if (projectIds.length === 0) return []
+): Promise<
+  Array<{
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    value: number;
+  }>
+> {
+  if (projectIds.length === 0) return [];
   const rows = await db.$queryRaw<ConciseRow[]>`
     WITH session_turns AS (
       SELECT
@@ -227,17 +264,17 @@ async function queryConciseSessionLeaders(
       ua.avg_human  AS avg_human_msg
     FROM user_avg ua
     JOIN users u ON u.id = ua.user_id
-  `
+  `;
   return rows.map((r) => ({
     userId: r.user_id,
     userName: r.name,
     avatarUrl: r.avatar_url,
     value: Number(r.avg_human_msg),
-  }))
+  }));
 }
 
 interface SessionIdRow {
-  session_id: string
+  session_id: string;
 }
 
 /** Task 도구 호출이 있었던 세션 id (최근순 3개) — 위임 사례 링크용 */
@@ -246,7 +283,7 @@ async function queryTaskDelegationSampleSessionIds(
   start: Date,
   end: Date,
 ): Promise<string[]> {
-  if (projectIds.length === 0) return []
+  if (projectIds.length === 0) return [];
   const rows = await db.$queryRaw<SessionIdRow[]>`
     SELECT DISTINCT session_id
     FROM events
@@ -257,12 +294,12 @@ async function queryTaskDelegationSampleSessionIds(
       AND agent_id IS NULL
     ORDER BY session_id DESC
     LIMIT 3
-  `
-  return rows.map((r) => r.session_id)
+  `;
+  return rows.map((r) => r.session_id);
 }
 
 interface SkillNameRow {
-  skill_name: string
+  skill_name: string;
 }
 
 /** 최근 4주에 1회+ 호출됐지만 이번 주 0회인 스킬 목록 */
@@ -272,7 +309,7 @@ async function queryForgottenSkills(
   weekStart: Date,
   weekEnd: Date,
 ): Promise<string[]> {
-  if (projectIds.length === 0) return []
+  if (projectIds.length === 0) return [];
   const rows = await db.$queryRaw<SkillNameRow[]>`
     WITH past_skills AS (
       SELECT DISTINCT skill_name
@@ -298,8 +335,8 @@ async function queryForgottenSkills(
       SELECT 1 FROM current_skills c WHERE c.skill_name = p.skill_name
     )
     ORDER BY p.skill_name ASC
-  `
-  return rows.map((r) => r.skill_name)
+  `;
+  return rows.map((r) => r.skill_name);
 }
 
 // ─── Main service ──────────────────────────────────────────────────────────
@@ -308,9 +345,13 @@ export async function getWeeklyReport(
   projectIds: string[],
   week: WeekRange,
 ): Promise<WeeklyReport> {
-  const prevWeekStart = new Date(week.start.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const prevWeekEnd = new Date(week.end.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const fourWeeksAgoStart = new Date(week.start.getTime() - 4 * 7 * 24 * 60 * 60 * 1000)
+  const prevWeekStart = new Date(
+    week.start.getTime() - 7 * 24 * 60 * 60 * 1000,
+  );
+  const prevWeekEnd = new Date(week.end.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourWeeksAgoStart = new Date(
+    week.start.getTime() - 4 * 7 * 24 * 60 * 60 * 1000,
+  );
 
   const [
     thisWeekRollups,
@@ -324,10 +365,10 @@ export async function getWeeklyReport(
     queryTaskDelegationSampleSessionIds(projectIds, week.start, week.end),
     queryForgottenSkills(projectIds, fourWeeksAgoStart, week.start, week.end),
     queryConciseSessionLeaders(projectIds, week.start, week.end),
-  ])
+  ]);
 
-  const summary = aggregateSummary(thisWeekRollups, 10)
-  const prevSummary = aggregateSummary(prevWeekRollups, 10)
+  const summary = aggregateSummary(thisWeekRollups, 10);
+  const prevSummary = aggregateSummary(prevWeekRollups, 10);
 
   const kpis: WeeklyKpis = {
     sessionCount: summary.sessionCount,
@@ -337,17 +378,20 @@ export async function getWeeklyReport(
     wow: {
       sessions: percentDelta(summary.sessionCount, prevSummary.sessionCount),
       turns: percentDelta(summary.turnCount, prevSummary.turnCount),
-      activeUsers: percentDelta(summary.activeUserCount, prevSummary.activeUserCount),
+      activeUsers: percentDelta(
+        summary.activeUserCount,
+        prevSummary.activeUserCount,
+      ),
       tokens: percentDelta(
         totalTokensFromRollups(thisWeekRollups),
         totalTokensFromRollups(prevWeekRollups),
       ),
     },
-  }
+  };
 
-  const userStats = aggregateUserStats(thisWeekRollups)
-  const eligibleUsers = userStats.filter((u) => u.sessionCount >= 3)
-  const eligibleUserIds = eligibleUsers.map((u) => u.userId)
+  const userStats = aggregateUserStats(thisWeekRollups);
+  const eligibleUsers = userStats.filter((u) => u.sessionCount >= 3);
+  const eligibleUserIds = eligibleUsers.map((u) => u.userId);
 
   // #1 skill usage leader — from aggregated userStats
   const skillUsageCandidates = eligibleUsers.map((u) => ({
@@ -355,58 +399,67 @@ export async function getWeeklyReport(
     userName: u.name,
     avatarUrl: u.avatarUrl,
     value: u.skillCalls,
-  }))
+  }));
   // #3 delegation (agentCalls)
   const delegationCandidates = eligibleUsers.map((u) => ({
     userId: u.userId,
     userName: u.name,
     avatarUrl: u.avatarUrl,
     value: u.agentCalls,
-  }))
+  }));
   // #5 session count
   const sessionCountCandidates = eligibleUsers.map((u) => ({
     userId: u.userId,
     userName: u.name,
     avatarUrl: u.avatarUrl,
     value: u.sessionCount,
-  }))
+  }));
 
   // #2 diversity, #6 tokens — separate queries, restricted to eligible
   const [diversityCandidates, tokenCandidates] = await Promise.all([
-    queryTopSkillDiversityByUser(projectIds, week.start, week.end, eligibleUserIds),
+    queryTopSkillDiversityByUser(
+      projectIds,
+      week.start,
+      week.end,
+      eligibleUserIds,
+    ),
     queryTopTokenUsageByUser(projectIds, week.start, week.end, eligibleUserIds),
-  ])
+  ]);
 
   const topUsers: WeeklyTopUsers = {
     learnFrom: {
       skillUsage: pickLeader(skillUsageCandidates),
       skillDiversity: pickLeader(diversityCandidates),
       delegation: pickLeader(delegationCandidates),
-      conciseSession: pickLeader(conciseLeaderCandidates, true),  // 오름차순 (적을수록 1등)
+      conciseSession: pickLeader(conciseLeaderCandidates, true), // 오름차순 (적을수록 1등)
     },
     usageScale: {
       sessionCount: pickLeader(sessionCountCandidates),
       tokenUsage: pickLeader(tokenCandidates),
     },
     eligibleUserCount: eligibleUsers.length,
-  }
+  };
 
   // Insights — delegation
   // ⚡ Bolt Optimization:
   // 병목 지점: 기존 코드는 `thisWeekRollups`를 3번 순회하고, 매 순회마다 Object.values()로 중간 배열을 생성하여 메모리 할당 비용이 발생했습니다.
   // 최적화 방법: 단일 for...of 루프와 Object.keys() 순회를 결합하여 N+1 순회를 1회 순회로 통합하고 중간 배열 할당을 제거했습니다.
   // 기대 효과: `thisWeekRollups`의 크기가 클 경우, 불필요한 배열 생성 오버헤드와 O(N) 순회를 1/3로 줄여 리포트 생성 성능이 향상됩니다.
-  let totalAgentCalls = 0
-  let totalSkillCalls = 0
-  const distinctSkillsThisWeek = new Set<string>()
+  let totalAgentCalls = 0;
+  let totalSkillCalls = 0;
+  const distinctSkillsThisWeek = new Set<string>();
 
   for (const r of thisWeekRollups) {
-    for (const k of Object.keys(r.agentCounts)) {
-      totalAgentCalls += r.agentCounts[k]
+    for (const k in r.agentCounts) {
+      if (Object.hasOwn(r.agentCounts, k)) {
+        totalAgentCalls += r.agentCounts[k];
+      }
     }
-    for (const k of Object.keys(r.skillCounts)) {
-      totalSkillCalls += r.skillCounts[k]
-      distinctSkillsThisWeek.add(k)
+    for (const k in r.skillCounts) {
+      if (Object.hasOwn(r.skillCounts, k)) {
+        totalSkillCalls += r.skillCounts[k];
+        distinctSkillsThisWeek.add(k);
+      }
     }
   }
 
@@ -421,7 +474,7 @@ export async function getWeeklyReport(
       distinctSkills: distinctSkillsThisWeek.size,
       forgottenSkills,
     },
-  }
+  };
 
   const trendContext: WeeklyTrendContext = {
     thisWeekSeries: seriesFromRollups(thisWeekRollups),
@@ -429,10 +482,11 @@ export async function getWeeklyReport(
     topSkills: summary.topSkills.slice(0, 10),
     topAgents: summary.topAgents.slice(0, 10),
     modelShare: summary.modelShare,
-  }
+  };
 
-  const hasPrevWeekData = prevWeekRollups.length > 0 && prevSummary.sessionCount > 0
-  const weekMeta = buildWeekMeta(week, !hasPrevWeekData)
+  const hasPrevWeekData =
+    prevWeekRollups.length > 0 && prevSummary.sessionCount > 0;
+  const weekMeta = buildWeekMeta(week, !hasPrevWeekData);
 
   return {
     week: weekMeta,
@@ -440,6 +494,5 @@ export async function getWeeklyReport(
     insights,
     topUsers,
     trendContext,
-  }
+  };
 }
-
