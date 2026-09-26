@@ -28,8 +28,9 @@ export function DeleteProjectModal({
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteProject()
 
-  useEffect(() => {
+    useEffect(() => {
     if (!project) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
       setConfirmName('')
       mutation.reset()
     }
@@ -84,7 +85,8 @@ export function DeleteProjectModal({
           <Input
             id="delete-project-confirm"
             value={confirmName}
-            onChange={(e) => setConfirmName(e.target.value)}
+            onChange={(e) =>
+      setConfirmName(e.target.value)}
             placeholder={project?.name ?? ''}
             disabled={mutation.isPending}
             autoComplete="off"
