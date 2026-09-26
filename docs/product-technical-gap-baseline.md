@@ -132,3 +132,17 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 - GREEN production `a923e14c…` aligns default and click calculations. After the fourth same-branch regression, stable successor argos#701 started from predecessor head `33078e37…` and restored the complete verified delta test-first at `566d631e…`, production at `fb672e71…`, and full CHANGELOG history at `3c4973f…`. Malformed URL dates are fixed by source-level RED `4facf856…`, fail-closed `parseISO`/`isValid` GREEN `d63dc2fe…`, and CHANGELOG evidence `04d8afe…`.
 - argos#701 and predecessor argos#694 remain **Draft/Proposed** until exact-head hosted checks, current independent approval, real browser/AT, responsive, eight-locale, recovery, and performance evidence are complete.
 - Preserve the meaningful synchronize evidence at argos#701@`04d8afe…`; do not use empty retrigger commits. `developmental` already includes the correct pull-request branch filter, so the prior zero-run condition was caused by base retarget alone not emitting a default workflow activity.
+
+## 2026-09-27 decorative-control reconciliation
+
+Canonical product writer #656 exact `f99900b9947a431ba5ef1c8ecc45c575fd111478` preserves the five reusable controls and restores seven deleted evidence blobs with ordinary commits. Compared with verified `70a9d5d…`, the only effective changes are one additional decorative-icon boundary each in EventList, WeekNavigator, and Pagination; focused tests, CHANGELOG, and Palette guidance are blob-restored.
+
+| Surface | Exact evidence | Status |
+|---|---|---|
+| ContextSection, EventList, WeekNavigator, Pagination, SelectTrigger | Component contracts preserve accessible names, disclosure/navigation/page-change behavior, and decorative SVG boundaries | Source PASS; hosted/browser/AT pending |
+| Duplicate writer #663 | Exact `8e87e48…`; two valid icon additions plus broad formatting churn, no focused tests | Draft; preserve until protected carryover |
+| Back control #664 | Exact `6b154d3…`; one hard-coded English label, no history-empty or eight-locale contract | Draft / FAIL |
+| Checks and approval | #656 and both sibling heads have queued checks; no current independent approval | FAIL |
+| Real interaction and locale | Pointer/touch/keyboard, AT, 320/768/desktop and ko/en/ja/zh/vi/es/de/fr absent | FAIL |
+
+Do not close #663 or merge #664 on overlap alone. First prove protected integration or complete semantic/test carryover, then refresh this exact-head matrix.
