@@ -22,6 +22,8 @@ describe("DateRangePicker", () => {
   let mockSearchParams: URLSearchParams;
 
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-26T12:00:00Z"));
     mockPush = vi.fn();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
@@ -41,6 +43,7 @@ describe("DateRangePicker", () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
   });
 
   it("renders presets", () => {
@@ -60,10 +63,7 @@ describe("DateRangePicker", () => {
 
     expect(mockPush).toHaveBeenCalledTimes(1);
 
-    // Check if the URL contains from and to parameters
-    const calledUrl = mockPush.mock.calls[0][0];
-    expect(calledUrl).toContain("from=");
-    expect(calledUrl).toContain("to=");
+    expect(mockPush).toHaveBeenCalledWith("?from=2026-08-28&to=2026-09-26");
   });
 
   it("has aria-pressed set correctly based on active state", () => {
