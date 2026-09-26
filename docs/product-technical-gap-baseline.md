@@ -94,7 +94,7 @@ argos#651 remains **Draft/Proposed** until exact-head CI and security checks are
 
 ## Date-range picker acceptance — argos#694
 
-Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `084e64600ed053a831b22c5fe6bdf637eb98c312`.
+Product source remains single-writer argos#694; this documentation lane records evidence only. Product evidence exact: `62bad62679776aabb14be6589f49734b9d7be3e7`.
 
 ### PRD / TRD
 
