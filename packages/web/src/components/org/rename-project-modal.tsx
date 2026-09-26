@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -108,6 +109,7 @@ export function RenameProjectModal({
               취소
             </Button>
             <Button type="submit" size="sm" disabled={!canSubmit}>
+              {mutation.isPending && <Loader2 className="animate-spin" aria-hidden="true" />}
               {mutation.isPending ? '변경 중…' : '변경'}
             </Button>
           </AlertDialogFooter>
