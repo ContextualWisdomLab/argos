@@ -30,3 +30,13 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix CSV Injection in Data Export]
+**Vulnerability:** 사용자 세션 데이터를 CSV로 내보낼 때, Spreadsheet Macro Injection (CSV Injection) 취약점이 발견되었습니다. 프롬프트나 사용자 이름이 `=`, `+`, `-`, `@` 등으로 시작할 경우, 스프레드시트 프로그램에서 이를 수식으로 해석해 임의의 매크로나 명령어가 실행될 위험이 있었습니다.
+**Learning:** 사용자 입력 데이터를 안전하게 이스케이프 처리(예: `""` 처리) 하더라도 스프레드시트 애플리케이션의 수식 해석을 막지 못합니다. CSV 내보내기 시 수식을 트리거하는 문자로 시작하는 텍스트 필드를 반드시 방어해야 합니다.
+**Prevention:** CSV로 출력되는 필드 중에서 `typeof value !== 'number'` 인 문자열 데이터가 `=, +, -, @, \t, \r, \n` (및 전각문자)로 시작하는지 검사하고, 해당할 경우 맨 앞에 작은따옴표(`'`)를 붙여 수식이 아닌 일반 문자열로 강제 인식되도록 처리합니다.
+
+## 2025-02-18 - [Fix vulnerable dependencies in package.json]
+**Vulnerability:** trivy-fs scan detected multiple high and critical vulnerabilities in transitive dependencies (next, browserslist, deepmerge-ts, sharp).
+**Learning:** Outdated dependencies expose the application to DoS, remote code execution (RCE), and other critical security issues. This is especially problematic when dependencies are deeply nested in the lockfile and not explicitly updated.
+**Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce secure versions of critical packages (e.g. Next.js, browserslist) across all transitive paths in the pnpm workspace. Keep lockfiles updated and enforce CI-based dependency scanning.
