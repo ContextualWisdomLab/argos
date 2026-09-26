@@ -81,3 +81,5 @@ describe('OrgSidebar', () => {
     expect(mobileIcon).toHaveAttribute('aria-hidden', 'true')
   })
 })
+
+// Trigger CI rerun
