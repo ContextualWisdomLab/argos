@@ -4,7 +4,7 @@ Status: **Proposed**
 Last evidence refresh: 2026-09-20
 Current baseline writer: [argos#651](https://github.com/ContextualWisdomLab/argos/pull/651)
 Tracked reusable-control review: [argos#656](https://github.com/ContextualWisdomLab/argos/pull/656)
-Tracked reusable-control evidence: `1c113c20473e22ba3245450f161262133a62fa83`
+Tracked reusable-control evidence: `9f93a8e5c7d4f374bbb19a94ab2819267f690068`
 Evidence ancestor: `db97dec458813daa200a314bb809e95f02343b3c`
 
 ## Goal and loop
@@ -135,7 +135,7 @@ Sequence: select preset → compute inclusive `from`/`to` → delete `page` → 
 
 ## 2026-09-27 decorative-control reconciliation
 
-Canonical product writer #656 exact `1c113c20473e22ba3245450f161262133a62fa83` preserves the five reusable controls. Successor `c208826e…`, titled as an empty CI retrigger, deleted three complete focused tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored every verified blob. Compared with verified `205b5651…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding. Draft sibling #702 exact `d3936f05…` now also carries EventList plus duplicate guidance/CHANGELOG, but still lacks #656's focused behavior contracts and this canonical ledger. Preserve it until protected integration proves complete semantic and test carryover.
+Canonical product writer #656 exact `9f93a8e5c7d4f374bbb19a94ab2819267f690068` preserves the five reusable controls. Successor `4c60defb…`, titled as comprehensive Select testing, again deleted three complete focused tests, weakened two remaining contracts, and removed Palette/CHANGELOG evidence without a product-source replacement. Seven ordinary-forward commits restored every verified blob. Compared with verified `1c113c20…`, the current head is eight commits ahead with `files: []`; the recurrence remains an RCA finding. Draft sibling #702 exact `d3936f05…` now also carries EventList plus duplicate guidance/CHANGELOG, but still lacks #656's focused behavior contracts and this canonical ledger. Preserve it until protected integration proves complete semantic and test carryover.
 
 | Surface | Exact evidence | Status |
 |---|---|---|
@@ -165,7 +165,7 @@ Keep the memoization only if the fixed-workload profile is positive without sema
 
 ## Markdown rendering memoization hypothesis — argos#704
 
-[argos#704](https://github.com/ContextualWisdomLab/argos/pull/704) is Draft/Proposed at exact head `ba525a295c206853027bbffec6788e84409908c5`. The product branch preserves a static Markdown renderer map and proposed `React.memo` boundary. Guidance and CHANGELOG now describe this as a bounded hypothesis, not completed performance work.
+[argos#704](https://github.com/ContextualWisdomLab/argos/pull/704) is Draft/Proposed at exact head `135c4184c4ff403b04fc278c46355476d9340d64`. The product branch preserves a static Markdown renderer map and proposed `React.memo` boundary. Guidance and CHANGELOG again describe this as a bounded hypothesis after successor `56fa2850…` removed the measurement and rollback boundary; the restoration head is three commits ahead of the prior evidence with `files: []`.
 
 | Concern | Required evidence | Status |
 |---|---|---|
@@ -177,3 +177,20 @@ Keep the memoization only if the fixed-workload profile is positive without sema
 | Hosted admission | Exact-head CI/Security/Semgrep/CodeQL and independent current-head approval | PENDING |
 
 Keep memoization only if measured benefit is positive without semantic regression; remove it when the comparator cost or update pattern eliminates the benefit.
+
+
+## Modal async-button busy lifecycle — argos#706
+
+[argos#706](https://github.com/ContextualWisdomLab/argos/pull/706) is Draft/Proposed at exact head `662049437f43fbf007c861fca0e448ebe62de92f`. It adds decorative `Loader2` indicators to five create/delete/rename surfaces while preserving the existing pending guard and visible state text.
+
+| Concern | Required evidence | Status |
+|---|---|---|
+| Determinism / duplicate submit | Each CTA invokes its mutation once and rejects Enter/click while pending | Source guard exists; focused interaction contract absent |
+| Busy semantics | Button/dialog exposes a stable accessible busy status without name flicker | FAIL — no `aria-busy` or accessibility-tree evidence |
+| Motion | Spinner respects `prefers-reduced-motion` without hiding progress text | FAIL — unconditional `animate-spin` |
+| Error / retry / rollback | Failed mutation restores inputs, focus and retryability; destructive success closes only after acknowledgement | Source paths exist; browser lifecycle evidence absent |
+| Responsive / locales | 320/768/desktop and ko/en/ja/zh/vi/es/de/fr wrapping for all pending labels | FAIL |
+| Real interaction | Pointer, touch, keyboard, AT and focus-trap replay across all five modals | FAIL |
+| Hosted admission | Exact-head CI/Security/Semgrep/CodeQL and independent current-head approval | PENDING |
+
+Do not treat a decorative spinner alone as completion. Preserve the product delta, then add one focused lifecycle contract and current-head browser/AT evidence before Ready.
