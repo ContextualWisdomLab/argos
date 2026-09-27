@@ -42,3 +42,7 @@
 **Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to provider infrastructure errors (e.g. 404 from upstream language model).
 **Learning:** Strix security gates rely on external AI inference APIs which can be unstable. This is an environmental flake, not a codebase vulnerability.
 **Prevention:** Re-trigger the workflow using an empty commit (`git commit --allow-empty`) to bypass the transient failure.
+## 2024-08-25 - Prevent Strix Pipeline Flakiness via Empty Commit
+**Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to upstream LLM API timeouts.
+**Learning:** These are transient infrastructure failures and not true codebase vulnerabilities. They require re-triggering the check suite.
+**Prevention:** If blocked by a flaky infrastructure failure, use `git commit --allow-empty` to manually re-trigger the verification pipelines.
