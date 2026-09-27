@@ -20,7 +20,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "deepmerge-ts": "^8.0.0",
+    "deepmerge-ts": "8.0.2",
     "zod": "^3"
   },
   "devDependencies": {
