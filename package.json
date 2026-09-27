@@ -39,6 +39,6 @@
     }
   },
   "dependencies": {
-    "deepmerge-ts": "^8.0.1"
+    "deepmerge-ts": "^8.0.2"
   }
 }
