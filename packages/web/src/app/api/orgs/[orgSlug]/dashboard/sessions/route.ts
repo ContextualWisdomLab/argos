@@ -74,7 +74,7 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
 
 
 
-export function buildSessionsCsv(sessions: SessionWithInclude[]) {
+function buildSessionsCsv(sessions: SessionWithInclude[]) {
   const headers = [
     'Session ID',
     'User',
