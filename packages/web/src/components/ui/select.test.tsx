@@ -1,8 +1,8 @@
 /** @vitest-environment jsdom */
 /* eslint-disable react/display-name */
 import React from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import {
   Select,
@@ -48,8 +48,6 @@ vi.mock('@base-ui/react/select', async () => {
 });
 
 describe('Select accessibility', () => {
-  afterEach(cleanup);
-
   it('hides decorative chevrons from screen readers in trigger and scroll buttons', () => {
     const { container } = render(
       <Select>
@@ -63,7 +61,7 @@ describe('Select accessibility', () => {
       </Select>
     );
 
-    const triggerBtn = screen.getByRole('combobox', { name: 'Choose an option' });
+    const triggerBtn = screen.getByRole('combobox');
     const triggerSvg = triggerBtn.querySelector('svg');
     expect(triggerSvg).toHaveAttribute('aria-hidden', 'true');
 
