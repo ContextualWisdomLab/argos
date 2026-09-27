@@ -67,8 +67,10 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
+  // [Bolt: Performance Optimization] Use lexicographical string comparison for ISO 8601 timestamps
+  // to avoid repeated O(N log N) `Date.parse()` overhead inside the sort comparator.
   const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+    (a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0)
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
