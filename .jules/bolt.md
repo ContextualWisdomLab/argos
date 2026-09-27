@@ -4,7 +4,7 @@
 
 **Action:** In frequently executed paths that only need a timestamp primitive, prefer `Date.parse(value)`. Treat the allocation reduction as a bounded micro-optimization unless a committed benchmark establishes a larger runtime effect.
 
-## 2026-08-11 - 정적인 Markdown renderer 재사용과 memoization 가설
+## 2026-08-11 - 정적인 객체 Props 분리 및 React.memo 사용
 
-**Learning:** 정적인 `components` map을 렌더 함수 밖에서 재사용하면 참조 할당을 줄일 수 있습니다. `React.memo`의 실제 이득은 parent update 빈도, prop 안정성, 비교 비용과 Markdown 렌더 비용에 따라 달라지므로 프로파일 없이 일반 규칙이나 성능 향상으로 단정할 수 없습니다.
-**Action:** 고정 corpus에서 React commit duration·render count·main-thread time의 환경, warm-up, 표본 수, failure denominator, median/p95를 기록합니다. 동작 parity가 유지되고 효과가 양수일 때만 `React.memo`를 유지하며, 효과가 없거나 비교 비용이 더 크면 제거합니다.
+**Learning:** `components={{ ... }}`와 같이 인라인 객체를 `ReactMarkdown`과 같은 자주 사용되는 컴포넌트에 전달하면, 매 렌더링마다 객체 참조가 변경되어 불필요한 리렌더링을 유발합니다.
+**Action:** 정적인 객체는 컴포넌트 렌더 함수 외부로 분리하고, 순수 컴포넌트의 경우 `React.memo`로 감싸서 성능을 최적화합니다.
