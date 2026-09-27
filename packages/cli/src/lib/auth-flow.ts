@@ -6,9 +6,22 @@ import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
   // Command Injection 방지를 위해 exec 대신 spawn 사용
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error(`Invalid URL protocol: ${parsedUrl.protocol}. Only http and https are allowed.`);
+  }
+
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
+    const escapedUrl = url.replace(/([&|;<>()^])/g, '^$1');
+    const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
       windowsVerbatimArguments: true,
       detached: true,
       stdio: 'ignore'

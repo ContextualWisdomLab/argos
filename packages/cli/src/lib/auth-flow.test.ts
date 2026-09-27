@@ -35,12 +35,13 @@ describe('auth-flow', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     })
   })
 
   it('opens browser using start on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
-      value: 'win32',
+      value: 'win32', configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -59,7 +60,7 @@ describe('auth-flow', () => {
 
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
-      value: 'darwin',
+      value: 'darwin', configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -74,7 +75,7 @@ describe('auth-flow', () => {
 
   it('opens browser using xdg-open on linux safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
-      value: 'linux',
+      value: 'linux', configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -92,5 +93,41 @@ describe('auth-flow', () => {
     mockApiRequest.mockRejectedValueOnce(new Error('Network error'))
 
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
+  })
+
+  it('escapes all shell metacharacters on win32', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32', configurable: true,
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    // Testing characters: & | ; < > ( ) ^
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/?a=1&b=2|c;d<e>f(g)h^i' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      'cmd.exe',
+      ['/c', 'start', '""', 'http://example.com/?a=1^&b=2^|c^;d^<e^>f^(g^)h^^i'],
+      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+    )
+  })
+
+  it('throws an error for invalid url schemas', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'javascript:alert(1)' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL protocol: javascript:. Only http and https are allowed.')
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  })
+
+  it('throws an error for unparseable urls', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not_a_url' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('Invalid URL: not_a_url')
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 })
