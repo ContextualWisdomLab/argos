@@ -33,12 +33,18 @@ describe('dashboard summary accessibility labels', () => {
       />,
     )
 
-    const toggle = screen.getByRole('button', { name: 'What do these numbers mean?' })
+    const toggle = screen.getByRole('button', {
+      name: 'What do these numbers mean?',
+    })
     expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
     await user.click(toggle)
 
-    expect(screen.getByRole('button', { name: 'What do these numbers mean?' })).toHaveAttribute('aria-expanded', 'true')
+    expect(
+      screen.getByRole('button', {
+        name: 'What do these numbers mean?',
+      }),
+    ).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('keeps each visible file-summary label in its accessible action name', async () => {
@@ -73,14 +79,14 @@ describe('dashboard summary accessibility labels', () => {
     )
 
     const modified = screen.getByRole('button', {
-      name: /1\s?file modified/i
+      name: /^1 file modified.*view modified files$/i,
     })
     const read = screen.getByRole('button', {
-      name: /1\s?file read/i
+      name: /^1 file read.*view read files$/i,
     })
 
-    expect(modified).toHaveAccessibleName(/1\s?file modified/i)
-    expect(read).toHaveAccessibleName(/1\s?file read/i)
+    expect(modified).toHaveAccessibleName(/^1 file modified.*view modified files$/i)
+    expect(read).toHaveAccessibleName(/^1 file read.*view read files$/i)
 
     await user.click(modified)
     await user.click(read)
