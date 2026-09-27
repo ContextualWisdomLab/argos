@@ -1,3 +1,4 @@
+import React from 'react';
 import { Eye, Pencil, FileText } from 'lucide-react'
 import type { FileEntry, SessionFiles } from '@/lib/session-files'
 
@@ -23,7 +24,6 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
           <Pencil className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{modifiedCount}</span>
           <span>{modifiedCount === 1 ? 'file modified' : 'files modified'}</span>
-          <span className="sr-only">, view modified files</span>
         </button>
       )}
       {readCount > 0 && (
@@ -35,7 +35,6 @@ export function SessionFilesSummary({ files, onOpenFilesTab }: FilesSummaryProps
           <Eye className="h-3 w-3" aria-hidden="true" />
           <span className="font-medium tabular-nums">{readCount}</span>
           <span>{readCount === 1 ? 'file read' : 'files read'}</span>
-          <span className="sr-only">, view read files</span>
         </button>
       )}
     </div>
