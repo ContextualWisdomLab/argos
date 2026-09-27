@@ -1,7 +1,9 @@
 "use client";
 
+import React from "react";
+
 import { Component, type ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type MarkdownContentProps = { children: string };
@@ -57,16 +59,19 @@ export function MarkdownContent({ children }: MarkdownContentProps) {
               <ol className="mb-3 list-decimal pl-5 space-y-1">{children}</ol>
             ),
             li: ({ children }) => <li className="pl-0.5">{children}</li>,
-            a: ({ children, href }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-brand hover:underline break-all"
-              >
-                {children}
-              </a>
-            ),
+            a: ({ children, href }) => {
+              const safeHref = defaultUrlTransform(href || "");
+              return (
+                <a
+                  href={safeHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-brand hover:underline break-all"
+                >
+                  {children}
+                </a>
+              );
+            },
             blockquote: ({ children }) => (
               <blockquote className="mb-3 border-l-2 border-border pl-3 text-muted-foreground italic">
                 {children}

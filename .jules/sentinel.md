@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-21 - 마크다운 링크 렌더링에서의 XSS 취약점 수정
+**Vulnerability:** `MarkdownContent` 컴포넌트에서 사용자가 제공한 임의의 `javascript:` 링크가 `a` 태그 재정의 부분에서 렌더링될 때 검증 없이 노출되는 Cross-Site Scripting (XSS) 취약점이 존재했습니다.
+**Learning:** `react-markdown` 버전 10은 기본적으로 XSS를 방어하지만, `a` 태그 컴포넌트에 대한 커스텀 렌더링 함수를 제공하면 기본 렌더러가 무시되어 이러한 필터링이 누락됩니다. 따라서 기본 보안 정책을 유지하려면 `defaultUrlTransform`과 같은 기본 변환 기능을 명시적으로 적용해야 합니다.
+**Prevention:** 마크다운 렌더링 파이프라인에서 커스텀 컴포넌트를 정의할 때, `href`나 `src`와 같은 속성을 다루는 경우 항상 `defaultUrlTransform`과 같은 원래 라이브러리의 보안 변환 유틸리티를 명시적으로 적용해야 합니다.
