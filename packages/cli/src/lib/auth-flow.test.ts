@@ -93,4 +93,18 @@ describe('auth-flow', () => {
 
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
   })
+  it('URL-encodes the state parameter when polling', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'linux',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state/with+special&chars', authUrl: 'http://example.com/url' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(mockApiRequest.mock.calls.some(call => call[0].includes('state%2Fwith%2Bspecial%26chars'))).toBe(true)
+  })
 })
