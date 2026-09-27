@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-19 - Command Injection in Browser Launch (auth-flow.ts)
+**Vulnerability:** URL protocol was not validated before launching browser via `spawn` with `windowsVerbatimArguments: true` or shell commands, which could allow arbitrary command execution or local file read (e.g. `file:///etc/passwd`).
+**Learning:** Even when avoiding `exec` in favor of `spawn`, `windowsVerbatimArguments` bypasses node escaping, making it susceptible to injection if inputs aren't strictly checked.
+**Prevention:** Always parse untrusted URIs (e.g. using `new URL()`) and enforce allowlist of safe protocols (like `http:` or `https:`) before passing them to the OS.
