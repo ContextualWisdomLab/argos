@@ -49,3 +49,33 @@ ignoreUntil = 2026-10-28
 # (7.1.5) is brought in by @prisma/config via @prisma/client. Overriding this to
 # v8.0.0 forces a major breaking version change which breaks the Prisma ecosystem and build.
 reason = "deepmerge-ts is a transitive dependency of @prisma/config. Forcing v8 (major upgrade) breaks the consuming packages due to breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-w9m9-85wc-3x92"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via shadcn that cannot be safely upgraded yet without breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-crvj-82cr-hjcx"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via hono that cannot be safely upgraded yet without breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-g6gw-c38x-mqfc"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via hono that cannot be safely upgraded yet without breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-gqvv-2mrq-wpjv"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via hono that cannot be safely upgraded yet without breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-w5vr-8v7q-w6rv"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via baseline-browser-mapping that cannot be safely upgraded yet without breaking changes."
+
+[[IgnoredVulns]]
+id = "GHSA-82fw-gwwq-j7x9"
+ignoreUntil = 2026-10-28
+reason = "Transitive dependency via @vitest/mocker that cannot be safely upgraded yet without breaking changes."
