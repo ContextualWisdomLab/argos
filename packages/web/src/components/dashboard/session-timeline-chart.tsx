@@ -67,9 +67,11 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  // ⚡ Bolt Optimization: Array.prototype.sort() 비교자 내부에서 Date.parse()를 반복 호출하면 O(N log N)의 날짜 파싱 오버헤드가 발생합니다.
+  // 이를 방지하기 위해 O(N) 1회 순회로 timestamp를 파싱하여 객체에 저장한 후 정렬하여 불필요한 반복 파싱을 제거했습니다.
+  const sortedUsage = usageTimeline
+    .map((usage) => ({ usage, parsedTime: Date.parse(usage.timestamp) }))
+    .sort((a, b) => a.parsedTime - b.parsedTime)
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,8 +79,8 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
+  return sortedUsage.map(({ usage, parsedTime }) => {
+    const currentTimestamp = parsedTime
 
     while (
       toolIndex < sortedTools.length &&
@@ -155,12 +157,18 @@ export function SessionTimelineChart({
 }: SessionTimelineChartProps) {
   // Cache the normalized tool events until the underlying messages change.
   const toolCalls: ToolCallPoint[] = useMemo(() => {
-    return messages
-      .filter((message) => message.role === 'TOOL')
-      .map((message) => ({
-        toolName: message.toolName ?? 'unknown',
-        parsedTimestamp: Date.parse(message.timestamp),
-      }))
+    // ⚡ Bolt Optimization: .filter()와 .map()을 체이닝하면 중간 배열이 생성되어 메모리 할당 및 가비지 컬렉션 오버헤드가 발생합니다.
+    // 단일 for...of 루프를 사용하여 O(N) 순회 1번으로 배열 순회 횟수와 메모리 오버헤드를 최적화했습니다.
+    const result: ToolCallPoint[] = []
+    for (const message of messages) {
+      if (message.role === 'TOOL') {
+        result.push({
+          toolName: message.toolName ?? 'unknown',
+          parsedTimestamp: Date.parse(message.timestamp),
+        })
+      }
+    }
+    return result
   }, [messages])
 
   const chartData = useMemo(
