@@ -26,5 +26,5 @@
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
 
 ## [Unreleased]
-### 성능 개선
-- **대규모 데이터 집계 성능 최적화:** 일별 리포트(`daily-rollup.ts`) 및 주간 리포트(`weekly-report.ts`)에서 대규모 데이터를 병합하는 핫 패스 내부의 `Object.keys()` 루프를 `for...in` 루프로 변경하여, 반복적인 배열 할당을 완전히 제거하고 Garbage Collection(GC) 오버헤드와 힙 스래싱(heap thrashing)을 대폭 줄였습니다.
+### 보안 개선
+- Trivy 스캔을 통해 발견된 `deepmerge-ts` 패키지의 prototype pollution 취약점(CVE-2023-40345)을 해결하기 위해 `package.json`의 overrides에서 버전을 `^8.0.0`으로 업데이트했습니다.
