@@ -9,3 +9,7 @@
 ## 2024-11-20 - CopyPromptButton 접근성 향상 (동적 텍스트 및 상태)
 **Learning:** `CopyPromptButton`과 같이 버튼을 클릭했을 때 시각적으로만 상태가 변하고(예: 복사 아이콘이 체크 아이콘으로 변경), 텍스트가 동적으로 변경되는 컴포넌트에서는 스크린 리더 사용자가 상태 변화를 알아채기 어렵습니다. 또한 스크린 리더가 순수 장식용 아이콘까지 불필요하게 읽을 수 있습니다.
 **Action:** 동적으로 변경되는 텍스트를 `<span aria-live="polite">`로 감싸 스크린 리더가 즉시 변경 사항을 읽어주도록 해야 합니다. `<Button>` 컴포넌트에는 `aria-pressed={copied}`를 추가하여 토글 성격을 부여하고, 시각적인 아이콘 컴포넌트(예: `<Copy>`, `<Check>`)에는 `aria-hidden="true"`를 추가하여 스크린 리더에서 무시하도록 처리하는 패턴을 지속적으로 사용해야 합니다.
+
+## 2024-11-20 - Decorative Icons and ARIA Labels
+**Learning:** When using decorative icons within interactive elements (such as buttons or list items), screen readers may announce them redundantly or with unclear names unless they are explicitly hidden.
+**Action:** Always add `aria-hidden="true"` to purely decorative icons (like `<Icon>`, `<ChevronRight>`, or `<X>`) when they are accompanied by visible text or when their parent element already has a clear, accessible name (e.g., via `aria-label`).
