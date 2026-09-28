@@ -46,3 +46,7 @@
 **Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to upstream LLM API timeouts.
 **Learning:** These are transient infrastructure failures and not true codebase vulnerabilities. They require re-triggering the check suite.
 **Prevention:** If blocked by a flaky infrastructure failure, use `git commit --allow-empty` to manually re-trigger the verification pipelines.
+## 2024-08-25 - Fix Additional Trivy Vulnerabilities using pnpm.overrides
+**Vulnerability:** CVE-2026-45819 (baseline-browser-mapping), CVE-2026-73088/CVE-2026-73089 (browserslist), CVE-2026-75604/GHSA-2xp9-vwfh-vxw4 (next), and GHSA-rgj7-g3m4-5g8c (sharp) flagged by Trivy CI scanner.
+**Learning:** Monorepo package managers like pnpm might resolve older, vulnerable subdependencies. Vulnerabilities found by Trivy or OSV-scanner often require manual overrides if an immediate update isn't available from the direct parent dependency.
+**Prevention:** Use `pnpm.overrides` block in the root `package.json` to enforce safe versions across the workspace and run `pnpm install` to apply the lockfile changes.
