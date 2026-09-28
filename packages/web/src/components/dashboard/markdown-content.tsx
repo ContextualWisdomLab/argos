@@ -1,8 +1,6 @@
 "use client";
 
-import React from "react";
-
-import { Component, type ReactNode } from "react";
+import React, { Component, type ReactNode } from "react";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
