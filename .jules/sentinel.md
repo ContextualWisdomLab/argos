@@ -30,3 +30,13 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2024-11-21 - deepmerge-ts ReDoS Vulnerability
+**Vulnerability:** deepmerge-ts@7.1.5 was vulnerable to ReDoS (Regular Expression Denial of Service) through GHSA-ggr8-5vv4-36mx.
+**Learning:** This vulnerability existed in deeply nested dependency trees and was flagged by the strict OSV-Scanner checks in CI.
+**Prevention:** Always ensure vulnerabilities in deeply nested dependencies (like deepmerge-ts) are enforced to the patched versions using the `pnpm.overrides` block in the root `package.json` to safely patch them and pass CI checks.
+
+## 2024-11-21 - Multiple Deep Dependency Vulnerabilities (next, browserslist, sharp, baseline-browser-mapping)
+**Vulnerability:** Trivy-fs flagged multiple high/critical vulnerabilities across deeply nested dependencies including `next`, `browserslist`, `sharp`, and `baseline-browser-mapping`.
+**Learning:** Broadly scoped or large frameworks often pull in unpatched transient dependencies, exposing the application to various attack vectors (e.g., DoS, memory leaks) without direct use of the vulnerable packages.
+**Prevention:** Continuously monitor `pnpm-lock.yaml` via Trivy and aggressively patch affected subdependencies through the `pnpm.overrides` block in the root `package.json` when direct upgrades aren't available.
