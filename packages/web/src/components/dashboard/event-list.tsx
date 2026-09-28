@@ -113,7 +113,8 @@ function getSinglePreview(event: TimelineEvent): string {
     return normalized.slice(0, 80);
   }
   if (event.isSkillCall && event.skillName) return `Skill: ${event.skillName}`;
-  if (event.isAgentCall && event.agentType) return `Subagent: ${event.agentType}`;
+  if (event.isAgentCall && event.agentType)
+    return `Subagent: ${event.agentType}`;
   return event.toolName;
 }
 
@@ -171,7 +172,7 @@ function RowView({
           bg,
         )}
       >
-        <Icon className="h-3 w-3 text-background" />
+        <Icon className="h-3 w-3 text-background" aria-hidden="true" />
       </span>
       <span className="w-20 shrink-0 text-sm font-medium truncate">
         {label}
@@ -183,6 +184,7 @@ function RowView({
               "h-3 w-3 shrink-0 transition-transform",
               chevron === "expanded" && "rotate-90",
             )}
+            aria-hidden="true"
           />
         )}
         <span className="truncate">{preview}</span>
@@ -231,11 +233,12 @@ function Row({
   }
 
   const label = row.labelOverride ?? getSingleLabel(row.event);
-  const preview = row.labelOverride === "Tool"
-    ? row.event.kind === "tool"
-      ? row.event.toolName
-      : getSinglePreview(row.event)
-    : getSinglePreview(row.event);
+  const preview =
+    row.labelOverride === "Tool"
+      ? row.event.kind === "tool"
+        ? row.event.toolName
+        : getSinglePreview(row.event)
+      : getSinglePreview(row.event);
 
   return (
     <div style={style} role="listitem">
