@@ -34,3 +34,7 @@
 **Vulnerability:** OSV-Scanner detected a High severity vulnerability (CVE-2026-40345) in `deepmerge-ts` v7.1.5 via a GitHub CI check suite failure.
 **Learning:** CI 파이프라인에서 트리비/OSV-Scanner가 하위 종속성에 있는 취약점을 발견하면, 최상단 `package.json`의 `pnpm.overrides` 필드를 사용하여 안전한 버전(v8.0.0)으로 덮어쓰고 강제로 패치할 수 있습니다.
 **Prevention:** 향후 심층 종속성 취약점 보고서를 해결할 때도 동일하게 `pnpm.overrides`를 활용하여 버전을 고정하고, `pnpm install`을 실행하여 `pnpm-lock.yaml`을 갱신합니다.
+## 2026-09-28 - 🛡️ Fix multiple subdependency vulnerabilities (CVE-2026-45819, CVE-2026-73088, CVE-2026-73089, CVE-2026-75604, GHSA-2xp9-vwfh-vxw4, GHSA-rgj7-g3m4-5g8c)
+**Vulnerability:** OSV-Scanner detected multiple Critical and High severity vulnerabilities in `baseline-browser-mapping`, `browserslist`, `next`, and `sharp` via a GitHub CI check suite failure.
+**Learning:** 여러 하위 종속성(subdependencies)에서 취약점이 발생할 경우, 각 패키지의 안전한 버전으로 `pnpm.overrides` 필드를 구성하여 동시에 패치해야 합니다.
+**Prevention:** 정기적으로 Trivy/OSV-Scanner 경고를 모니터링하고, 발견된 취약점들은 `package.json`의 `pnpm.overrides`에 버전을 고정시킨 뒤 락파일(`pnpm-lock.yaml`)을 갱신하여 사전에 방지합니다.
