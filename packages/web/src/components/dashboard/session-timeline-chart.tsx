@@ -67,9 +67,13 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  // [Bolt: Performance Optimization] Use Schwartzian transform (map-sort-map) to avoid calling Date.parse O(N log N) times inside the sort comparator.
+  const mappedUsage = usageTimeline.map(usage => ({
+    original: usage,
+    parsedTimestamp: Date.parse(usage.timestamp)
+  }))
+  mappedUsage.sort((a, b) => a.parsedTimestamp - b.parsedTimestamp)
+
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
@@ -77,12 +81,10 @@ function buildChartData(
   let toolIndex = 0
   const cumulativeToolCounts = new Map<string, number>()
 
-  return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
-
+  return mappedUsage.map(({ original: usage, parsedTimestamp }) => {
     while (
       toolIndex < sortedTools.length &&
-      sortedTools[toolIndex]!.parsedTimestamp <= currentTimestamp
+      sortedTools[toolIndex]!.parsedTimestamp <= parsedTimestamp
     ) {
       const toolName = sortedTools[toolIndex]!.toolName || 'unknown'
       cumulativeToolCounts.set(
