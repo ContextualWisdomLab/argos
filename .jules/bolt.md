@@ -4,7 +4,7 @@
 
 **Action:** In frequently executed paths that only need a timestamp primitive, prefer `Date.parse(value)`. Treat the allocation reduction as a bounded micro-optimization unless a committed benchmark establishes a larger runtime effect.
 
-## 2026-09-27 - Lexicographical sorting for ISO 8601 timestamps
+## 2026-09-27 - Schwartzian transform for expensive sorts
 
-**Learning:** ISO 8601 timestamp strings are naturally lexicographically sortable. Using `Date.parse()` repeatedly inside an array's `.sort()` comparator incurs an O(N log N) overhead due to unnecessary string-to-number parsing.
-**Action:** When sorting arrays based on ISO 8601 timestamps, use native string comparison (`a < b ? -1 : 1`) instead of parsing the dates. This bypasses the `Date.parse()` overhead while preserving correctness.
+**Learning:** Lexicographical sorting of ISO 8601 timestamps strings (`a < b ? -1 : 1`) is unsafe unless you can guarantee strictly normalized formats (e.g., matching length and milliseconds presence). A `.100Z` suffix sorts improperly against `Z`. However, executing `Date.parse()` on every comparison inside a `.sort()` comparator results in O(N log N) parse executions, which scales poorly.
+**Action:** When sorting arrays based on non-uniform timestamp strings (or other expensive parse operations), use the Schwartzian transform (map-sort-map). Pre-compute the parsed primitives in an O(N) map pass, sort based on the primitive property, and then map back to the original objects.
