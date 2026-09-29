@@ -8,7 +8,7 @@ function openBrowser(url: string): void {
   // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
+    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>()^])/g, '^$1')], {
       windowsVerbatimArguments: true,
       detached: true,
       stdio: 'ignore'
