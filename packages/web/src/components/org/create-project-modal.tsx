@@ -28,8 +28,9 @@ export function CreateProjectModal({
   const [name, setName] = useState('')
   const mutation = useCreateProject(orgSlug)
 
-  useEffect(() => {
+    useEffect(() => {
     if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('')
       mutation.reset()
     }
@@ -78,7 +79,8 @@ export function CreateProjectModal({
             <Input
               id="create-project-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+      setName(e.target.value)}
               placeholder="예: my-app"
               autoFocus
               disabled={mutation.isPending}

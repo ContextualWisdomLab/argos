@@ -32,8 +32,9 @@ export function DeleteOrgModal({
   const [confirmName, setConfirmName] = useState('')
   const mutation = useDeleteOrg()
 
-  useEffect(() => {
+    useEffect(() => {
     if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
       setConfirmName('')
       mutation.reset()
     }
@@ -84,7 +85,8 @@ export function DeleteOrgModal({
           <Input
             id="delete-org-confirm"
             value={confirmName}
-            onChange={(e) => setConfirmName(e.target.value)}
+            onChange={(e) =>
+      setConfirmName(e.target.value)}
             placeholder={orgName}
             disabled={mutation.isPending}
             autoComplete="off"

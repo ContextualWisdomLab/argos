@@ -26,10 +26,12 @@ export function RenameProjectModal({
   const [name, setName] = useState('')
   const mutation = useUpdateProject(project?.id ?? '')
 
-  useEffect(() => {
+    useEffect(() => {
     if (project) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(project.name)
     } else {
+
       setName('')
       mutation.reset()
     }
@@ -84,7 +86,8 @@ export function RenameProjectModal({
             <Input
               id="rename-project-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) =>
+      setName(e.target.value)}
               placeholder={project?.name ?? ''}
               autoFocus
               disabled={mutation.isPending}

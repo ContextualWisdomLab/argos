@@ -27,9 +27,11 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const mutation = useCreateOrg()
 
-  useEffect(() => {
+    useEffect(() => {
     if (!open) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
       setName('')
+
       setErrorMessage(null)
       mutation.reset()
     }
@@ -46,7 +48,8 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
     const trimmed = name.trim()
     if (!trimmed || mutation.isPending) return
 
-    setErrorMessage(null)
+
+      setErrorMessage(null)
 
     try {
       const result = await mutation.mutateAsync({ name: trimmed })
@@ -57,14 +60,17 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
     } catch (err) {
       if (err instanceof ApiError) {
         if (err.code === 'VALIDATION_ERROR' || err.status === 400) {
-          setErrorMessage('입력한 이름이 올바르지 않습니다.')
+
+      setErrorMessage('입력한 이름이 올바르지 않습니다.')
           return
         }
         if (err.message) {
-          setErrorMessage(err.message)
+
+      setErrorMessage(err.message)
           return
         }
       }
+
       setErrorMessage('조직을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.')
     }
   }
@@ -87,8 +93,10 @@ export function CreateOrgModal({ open, onOpenChange }: CreateOrgModalProps) {
               id="create-org-name"
               value={name}
               onChange={(e) => {
-                setName(e.target.value)
-                if (errorMessage) setErrorMessage(null)
+
+      setName(e.target.value)
+                if (errorMessage)
+      setErrorMessage(null)
               }}
               placeholder="예: Acme Inc."
               autoFocus
