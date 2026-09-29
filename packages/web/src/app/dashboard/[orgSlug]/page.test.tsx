@@ -21,6 +21,7 @@ vi.mock('lucide-react', () => ({
   PlusIcon: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="plus-icon" {...props} />,
 }))
 vi.mock('@/components/ui/button', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   Button: ({ children, variant: _variant, size: _size, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: string; size?: string }) => (
     <button {...props}>{children}</button>
   ),
