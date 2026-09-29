@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback } from 'react'
+import { useState, useRef, useMemo, useCallback } from 'react'
 import {
   formatSlashCommandText,
   type TimelineEvent,
@@ -201,7 +201,6 @@ export function SessionActivityRibbon({
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
-            aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
               selected
                 ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
@@ -226,7 +225,6 @@ export function SessionActivityRibbon({
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
-            aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
               selected
                 ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
@@ -257,7 +255,6 @@ export function SessionActivityRibbon({
               onMouseMove={handleEventHover(idx)}
               onMouseLeave={() => setHover(null)}
               aria-label={`Event ${idx + 1}`}
-              aria-current={selected ? 'true' : undefined}
               className={`h-full ${bg} transition-opacity ${
                 selected
                   ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
@@ -288,7 +285,7 @@ export function SessionActivityRibbon({
             group.items[0].event,
           )}
           onMouseLeave={() => setHover(null)}
-          aria-label={`Expand ${group.toolName} group, ${group.items.length} events`}
+          aria-label={`${group.toolName} x${group.items.length}`}
           className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
         >
           <span className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px bg-background/50" />
