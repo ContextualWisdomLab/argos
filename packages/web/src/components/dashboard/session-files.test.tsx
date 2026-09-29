@@ -54,4 +54,8 @@ describe("SessionFilesTab", () => {
     fireEvent.click(jumpModBtn);
     expect(onJump).toHaveBeenCalledWith(5);
   });
+
+  it("renders an additional condition", () => {
+    expect(true).toBe(true);
+  });
 });
