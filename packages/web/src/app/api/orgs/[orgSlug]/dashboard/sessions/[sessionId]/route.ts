@@ -82,11 +82,21 @@ export async function GET(
       model: null,
     }))
     {
+      // ⚡ Bolt Optimization:
+      // 병목 지점: 이전 코드에서는 각 usage record마다 session.messages의 timestamp와 비교할 때 매번 getTime()을 반복 호출했습니다.
+      // 최적화 방법: 반복 횟수가 많은 내부 루프에서 Date.getTime() 호출 오버헤드를 줄이기 위해, 루프 진입 전에 모든 메시지 timestamp를 미리 추출하여 배열에 저장(캐싱)했습니다.
+      // 기대 효과: 메시지와 usage record가 많은 세션에서 날짜 객체의 메서드 호출이 제거되어 집계 성능이 향상됩니다.
+      const messageTimestamps = new Float64Array(session.messages.length)
+      for (let i = 0; i < session.messages.length; i++) {
+        messageTimestamps[i] = session.messages[i].timestamp.getTime()
+      }
+
       let msgIdx = -1
       for (const u of session.usageRecords) {
+        const uTime = u.timestamp.getTime()
         while (
           msgIdx + 1 < session.messages.length &&
-          session.messages[msgIdx + 1].timestamp.getTime() <= u.timestamp.getTime()
+          messageTimestamps[msgIdx + 1] <= uTime
         ) {
           msgIdx++
         }
