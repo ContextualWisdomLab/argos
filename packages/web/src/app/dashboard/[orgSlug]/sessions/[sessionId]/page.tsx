@@ -156,6 +156,7 @@ export default function OrgSessionDetailPage({
               size="sm"
               onClick={() => router.back()}
               className="px-2 shrink-0"
+              aria-label="Back to Sessions"
             >
               ←
             </Button>
