@@ -401,12 +401,16 @@ export async function getWeeklyReport(
   const distinctSkillsThisWeek = new Set<string>()
 
   for (const r of thisWeekRollups) {
-    for (const k of Object.keys(r.agentCounts)) {
-      totalAgentCalls += r.agentCounts[k]
+    for (const k in r.agentCounts) {
+      if (Object.hasOwn(r.agentCounts, k)) {
+        totalAgentCalls += r.agentCounts[k]
+      }
     }
-    for (const k of Object.keys(r.skillCounts)) {
-      totalSkillCalls += r.skillCounts[k]
-      distinctSkillsThisWeek.add(k)
+    for (const k in r.skillCounts) {
+      if (Object.hasOwn(r.skillCounts, k)) {
+        totalSkillCalls += r.skillCounts[k]
+        distinctSkillsThisWeek.add(k)
+      }
     }
   }
 
