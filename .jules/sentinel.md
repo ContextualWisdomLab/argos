@@ -38,3 +38,7 @@
 **Vulnerability:** Trivy FS 분석 결과 `pnpm-lock.yaml`에서 발견된 취약점들은 실제 프로젝트 실행 환경과 무관한 의존성이거나 수정이 불가능한 시스템 종속성인 경우 CI를 실패하게 만듦.
 **Learning:** Trivy와 같은 정적 취약점 스캐너는 실제 사용 맥락을 이해하지 못하고 단순 버전 정보만으로 취약점을 보고하므로, 명백히 악용될 수 없는 경우 오탐지로 간주하고 `package.json`의 `pnpm.overrides`를 통해 버전 강제로 덮어씌워 CI를 통과시킬 수 있음.
 **Prevention:** CI 스캐너가 오탐지할 때는 `package.json`의 `pnpm.overrides` 블록에 취약점이 패치된 버전을 명시하여 Trivy의 버전 검증 로직을 만족시킬 것.
+## 2026-09-29 - CodeQL SQL 인젝션 오탐지 해결 방법론
+**Vulnerability:** CodeQL 정적 분석 스캐너가 Prisma의 `Prisma.sql` 내 배열 매핑 구조 `Prisma.join(projectIds.map(id => Prisma.sql[id]))`를 안전하지 않은 것으로 잘못 분류하여 CI 파이프라인이 차단되는 현상 발생.
+**Learning:** CodeQL은 Prisma 템플릿 태그에 대해 복잡한 배열 맵핑(`map(id => Prisma.sql[id])`)을 사용하면 SQL 인젝션 가능성으로 잘못 감지할 수 있음. 따라서 Prisma.join 자체만 이용하는 구조(`Prisma.join(projectIds.map(id => Prisma.sql\`\${id}\`))`)로 되돌렸으며 테스트가 성공했음.
+**Prevention:** Prisma.sql을 이용할 때는 CodeQL이 이해할 수 있도록 명시적인 템플릿 태그 백틱 구조를 유지할 것.
