@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogContent,
@@ -113,6 +114,7 @@ export function DeleteProjectModal({
             disabled={!canDelete}
             onClick={handleDelete}
           >
+            {mutation.isPending && <Loader2 className="animate-spin" aria-hidden="true" />}
             {mutation.isPending ? '삭제 중…' : '삭제'}
           </Button>
         </AlertDialogFooter>
