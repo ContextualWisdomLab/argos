@@ -6,10 +6,10 @@ import React, { Suspense } from 'react'
 import { cn } from '@/lib/utils'
 
 const PRESETS = [
-  { days: 7, label: '7d' },
-  { days: 30, label: '30d' },
-  { days: 90, label: '90d' },
-  { days: 3650, label: 'ALL' },
+  { days: 7, label: '7d', ariaLabel: '지난 7일' },
+  { days: 30, label: '30d', ariaLabel: '지난 30일' },
+  { days: 90, label: '90d', ariaLabel: '지난 90일' },
+  { days: 3650, label: 'ALL', ariaLabel: '전체 기간' },
 ] as const
 
 function DateRangePickerContent() {
@@ -62,6 +62,7 @@ function DateRangePickerContent() {
           <button
             key={preset.days}
             type="button"
+            aria-label={preset.ariaLabel}
             aria-pressed={activePreset === preset.days}
             onClick={() => handlePreset(preset.days)}
             className={cn(
