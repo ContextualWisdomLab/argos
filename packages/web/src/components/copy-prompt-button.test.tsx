@@ -35,23 +35,23 @@ describe('CopyPromptButton', () => {
   it('renders correctly with default labels', () => {
     render(<CopyPromptButton text="test prompt" />);
 
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: '프롬프트 복사' });
     expect(button).toBeDefined();
     expect(button.getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByText('프롬프트 복사')).toBeDefined();
+    expect(screen.getByRole('status').textContent).toBe('');
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
 
   it('renders correctly with custom labels', () => {
     render(<CopyPromptButton text="test prompt" label="Copy" copiedLabel="Copied" />);
 
-    expect(screen.getByText('Copy')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeDefined();
   });
 
   it('copies text and shows copied state temporarily', async () => {
     render(<CopyPromptButton text="test prompt" label="Copy" copiedLabel="Copied" />);
 
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: 'Copy' });
 
     await act(async () => {
       fireEvent.click(button);
@@ -59,9 +59,10 @@ describe('CopyPromptButton', () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith('test prompt');
 
-    // Check copied state
+    // Check copied state (visible label remains "Copy" accessibly)
     expect(button.getAttribute('aria-pressed')).toBe('true');
-    expect(screen.getByText('Copied')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Copy' })).toBeDefined();
+    expect(screen.getByRole('status').textContent).toBe('Copied');
     expect(screen.getByTestId('check-icon')).toBeDefined();
 
     // Fast-forward timer
@@ -71,7 +72,7 @@ describe('CopyPromptButton', () => {
 
     // Check reverted state
     expect(button.getAttribute('aria-pressed')).toBe('false');
-    expect(screen.getByText('Copy')).toBeDefined();
+    expect(screen.getByRole('status').textContent).toBe('');
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
 
@@ -86,7 +87,7 @@ describe('CopyPromptButton', () => {
 
     render(<CopyPromptButton text="test prompt" />);
 
-    const button = screen.getByRole('button');
+    const button = screen.getByRole('button', { name: '프롬프트 복사' });
 
     await act(async () => {
       fireEvent.click(button);
@@ -94,6 +95,7 @@ describe('CopyPromptButton', () => {
 
     // It shouldn't change state since it failed
     expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('status').textContent).toBe('');
     expect(screen.getByTestId('copy-icon')).toBeDefined();
   });
 });
