@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-09-29 - Insecure Random Number Generation for Temporary Files
+**Vulnerability:** Weak random number generation (`Math.random`) was used to generate suffixes for temporary filenames in `event-sender.ts`, which could lead to filename collisions or predictability vulnerabilities.
+**Learning:** For securely generating unique values like nonces or temporary filename identifiers, `Math.random()` should not be used as it is not cryptographically secure.
+**Prevention:** Always use `crypto.randomBytes` or `crypto.getRandomValues` when creating randomized elements that require uniqueness or unpredictability in file systems and security contexts.
