@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-05-24 - [Command Injection via cmd.exe in Node.js]
+**Vulnerability:** The `openBrowser` function in `packages/cli/src/lib/auth-flow.ts` used `spawn` with `cmd.exe` and `windowsVerbatimArguments: true` to open URLs on Windows. Because `windowsVerbatimArguments` bypasses Node.js's default argument quoting/escaping, shell metacharacters like `&` in the URL (e.g. `http://example.com/url&calc`) could execute arbitrary commands.
+**Learning:** `spawn` is generally safer than `exec`, but when using `cmd.exe` with `windowsVerbatimArguments: true`, command injection is still highly possible unless arguments are explicitly and carefully escaped for the Windows command shell. Furthermore, without strict protocol validation (`http:`, `https:`), unexpected URI schemes could cause further vulnerabilities.
+**Prevention:** Always validate URL protocols before processing them. When using `cmd.exe` with `windowsVerbatimArguments: true`, explicitly escape all shell metacharacters (`&`, `|`, `;`, `<`, `>`, `(`, `)`, `^`) by prepending them with a caret (`^`).

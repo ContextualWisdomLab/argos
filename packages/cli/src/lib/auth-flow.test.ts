@@ -35,12 +35,14 @@ describe('auth-flow', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     })
   })
 
   it('opens browser using start on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -60,6 +62,7 @@ describe('auth-flow', () => {
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'darwin',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -75,6 +78,7 @@ describe('auth-flow', () => {
   it('opens browser using xdg-open on linux safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'linux',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
