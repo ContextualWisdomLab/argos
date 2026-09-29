@@ -202,7 +202,7 @@ export function SessionActivityRibbon({
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
             aria-current={selected ? 'true' : undefined}
-            className={`h-full ${bg} transition-opacity ${
+            className={`h-full ${bg} transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10 ${
               selected
                 ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
                 : 'hover:opacity-70'
@@ -227,7 +227,7 @@ export function SessionActivityRibbon({
             onMouseLeave={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
             aria-current={selected ? 'true' : undefined}
-            className={`h-full ${bg} transition-opacity ${
+            className={`h-full ${bg} transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10 ${
               selected
                 ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
                 : 'hover:opacity-70'
@@ -258,7 +258,7 @@ export function SessionActivityRibbon({
               onMouseLeave={() => setHover(null)}
               aria-label={`Event ${idx + 1}`}
               aria-current={selected ? 'true' : undefined}
-              className={`h-full ${bg} transition-opacity ${
+              className={`h-full ${bg} transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10 ${
                 selected
                   ? 'outline outline-2 outline-offset-[-2px] outline-foreground'
                   : 'hover:opacity-70'
@@ -289,7 +289,7 @@ export function SessionActivityRibbon({
           )}
           onMouseLeave={() => setHover(null)}
           aria-label={`Expand ${group.toolName} group, ${group.items.length} events`}
-          className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
+          className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring z-10`}
         >
           <span className="pointer-events-none absolute inset-y-1 left-1/2 -translate-x-1/2 w-px bg-background/50" />
         </button>,
