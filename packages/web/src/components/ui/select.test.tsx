@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /** @vitest-environment jsdom */
 /* eslint-disable react/display-name */
 import React from 'react';
@@ -17,9 +18,9 @@ import {
 vi.mock('@base-ui/react/select', async () => {
   const actual = await vi.importActual('@base-ui/react/select');
   return {
-    ...actual,
+    ...(actual as any),
     Select: {
-      ...actual.Select,
+      ...(actual.Select as any),
       Root: ({ children }: { children: React.ReactNode }) => <div data-testid="select-root">{children}</div>,
       Value: React.forwardRef<HTMLSpanElement, React.ComponentProps<'span'>>(({ children, ...props }, ref) => (
         <span ref={ref} data-slot="select-value" {...props}>{children}</span>
