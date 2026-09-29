@@ -17,9 +17,11 @@ export interface Table {
   name: string;
   columns: Column[];
   foreignKeys: ForeignKey[];
+  enableRowLevelSecurity?: boolean;
 }
 
 const SNAKE_CASE_IDENTIFIER = /^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/;
+const MAX_IDENTIFIER_LENGTH = 63;
 const SIMPLE_SQL_TYPE = /^[a-zA-Z][a-zA-Z0-9_]*$/;
 const PARAMETERIZED_SQL_TYPE =
   /^[a-zA-Z][a-zA-Z0-9_]*\((?:MAX|[0-9]+)(?:, [0-9]+)?\)$/i;
@@ -65,6 +67,9 @@ function assertSafeSqlDefaultValue(value: string): void {
 function assertSnakeCaseIdentifier(kind: string, name: string): void {
   if (!SNAKE_CASE_IDENTIFIER.test(name)) {
     throw new Error(`${kind} '${name}' must be snake_case.`);
+  }
+  if (name.length > MAX_IDENTIFIER_LENGTH) {
+    throw new Error(`${kind} '${name}' exceeds the maximum length of ${MAX_IDENTIFIER_LENGTH} characters.`);
   }
 }
 
@@ -204,6 +209,24 @@ export class ERDModel {
     table.foreignKeys.splice(fkIndex, 1);
   }
 
+  enableRLS(tableName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    table.enableRowLevelSecurity = true;
+  }
+
+  disableRLS(tableName: string): void {
+    assertSnakeCaseIdentifier("Table", tableName);
+    const table = this.tables.get(tableName);
+    if (!table) {
+      throw new Error(`Table '${tableName}' does not exist.`);
+    }
+    table.enableRowLevelSecurity = false;
+  }
+
   generateDDL(): string {
     let ddl = "";
     for (const table of this.tables.values()) {
@@ -231,7 +254,11 @@ export class ERDModel {
 
       const allDefs = [...columnDefs, ...fkDefs];
       ddl += allDefs.join(",\n");
-      ddl += "\n);\n\n";
+      ddl += "\n);\n";
+      if (table.enableRowLevelSecurity) {
+        ddl += `ALTER TABLE ${table.name} ENABLE ROW LEVEL SECURITY;\n`;
+      }
+      ddl += "\n";
     }
     return ddl.trim();
   }
