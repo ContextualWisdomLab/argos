@@ -54,7 +54,7 @@ describe('Sessions API Route', () => {
       user: { id: 'user-1', name: '=cmd|\\\' /C calc\\\'!A0' }, // Injection string
       project: { id: 'proj-1', slug: 'p-1', name: '+1+1' }, // Injection string
       usageRecords: [{ inputTokens: 10, outputTokens: 20, estimatedCostUsd: 0.5 }],
-      messages: [{ content: '@SUM(1+1)' }], // Injection string
+      messages: [{ content: '\u200B@SUM(1+1)' }], // Injection string with zero-width space
       _count: { events: 1 },
       startedAt: new Date('2025-01-01T00:00:00Z'),
       endedAt: null,

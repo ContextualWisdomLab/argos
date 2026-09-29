@@ -40,3 +40,8 @@
 **Vulnerability:** trivy-fs scan detected multiple high and critical vulnerabilities in transitive dependencies (next, browserslist, deepmerge-ts, sharp).
 **Learning:** Outdated dependencies expose the application to DoS, remote code execution (RCE), and other critical security issues. This is especially problematic when dependencies are deeply nested in the lockfile and not explicitly updated.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce secure versions of critical packages (e.g. Next.js, browserslist) across all transitive paths in the pnpm workspace. Keep lockfiles updated and enforce CI-based dependency scanning.
+
+## 2025-02-18 - [Fix CSV Injection in Data Export (Strix Followup)]
+**Vulnerability:** 사용자 세션 데이터를 CSV로 내보낼 때 CSV Injection 취약점을 방어하기 위해 `trimStart()`를 적용하였으나, `\u200B`와 같은 Zero Width Space 등의 숨겨진 제어 문자는 필터링되지 않아 이를 이용한 우회 공격이 가능했습니다.
+**Learning:** `trimStart()`는 일반 공백만 제거하며 `\u200B` 등 스프레드시트가 무시하는 일부 숨겨진 특수 문자들을 잡아내지 못합니다. 이로 인해 스프레드시트는 이러한 문자를 넘기고 그 뒤의 수식을 실행할 수 있어 보안 필터를 우회하게 됩니다.
+**Prevention:** CSV Injection 방어를 위한 공백 제거 시 단순히 `trimStart()`를 쓰지 말고, 정규식 `text.replace(/^[\s\u200B\u200C\u200D\uFEFF]+/, '')`를 활용하여 보이지 않는 제어 문자까지 모두 확실하게 제거한 뒤 검증을 수행해야 합니다.
