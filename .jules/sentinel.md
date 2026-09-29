@@ -30,3 +30,27 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-08-25 - Fix CSV Formula Injection (Macro Injection) in session export
+**Vulnerability:** User inputs (e.g., session titles or prompts) containing characters like `=`, `+`, `-`, `@`, `\t`, or `\r` at the start of a field could be executed as formulas or macros when the exported CSV was opened in spreadsheet software like Microsoft Excel or Google Sheets.
+**Learning:** Raw rendering of text into CSV without prepending a safe character (like `'`) can lead to formula execution, regardless of field quoting (`"..."`), which only prevents delimiter collision.
+**Prevention:** Always prepend a single quote (`'`) to string fields starting with dangerous characters before building the CSV string. Exclude raw numbers to preserve proper numeric formatting in spreadsheets.
+## 2024-08-25 - Never Override AGENTS.md
+**Vulnerability:** CI system components (e.g. Strix penetration testing gate, organizational code-owner governance rules) may rely on the existence and contents of the repository's `AGENTS.md` file. Overwriting or destroying it unintentionally triggers check suite failures like "provider/backend was unavailable".
+**Learning:** `AGENTS.md` controls core AI agent guidelines and must be preserved intact.
+**Prevention:** If `AGENTS.md` is corrupted or modified by accident, restore it immediately using `git restore --source origin/main AGENTS.md` to prevent pipeline breakage.
+## 2024-08-25 - Handle Strix Flakiness
+**Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to provider infrastructure errors (e.g. 404 from upstream language model).
+**Learning:** Strix security gates rely on external AI inference APIs which can be unstable. This is an environmental flake, not a codebase vulnerability.
+**Prevention:** Re-trigger the workflow using an empty commit (`git commit --allow-empty`) to bypass the transient failure.
+## 2024-08-25 - Prevent Strix Pipeline Flakiness via Empty Commit
+**Vulnerability:** CI system check `strix` occasionally fails with "LLM CONNECTION FAILED" due to upstream LLM API timeouts.
+**Learning:** These are transient infrastructure failures and not true codebase vulnerabilities. They require re-triggering the check suite.
+**Prevention:** If blocked by a flaky infrastructure failure, use `git commit --allow-empty` to manually re-trigger the verification pipelines.
+## 2024-08-25 - Fix Additional Trivy Vulnerabilities using pnpm.overrides
+**Vulnerability:** CVE-2026-45819 (baseline-browser-mapping), CVE-2026-73088/CVE-2026-73089 (browserslist), CVE-2026-75604/GHSA-2xp9-vwfh-vxw4 (next), and GHSA-rgj7-g3m4-5g8c (sharp) flagged by Trivy CI scanner.
+**Learning:** Monorepo package managers like pnpm might resolve older, vulnerable subdependencies. Vulnerabilities found by Trivy or OSV-scanner often require manual overrides if an immediate update isn't available from the direct parent dependency.
+**Prevention:** Use `pnpm.overrides` block in the root `package.json` to enforce safe versions across the workspace and run `pnpm install` to apply the lockfile changes.
+## 2024-08-25 - Handle CodeQL Timeout Flakiness via Empty Commit
+**Vulnerability:** CI system check `CodeQL compatibility analysis` occasionally fails with "CodeQL scan dispatched. The dispatch workflow will rerun this exact failed CodeQL job after publishing its terminal verdict" or "CodeQL scan dispatch or exact-head verdict read did not succeed" due to upstream API issues (HTTP 502).
+**Learning:** These are transient infrastructure failures and not true codebase vulnerabilities. They require re-triggering the check suite.
+**Prevention:** If blocked by a flaky infrastructure failure, use `git commit --allow-empty` to manually re-trigger the verification pipelines.
