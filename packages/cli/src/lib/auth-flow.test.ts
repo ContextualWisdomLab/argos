@@ -73,9 +73,7 @@ describe('auth-flow', () => {
   })
 
   it('opens browser using xdg-open on linux safely with spawn', async () => {
-    Object.defineProperty(process, 'platform', {
-      value: 'linux',
-    })
+
 
     const mockApiRequest = vi.mocked(apiRequest)
     mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/url' }) // Step 1
