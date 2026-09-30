@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { SelectScrollUpButton, SelectScrollDownButton, SelectTrigger } from './select'
 
@@ -43,6 +43,7 @@ describe('Select Component', () => {
          <span>test</span>
       </SelectTrigger>
     )
+    expect(screen.getByRole('button', { name: 'test' })).toBeInTheDocument()
     const triggerChevron = triggerContainer.querySelector('svg.lucide-chevron-down')
     expect(triggerChevron).not.toBeNull()
     expect(triggerChevron).toHaveAttribute('aria-hidden', 'true')
