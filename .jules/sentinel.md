@@ -38,3 +38,7 @@
 **Vulnerability:** OSV-Scanner detected multiple Critical and High severity vulnerabilities in `baseline-browser-mapping`, `browserslist`, `next`, and `sharp` via a GitHub CI check suite failure.
 **Learning:** 여러 하위 종속성(subdependencies)에서 취약점이 발생할 경우, 각 패키지의 안전한 버전으로 `pnpm.overrides` 필드를 구성하여 동시에 패치해야 합니다.
 **Prevention:** 정기적으로 Trivy/OSV-Scanner 경고를 모니터링하고, 발견된 취약점들은 `package.json`의 `pnpm.overrides`에 버전을 고정시킨 뒤 락파일(`pnpm-lock.yaml`)을 갱신하여 사전에 방지합니다.
+## 2026-09-30 - 🛡️ Fix multiple subdependency vulnerabilities including next, browserslist, streamsearch, busboy
+**Vulnerability:** OSV-Scanner and Dependency Review detected multiple Critical and High severity vulnerabilities in `next` (GHSA-2xp9-vwfh-vxw4, CVE-2025-29927, CVE-2025-55182), `browserslist` (CVE-2026-73088, CVE-2026-73089), `streamsearch` and `busboy` via a GitHub CI check suite failure.
+**Learning:** 여러 하위 종속성에서 취약점이 추가로 발견되거나 dependency review 단계에서 스코어카드가 낮은 패키지가 발견되는 경우, 동일한 패턴(`pnpm.overrides`)을 적용하여 안전한 버전(e.g., next: 15.5.24, browserslist: 4.28.7, streamsearch: 1.1.0, busboy: 1.6.0)으로 모두 패치해야 합니다.
+**Prevention:** 정기적으로 Trivy/OSV-Scanner 경고 및 Dependency Review를 확인하고, 발견된 취약점들은 `package.json`의 `pnpm.overrides`에 버전을 고정시킨 뒤 락파일(`pnpm-lock.yaml`)을 업데이트하여 해결합니다.

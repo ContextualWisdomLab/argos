@@ -37,8 +37,10 @@
       "body-parser": "^2.3.0",
       "deepmerge-ts": "8.0.0",
       "baseline-browser-mapping": "1.0.0",
-      "browserslist": "4.24.2",
-      "next": "15.1.0"
+      "browserslist": "4.28.7",
+      "next": "15.5.24",
+      "streamsearch": "1.1.0",
+      "busboy": "1.6.0"
     }
   }
 }
