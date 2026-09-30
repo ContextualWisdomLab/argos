@@ -37,6 +37,20 @@ describe('ContextSection', () => {
     expect(screen.queryByTestId('test-content')).not.toBeInTheDocument()
   })
 
+
+  it('includes aria-hidden="true" on decorative icons', () => {
+    const { container } = render(
+      <ContextSection title="Icon Test" defaultOpen>
+        <div>Content</div>
+      </ContextSection>
+    )
+
+    // Check for ChevronUp icon when open
+    const chevronUp = container.querySelector('svg.text-muted-foreground')
+    expect(chevronUp).not.toBeNull()
+    expect(chevronUp).toHaveAttribute('aria-hidden', 'true')
+  })
+
   it('renders open by default if defaultOpen is true', () => {
     render(
       <ContextSection title="Test Title" defaultOpen>
