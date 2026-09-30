@@ -155,6 +155,7 @@ function RowView({
       type="button"
       onClick={onClick}
       aria-current={isSelected ? "step" : undefined}
+      aria-label={chevron ? `${label} ${preview}` : undefined}
       aria-expanded={chevron ? chevron === "expanded" : undefined}
       className={cn(
         "w-full h-full text-left flex items-center gap-3 py-2 border-b border-border/60 transition-colors",
