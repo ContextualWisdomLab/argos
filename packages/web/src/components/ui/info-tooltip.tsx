@@ -12,7 +12,7 @@ export function InfoTooltip({ content, className }: { content: ReactNode; classN
         aria-label="더 보기"
         className={cn('inline-flex cursor-default items-center', className)}
       >
-        <Info size={12} className="text-muted-foreground/70" />
+        <Info size={12} className="text-muted-foreground/70" aria-hidden="true" />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Positioner sideOffset={4}>
