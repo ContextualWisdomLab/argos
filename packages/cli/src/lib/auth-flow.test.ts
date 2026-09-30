@@ -38,23 +38,54 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('opens browser using explorer.exe on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    // Note: The URL is passed as-is to explorer.exe, Node handles quoting.
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/?a=1&b=2|%TEMP%"calc' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      'explorer.exe',
+      ['http://example.com/?a=1&b=2|%TEMP%"calc'],
+      { detached: true, stdio: 'ignore' }
     )
+  })
+
+  it('fails closed when authUrl protocol is not http or https', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'javascript:alert(1)' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).not.toHaveBeenCalled()
+  })
+
+  it('fails closed when authUrl is unparsable', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not-a-url' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).not.toHaveBeenCalled()
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
