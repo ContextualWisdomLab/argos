@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { WeekNavigator } from './week-navigator'
 
@@ -18,6 +18,9 @@ describe('WeekNavigator', () => {
     const { container } = render(
       <WeekNavigator currentIsoKey="2026-W16" label="2026-W16 (4/13~4/19)" isCurrent={true} />
     )
+
+    expect(screen.getByRole('link', { name: '이전 주' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '다음 주' })).toBeInTheDocument()
 
     const chevronIcons = container.querySelectorAll('svg.lucide-chevron-left, svg.lucide-chevron-right')
     expect(chevronIcons.length).toBeGreaterThan(0)
