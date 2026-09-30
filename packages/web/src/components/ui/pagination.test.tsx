@@ -1,29 +1,26 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it } from 'vitest'
+
+globalThis.React = React;
+
 import { render } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { Pagination } from './pagination'
 
-globalThis.React = React;
-globalThis.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
+describe('Pagination Components', () => {
+  it('includes aria-hidden="true" on decorative icons and retains accessible names', () => {
+    const { container } = render(<Pagination page={2} pageSize={10} total={30} onPageChange={() => {}} />)
+    const prevIcon = container.querySelector('svg.lucide-chevron-left')
+    expect(prevIcon).not.toBeNull()
+    expect(prevIcon).toHaveAttribute('aria-hidden', 'true')
+    const prevButton = prevIcon.closest('button')
+    expect(prevButton).toHaveAttribute('aria-label', '이전 페이지')
 
-describe('Pagination', () => {
-  it('includes aria-hidden="true" on decorative icons', () => {
-    const { container } = render(
-      <Pagination page={2} pageSize={10} total={30} onPageChange={() => {}} />
-    )
-
-    const chevronLeft = container.querySelector('svg.lucide-chevron-left')
-    expect(chevronLeft).not.toBeNull()
-    expect(chevronLeft).toHaveAttribute('aria-hidden', 'true')
-
-    const chevronRight = container.querySelector('svg.lucide-chevron-right')
-    expect(chevronRight).not.toBeNull()
-    expect(chevronRight).toHaveAttribute('aria-hidden', 'true')
+    const nextIcon = container.querySelector('svg.lucide-chevron-right')
+    expect(nextIcon).not.toBeNull()
+    expect(nextIcon).toHaveAttribute('aria-hidden', 'true')
+    const nextButton = nextIcon.closest('button')
+    expect(nextButton).toHaveAttribute('aria-label', '다음 페이지')
   })
 })

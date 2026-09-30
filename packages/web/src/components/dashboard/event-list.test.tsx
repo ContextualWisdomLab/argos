@@ -71,5 +71,12 @@ describe('EventList', () => {
     chevronIcons.forEach(icon => {
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     })
+
+    // Verify enclosing group control accessible name/state
+    const groupButton = container.querySelector('button[aria-expanded]');
+    expect(groupButton).not.toBeNull();
+    expect(groupButton).toHaveAttribute('aria-expanded', 'true');
+    // The text 'TestTool' is the tool name.
+    expect(groupButton).toHaveTextContent('TestTool');
   })
 })

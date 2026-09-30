@@ -24,5 +24,10 @@ describe('WeekNavigator', () => {
     chevronIcons.forEach(icon => {
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     })
+
+    const buttons = container.querySelectorAll('a');
+    expect(buttons.length).toBe(2);
+    expect(buttons[0]).toHaveAttribute('aria-label', '이전 주');
+    expect(buttons[1]).toHaveAttribute('aria-label', '다음 주');
   })
 })

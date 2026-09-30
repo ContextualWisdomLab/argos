@@ -47,6 +47,11 @@ describe('Select Component', () => {
     expect(triggerChevron).not.toBeNull()
     expect(triggerChevron).toHaveAttribute('aria-hidden', 'true')
 
+    const triggerButton = triggerContainer.querySelector('button');
+    expect(triggerButton).not.toBeNull();
+    expect(triggerButton).toHaveTextContent('test');
+    // It shouldn't lose its accessible role or contents
+
     const { container: upContainer } = render(
       <SelectScrollUpButton />
     )
