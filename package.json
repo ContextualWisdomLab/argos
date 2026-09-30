@@ -42,9 +42,9 @@
     }
   },
   "dependencies": {
+    "baseline-browser-mapping": "^2.11.26",
+    "browserslist": "^4.29.3",
     "deepmerge-ts": "^8.0.2",
-    "next": "^15.5.22",
-    "browserslist": "^4.24.0",
-    "baseline-browser-mapping": "^2.11.26"
+    "next": "^15.5.26"
   }
 }
