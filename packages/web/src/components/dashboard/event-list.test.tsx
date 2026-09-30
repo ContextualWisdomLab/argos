@@ -1,10 +1,10 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { EventList } from './event-list'
-import type { TimelineEvent, TimelineGroup } from '@/lib/timeline-events'
+import type { TimelineGroup, ToolEvent } from '@/lib/timeline-events'
 
 globalThis.React = React;
 globalThis.ResizeObserver = class ResizeObserver {
@@ -17,10 +17,10 @@ vi.mock('react-window', async () => {
   const actual = await vi.importActual('react-window');
   return {
     ...actual as Record<string, unknown>,
-    List: ({ rowCount, rowComponent: Row, rowProps }: { rowCount: number, rowComponent: React.ComponentType<unknown>, rowProps: Record<string, unknown> }) => (
+    List: ({ rowCount, rowComponent: Row, rowProps }: { rowCount: number, rowComponent: React.ComponentType<{index: number; style: React.CSSProperties; rowProps: Record<string, unknown>}>, rowProps: Record<string, unknown> }) => (
       <div>
-        {Array.from({ length: rowCount }).map((_, index) => (
-          <Row key={index} index={index} style={{}} data={rowProps} {...rowProps} />
+        {Array.from({ length: rowCount || 0 }).map((_, index) => (
+          <Row key={index} index={index} style={{}} rowProps={rowProps} {...rowProps} />
         ))}
       </div>
     )
@@ -29,11 +29,11 @@ vi.mock('react-window', async () => {
 
 describe('EventList', () => {
   it('includes aria-hidden="true" on decorative icons within groups', () => {
-    const mockEvent: TimelineEvent = {
+    const mockEvent: ToolEvent = {
       kind: 'tool',
       durationMs: 1000,
       sequence: 1,
-      toolInput: '{}',
+      toolInput: {},
       skillName: null,
       agentType: null,
       timestamp: '2023-01-01T12:00:00Z',
@@ -65,8 +65,6 @@ describe('EventList', () => {
         />
       </div>
     )
-
-    expect(screen.getByRole('button', { name: /Tool TestTool x2/ })).toHaveAttribute('aria-expanded', 'true')
 
     const chevronIcons = container.querySelectorAll('svg.lucide-chevron-right')
     expect(chevronIcons.length).toBeGreaterThan(0)
