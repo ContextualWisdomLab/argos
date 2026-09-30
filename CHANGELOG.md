@@ -24,3 +24,14 @@
 - 세션 활동 리본은 시각적으로 현재인 이벤트를 토글 버튼으로 오인시키지 않고 `aria-current`로 노출하며, 병합된 도구 실행은 `Expand … group` 다음 행동과 포함 이벤트 수를 명확히 안내합니다.
 - 프로젝트 이름 변경·삭제 버튼과 텍스트가 이름을 제공하는 프로젝트 생성 버튼의 장식 아이콘을 접근성 트리에서 숨기고, 버튼의 기존 접근 가능한 이름이 유지되는지 렌더링 회귀 테스트로 고정했습니다.
 - 웹 대시보드의 각종 로그아웃 버튼(`org-sidebar.tsx`, `org-header.tsx`, `no-organization-state.tsx`)에 스크린 리더용 `aria-label="Log out of your account"` (또는 `Sign out of your account`) 속성을 추가하여 접근성을 개선했습니다.
+
+## [Unreleased]
+### 보안 개선
+- Trivy 스캔을 통해 발견된 `deepmerge-ts` 패키지의 prototype pollution 취약점(CVE-2023-40345)을 해결하기 위해 `package.json`의 overrides에서 버전을 `^8.0.0`으로 업데이트했습니다.
+
+## [Unreleased]
+### 성능 개선
+- **대규모 데이터 집계 성능 최적화:** 일별 리포트(`daily-rollup.ts`) 및 주간 리포트(`weekly-report.ts`)에서 대규모 데이터를 병합하는 핫 패스 내부의 `Object.keys()` 루프를 `for...in` 루프로 변경하여, 반복적인 배열 할당을 완전히 제거하고 Garbage Collection(GC) 오버헤드와 힙 스래싱(heap thrashing)을 대폭 줄였습니다.
+
+### 보안 개선
+- Trivy 스캔 결과에 따라 프로덕션 빌드 체인에 포함된 여러 패키지의 취약점(CVE-2023-40345, CVE-2026-45819, CVE-2026-73088 등)을 해결하기 위해 `package.json`의 `overrides` 설정을 추가했습니다(`deepmerge-ts`, `next`, `sharp`, `browserslist`, `baseline-browser-mapping` 등).
