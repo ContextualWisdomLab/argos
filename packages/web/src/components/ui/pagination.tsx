@@ -93,7 +93,7 @@ export function Pagination({
                 if (value) onPageSizeChange(Number(value))
               }}
             >
-              <SelectTrigger size="sm" className="min-w-[60px]">
+              <SelectTrigger size="sm" className="min-w-[60px]" aria-label="페이지당 항목 수">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent alignItemWithTrigger={false} className="p-1">

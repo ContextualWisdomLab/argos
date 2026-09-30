@@ -58,7 +58,10 @@ export function ProjectFilter() {
 
   return (
     <Select value={selectValue} onValueChange={handleChange}>
-      <SelectTrigger className="flex h-9 min-w-40 items-center gap-2 rounded-lg border-0 bg-card px-2.5 text-sm text-foreground ring-1 ring-foreground/10 transition-colors hover:bg-card-elevated dark:bg-card dark:hover:bg-card-elevated">
+      <SelectTrigger
+        aria-label="프로젝트 선택"
+        className="flex h-9 min-w-40 items-center gap-2 rounded-lg border-0 bg-card px-2.5 text-sm text-foreground ring-1 ring-foreground/10 transition-colors hover:bg-card-elevated dark:bg-card dark:hover:bg-card-elevated"
+      >
         <span className="truncate">{label}</span>
       </SelectTrigger>
       <SelectContent alignItemWithTrigger={false} sideOffset={6} className="p-1">
