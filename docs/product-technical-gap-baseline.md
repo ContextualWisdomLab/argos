@@ -6,6 +6,8 @@ Predecessor provenance: #713
 Base reviewed: `developmental@2fa92012bcf80acc1f921a4bafea76b3b1424b46`
 Regression heads: `3d54ba11dab1fb73c502e6d320a9c377169200f1`, `a9aab591bd9724ad44515560d22549f9d46d4060`
 Successor source tree: `48bb9feb25485bed3faa4f40e3818b1cb0575723`
+CI RED evidence head: `46c045b949be88aef49f341dcc390941b920ef7a`
+Accessible-name repair head: `30064154499c8114d052338d654f4c4f3b2e6849`
 
 ## Goal and boundary
 
@@ -13,14 +15,14 @@ Argos owns the dashboard controls and their presentation semantics. Decorative C
 
 ## Root cause and repair
 
-Commits `3d54ba11dab1fb73c502e6d320a9c377169200f1` and `a9aab591bd9724ad44515560d22549f9d46d4060` corrected or retained TypeScript test-double shapes but repeatedly removed the observable role/name/state assertions, the CHANGELOG entry, and this Gap baseline. Direct repair on the shared writer was therefore not durable. Draft successor #723 preserves the complete valid tree, including the type corrections, event-group `aria-expanded`, week-navigation, pagination, and select-trigger accessible names. No production component or dependency was added.
+Commits `3d54ba11dab1fb73c502e6d320a9c377169200f1` and `a9aab591bd9724ad44515560d22549f9d46d4060` corrected or retained TypeScript test-double shapes but repeatedly removed the observable role/name/state assertions, the CHANGELOG entry, and this Gap baseline. Direct repair on the shared writer was therefore not durable. Draft successor #723 preserves the complete valid tree, including the type corrections, event-group `aria-expanded`, week-navigation, pagination, and select-trigger accessible names. Exact-head CI run `36718771104` then proved that implicit child-text naming produced the concatenated name `ToolTestTool x20:00:00`, so the disclosure control now derives an explicit accessible name from its existing label and preview while leaving elapsed time visual. No component or dependency was added.
 
 ## Exact-head acceptance matrix
 
 | Capability | Current evidence | Status | Required action |
 | --- | --- | --- | --- |
-| Determinism | Fixed fixtures assert icon exclusion and enclosing-control semantics | GREEN (source contract) | Run exact-head Vitest |
-| Semantics | Event group retains name and `aria-expanded`; navigation, pagination, and trigger names remain discoverable | GREEN (source contract) | Verify browser accessibility tree |
+| Determinism | CI RED at `46c045b...` reproduced the concatenated disclosure name; the existing fixture now exercises the explicit label/preview name | REPAIR COMMITTED; NEW CHECKS REQUIRED | Run exact-head Vitest |
+| Semantics | Event group now exposes `Tool TestTool x2` without elapsed-time pollution and retains `aria-expanded`; navigation, pagination, and trigger names remain discoverable | GREEN (source contract) | Verify browser accessibility tree |
 | Keyboard/pointer/touch | Existing controls remain native button/link primitives | NOT REVALIDATED | Exercise keyboard, pointer, and touch on exact head |
 | Loading/empty/error/offline/permission/read-only/stale/conflict/retry/busy | No state behavior changed by this icon-only delta | NOT REVALIDATED | Cover applicable dashboard states before merge |
 | Responsive evidence | No current-head desktop/mobile/intermediate screenshots | FAIL | Capture all three viewport classes |
