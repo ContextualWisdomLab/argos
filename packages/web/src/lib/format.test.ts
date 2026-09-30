@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import {
   formatTokens,
   formatCost,
+  formatDate,
   formatDurationMs,
   formatRelativeTime,
+  formatLastUsed,
   formatDuration,
   formatDateTime,
   formatDateTimeFull,
@@ -167,5 +169,173 @@ describe('잘못된 날짜 입력 fallback', () => {
 
   it('formatDateTimeFull 도 파싱 불가 문자열을 그대로 돌려준다', () => {
     expect(formatDateTimeFull('not-a-date')).toBe('not-a-date')
+  })
+})
+
+describe('formatRelativeTime fallback', () => {
+  it('distance-to-now mode returns original string on invalid date', () => {
+    expect(formatRelativeTime('not-a-date')).toBe('not-a-date')
+  })
+})
+
+describe('formatLastUsed fallback', () => {
+  it('diffMs returns >= 1 day branch for NaN', () => {
+    expect(formatLastUsed('not-a-date')).toBe('not-a-date')
+  })
+})
+
+describe('formatDate fallback', () => {
+  it('returns original string on invalid date', () => {
+    expect(formatDate('not-a-date')).toBe('not-a-date')
+  })
+})
+
+describe('formatDateTime timezone variations', () => {
+  it('formats correctly', () => {
+    const s = '2026-06-01T00:00:00Z'
+    const result = formatDateTime(s)
+    expect(result).toContain('2026')
+  })
+  it('throws in try catch', () => {
+    const originalDate = global.Date
+    const MockDate = class extends Date {
+      constructor() {
+        super()
+        throw new Error('mock error')
+      }
+    }
+    global.Date = MockDate as unknown as DateConstructor
+    expect(formatDateTime('s')).toBe('s')
+    expect(formatDateTimeFull('s')).toBe('s')
+    expect(formatRelativeTime('s')).toBe('s')
+    global.Date = originalDate
+  })
+})
+
+describe('formatDateTimeFull timezone variations', () => {
+  it('formats correctly', () => {
+    const s = '2026-06-01T00:00:00Z'
+    const result = formatDateTimeFull(s)
+    expect(result).toContain('2026-06-01')
+  })
+})
+
+describe('formatElapsedHms NaN', () => {
+  it('handles bad timestamps', () => {
+    expect(formatElapsedHms('not-a-date', Number.NaN)).toBe('')
+  })
+})
+
+describe('formatDuration diff 0', () => {
+  it('0 diff', () => {
+    expect(formatDuration('2026-06-01T00:00:00Z', '2026-06-01T00:00:00Z')).toBe('0s')
+  })
+  it('undefined end', () => {
+    expect(formatDuration('2026-06-01T00:00:00Z')).toContain('h')
+  })
+})
+
+describe('formatDuration undefined start/end with 0 fallback', () => {
+  it('handles negative or 0', () => {
+    // start > end diffMs < 1000
+    expect(formatDuration('2026-06-02T00:00:00Z', '2026-06-01T00:00:00Z')).toBe('0s')
+  })
+})
+
+describe('formatDurationMs coverage', () => {
+  it('covers ms < 60_000 branch', () => {
+    expect(formatDurationMs(15_000)).toBe('15s')
+  })
+})
+
+describe('formatLastUsed branch coverage', () => {
+  it('diffMs > ONE_DAY_MS', () => {
+    // Return a time well into the past to trigger formatDateTimeFull
+    expect(formatLastUsed('2000-01-01T00:00:00Z')).toContain('2000')
+  })
+})
+
+describe('formatLastUsed today', () => {
+  it('returns relative time for recent date', () => {
+    // Current time so diffMs is 0
+    expect(formatLastUsed(new Date().toISOString())).toContain('전')
+  })
+})
+
+describe('formatDate fallback', () => {
+  it('returns original string on invalid date', () => {
+    expect(formatDate('not-a-date')).toBe('not-a-date')
+  })
+})
+
+describe('formatDateTime timezone variations', () => {
+  it('formats correctly', () => {
+    const s = '2026-06-01T00:00:00Z'
+    const result = formatDateTime(s)
+    expect(result).toContain('2026')
+  })
+  it('throws in try catch', () => {
+    const originalDate = global.Date
+    const MockDate = class extends Date {
+      constructor() {
+        super()
+        throw new Error('mock error')
+      }
+    }
+    global.Date = MockDate as unknown as DateConstructor
+    expect(formatDateTime('s')).toBe('s')
+    expect(formatDateTimeFull('s')).toBe('s')
+    expect(formatRelativeTime('s')).toBe('s')
+    global.Date = originalDate
+  })
+})
+
+describe('formatDateTimeFull timezone variations', () => {
+  it('formats correctly', () => {
+    const s = '2026-06-01T00:00:00Z'
+    const result = formatDateTimeFull(s)
+    expect(result).toContain('2026-06-01')
+  })
+})
+
+describe('formatElapsedHms NaN', () => {
+  it('handles bad timestamps', () => {
+    expect(formatElapsedHms('not-a-date', Number.NaN)).toBe('')
+  })
+})
+
+describe('formatDuration diff 0', () => {
+  it('0 diff', () => {
+    expect(formatDuration('2026-06-01T00:00:00Z', '2026-06-01T00:00:00Z')).toBe('0s')
+  })
+  it('undefined end', () => {
+    expect(formatDuration('2026-06-01T00:00:00Z')).toContain('h')
+  })
+})
+
+describe('formatDuration undefined start/end with 0 fallback', () => {
+  it('handles negative or 0', () => {
+    // start > end diffMs < 1000
+    expect(formatDuration('2026-06-02T00:00:00Z', '2026-06-01T00:00:00Z')).toBe('0s')
+  })
+})
+
+describe('formatDurationMs coverage', () => {
+  it('covers ms < 60_000 branch', () => {
+    expect(formatDurationMs(15_000)).toBe('15s')
+  })
+})
+
+describe('formatLastUsed branch coverage', () => {
+  it('diffMs > ONE_DAY_MS', () => {
+    // Return a time well into the past to trigger formatDateTimeFull
+    expect(formatLastUsed('2000-01-01T00:00:00Z')).toContain('2000')
+  })
+})
+
+describe('formatLastUsed today', () => {
+  it('returns relative time for recent date', () => {
+    // Current time so diffMs is 0
+    expect(formatLastUsed(new Date().toISOString())).toContain('전')
   })
 })
