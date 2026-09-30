@@ -170,6 +170,53 @@ describe('SessionTimelineChart', () => {
     ])
   })
 
+  it('preserves the original array using a Schwartzian transform (decorate-sort-undecorate)', () => {
+    const originalUsageTimeline: SessionTimelineUsage[] = [
+      {
+        timestamp: '2023-01-01T00:02:00.000Z',
+        inputTokens: 200,
+        outputTokens: 75,
+        estimatedCostUsd: 0.002,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+      {
+        timestamp: '2023-01-01T00:01:00.000Z',
+        inputTokens: 100,
+        outputTokens: 50,
+        estimatedCostUsd: 0.001,
+        model: 'gpt-4',
+        isSubagent: false,
+      },
+    ]
+    const usageTimeline = [...originalUsageTimeline]
+    const originalMessages: SessionDetail['messages'] = [
+      {
+        role: 'TOOL',
+        content: 'Alpha output 2',
+        sequence: 2,
+        timestamp: '2023-01-01T00:00:20.000Z',
+        inputTokens: 0,
+        outputTokens: 0,
+        estimatedCostUsd: 0,
+        toolName: 'alpha',
+      },
+    ]
+    const messages = [...originalMessages]
+
+    render(
+      <SessionTimelineChart
+        usageTimeline={usageTimeline}
+        messages={messages}
+        sessionStartedAt="2023-01-01T00:00:00.000Z"
+      />
+    )
+
+    // The component should NOT mutate its props (O(N) mapping ensures isolation)
+    expect(usageTimeline).toEqual(originalUsageTimeline)
+    expect(messages).toEqual(originalMessages)
+  })
+
   it('sorts local copies and bounds repeated and distinct tool summaries', () => {
     const usageTimeline: SessionTimelineUsage[] = [
       {
