@@ -67,9 +67,13 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
-  )
+  // [Performance] Schwartzian transform (map-sort-map):
+  // Date.parse is evaluated O(N) times instead of O(N log N) during sorting.
+  const sortedUsage = usageTimeline
+    .map((usage) => ({ usage, time: Date.parse(usage.timestamp) }))
+    .sort((a, b) => a.time - b.time)
+    .map((w) => w.usage)
+
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
