@@ -73,14 +73,14 @@ describe('dashboard summary accessibility labels', () => {
     )
 
     const modified = screen.getByRole('button', {
-      name: /1\s?file modified/i
+      name: /^1\s?file modified/i
     })
     const read = screen.getByRole('button', {
-      name: /1\s?file read/i
+      name: /^1\s?file read/i
     })
 
-    expect(modified).toHaveAccessibleName(/1\s?file modified/i)
-    expect(read).toHaveAccessibleName(/1\s?file read/i)
+    expect(modified).toHaveAccessibleName(/^1\s?file modified/i)
+    expect(read).toHaveAccessibleName(/^1\s?file read/i)
 
     await user.click(modified)
     await user.click(read)

@@ -2,8 +2,18 @@ name: CI
 on:
   push:
     branches: [main, developmental, feat-*, "feature/**"]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
   pull_request:
     branches: [main, developmental]
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.repository }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -31,6 +41,11 @@ jobs:
       ADMIN_USERNAME: "ci-admin"
       ADMIN_PASSWORD: "ci-admin-password"
     steps:
+      - name: Validate pull request metadata
+        if: ${{ github.event_name == 'pull_request' && !github.event.pull_request.number }}
+        run: |
+          echo "::error::Pull request number is required for CI concurrency."
+          exit 1
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
