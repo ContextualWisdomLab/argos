@@ -30,3 +30,19 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-08-27 - 🛡️ Fix deepmerge-ts vulnerability (CVE-2026-40345)
+**Vulnerability:** OSV-Scanner detected a High severity vulnerability (CVE-2026-40345) in `deepmerge-ts` v7.1.5 via a GitHub CI check suite failure.
+**Learning:** CI 파이프라인에서 트리비/OSV-Scanner가 하위 종속성에 있는 취약점을 발견하면, 최상단 `package.json`의 `pnpm.overrides` 필드를 사용하여 안전한 버전(v8.0.0)으로 덮어쓰고 강제로 패치할 수 있습니다.
+**Prevention:** 향후 심층 종속성 취약점 보고서를 해결할 때도 동일하게 `pnpm.overrides`를 활용하여 버전을 고정하고, `pnpm install`을 실행하여 `pnpm-lock.yaml`을 갱신합니다.
+## 2026-09-28 - 🛡️ Fix multiple subdependency vulnerabilities (CVE-2026-45819, CVE-2026-73088, CVE-2026-73089, CVE-2026-75604, GHSA-2xp9-vwfh-vxw4, GHSA-rgj7-g3m4-5g8c)
+**Vulnerability:** OSV-Scanner detected multiple Critical and High severity vulnerabilities in `baseline-browser-mapping`, `browserslist`, `next`, and `sharp` via a GitHub CI check suite failure.
+**Learning:** 여러 하위 종속성(subdependencies)에서 취약점이 발생할 경우, 각 패키지의 안전한 버전으로 `pnpm.overrides` 필드를 구성하여 동시에 패치해야 합니다.
+**Prevention:** 정기적으로 Trivy/OSV-Scanner 경고를 모니터링하고, 발견된 취약점들은 `package.json`의 `pnpm.overrides`에 버전을 고정시킨 뒤 락파일(`pnpm-lock.yaml`)을 갱신하여 사전에 방지합니다.
+## 2026-09-30 - 🛡️ Fix multiple subdependency vulnerabilities including next, browserslist, streamsearch, busboy
+**Vulnerability:** OSV-Scanner and Dependency Review detected multiple Critical and High severity vulnerabilities in `next` (GHSA-2xp9-vwfh-vxw4, CVE-2025-29927, CVE-2025-55182), `browserslist` (CVE-2026-73088, CVE-2026-73089), `streamsearch` and `busboy` via a GitHub CI check suite failure.
+**Learning:** 여러 하위 종속성에서 취약점이 추가로 발견되거나 dependency review 단계에서 스코어카드가 낮은 패키지가 발견되는 경우, 동일한 패턴(`pnpm.overrides`)을 적용하여 안전한 버전(e.g., next: 15.5.24, browserslist: 4.28.7, streamsearch: 1.1.0, busboy: 1.6.0)으로 모두 패치해야 합니다.
+**Prevention:** 정기적으로 Trivy/OSV-Scanner 경고 및 Dependency Review를 확인하고, 발견된 취약점들은 `package.json`의 `pnpm.overrides`에 버전을 고정시킨 뒤 락파일(`pnpm-lock.yaml`)을 업데이트하여 해결합니다.
+## 2026-09-30 - 🛡️ Fix sharp vulnerabilities in libheif/libvips (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c)
+**Vulnerability:** OSV-Scanner detected High severity vulnerabilities (GHSA-f88m-g3jw-g9cj, GHSA-rgj7-g3m4-5g8c) in `sharp` v0.33.5 via a GitHub CI check suite failure.
+**Learning:** `sharp` 패키지는 네이티브 바인딩을 포함하므로 libvips/libheif와 같은 하위 시스템 라이브러리의 취약점에 영향을 받습니다. 이를 방지하려면 `pnpm.overrides`를 통해 취약점이 패치된 최신 버전(v0.35.4)으로 고정하여 모든 하위 의존성을 강제로 업데이트해야 합니다.
+**Prevention:** 향후 이미지 처리 라이브러리에서 발생하는 보안 경고의 경우, `package.json`의 `pnpm.overrides`에 해당 라이브러리(e.g., sharp)의 최신 패치 버전을 명시하고 `pnpm install`을 실행하여 락파일을 지속적으로 갱신합니다.

@@ -394,17 +394,17 @@ export async function getWeeklyReport(
   // Insights — delegation
   // ⚡ Bolt Optimization:
   // 병목 지점: 기존 코드는 `thisWeekRollups`를 3번 순회하고, 매 순회마다 Object.values()로 중간 배열을 생성하여 메모리 할당 비용이 발생했습니다.
-  // 최적화 방법: 단일 for...of 루프와 Object.keys() 순회를 결합하여 N+1 순회를 1회 순회로 통합하고 중간 배열 할당을 제거했습니다.
+  // 최적화 방법: 단일 for...of 루프와 for...in 순회를 결합하여 N+1 순회를 1회 순회로 통합하고 중간 배열 할당을 완전히 제거했습니다.
   // 기대 효과: `thisWeekRollups`의 크기가 클 경우, 불필요한 배열 생성 오버헤드와 O(N) 순회를 1/3로 줄여 리포트 생성 성능이 향상됩니다.
   let totalAgentCalls = 0
   let totalSkillCalls = 0
   const distinctSkillsThisWeek = new Set<string>()
 
   for (const r of thisWeekRollups) {
-    for (const k of Object.keys(r.agentCounts)) {
+    for (const k in r.agentCounts) {
       totalAgentCalls += r.agentCounts[k]
     }
-    for (const k of Object.keys(r.skillCounts)) {
+    for (const k in r.skillCounts) {
       totalSkillCalls += r.skillCounts[k]
       distinctSkillsThisWeek.add(k)
     }
