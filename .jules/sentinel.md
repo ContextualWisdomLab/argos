@@ -33,4 +33,4 @@
 ## 2025-02-27 - [Fix User Enumeration via Timing Attack]
 **Vulnerability:** User enumeration timing attack found in login flow where non-existent users returned immediately without hashing the password.
 **Learning:** Returning early before expensive operations like bcrypt allows attackers to guess valid emails by measuring response times.
-**Prevention:** Always perform the expensive hashing operation against a dummy hash when a user is not found to normalize execution time.
+**Prevention:** Always perform the expensive hashing operation (e.g., bcrypt.hash) when a user is not found to normalize execution time.
