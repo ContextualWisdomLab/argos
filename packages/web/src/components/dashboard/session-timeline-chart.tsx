@@ -67,8 +67,17 @@ function buildChartData(
   toolCalls: ToolCallPoint[],
   sessionStartedAt: string
 ): ChartDataItem[] {
-  const sortedUsage = [...usageTimeline].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+  // ⚡ Bolt Optimization:
+  // 병목 지점: sort()의 비교 함수 내에서 Date.parse()를 호출하면 O(N log N) 횟수만큼 날짜 파싱이 발생하여 병목이 생깁니다.
+  // 최적화 방법: O(N) 단일 패스로 Date.parse()를 미리 수행하여 배열 매핑을 거친 뒤 정렬하고, 순회 루프에서도 파싱된 값을 재사용하도록 변경했습니다.
+  // 기대 효과: Date.parse() 호출 횟수를 N log N에서 N으로 줄여 렌더링 성능을 향상시키고 불필요한 연산을 제거합니다.
+  const parsedUsage = usageTimeline.map((u) => ({
+    ...u,
+    parsedTimestamp: Date.parse(u.timestamp),
+  }))
+
+  const sortedUsage = parsedUsage.sort(
+    (a, b) => a.parsedTimestamp - b.parsedTimestamp
   )
   const sortedTools = [...toolCalls].sort(
     (a, b) => a.parsedTimestamp - b.parsedTimestamp
@@ -78,7 +87,7 @@ function buildChartData(
   const cumulativeToolCounts = new Map<string, number>()
 
   return sortedUsage.map((usage) => {
-    const currentTimestamp = Date.parse(usage.timestamp)
+    const currentTimestamp = usage.parsedTimestamp
 
     while (
       toolIndex < sortedTools.length &&
