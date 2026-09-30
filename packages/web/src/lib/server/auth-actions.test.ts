@@ -7,7 +7,7 @@ vi.mock('bcryptjs', () => ({
     compare: vi.fn().mockResolvedValue(false),
   },
 }))
-vi.mock('./db', () => ({
+vi.mock('./db.js', () => ({
   db: {
     user: {
       findUnique: vi.fn().mockResolvedValue(null),
