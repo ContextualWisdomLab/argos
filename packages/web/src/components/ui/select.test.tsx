@@ -27,6 +27,7 @@ describe('Select Component', () => {
     )
 
     const chevronIcons = container.querySelectorAll('svg.lucide-chevron-down, svg.lucide-chevron-up')
+    expect(chevronIcons.length).toBeGreaterThan(0)
     chevronIcons.forEach(icon => {
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     })

@@ -47,6 +47,7 @@ describe('ContextSection', () => {
 
     // Check for ChevronUp icon when open
     const chevronUp = container.querySelector('svg.text-muted-foreground')
+    expect(chevronUp).not.toBeNull()
     expect(chevronUp).toHaveAttribute('aria-hidden', 'true')
   })
 

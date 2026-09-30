@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { EventList } from './event-list'
@@ -12,6 +12,20 @@ globalThis.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+vi.mock('react-window', async () => {
+  const actual = await vi.importActual('react-window');
+  return {
+    ...actual as any,
+    List: ({ rowCount, rowComponent: Row, rowProps }: any) => (
+      <div>
+        {Array.from({ length: rowCount }).map((_, index) => (
+          <Row key={index} index={index} style={{}} data={rowProps} {...rowProps} />
+        ))}
+      </div>
+    )
+  };
+});
 
 describe('EventList', () => {
   it('includes aria-hidden="true" on decorative icons within groups', () => {
@@ -33,8 +47,6 @@ describe('EventList', () => {
     }
     const expandedGroups = new Set([0])
 
-    // In jsdom environment, react-window may not render all rows unless width/height are handled,
-    // but the Row is tested directly.
     const { container } = render(
       <div style={{ height: '500px', width: '500px' }}>
         <EventList
@@ -49,9 +61,8 @@ describe('EventList', () => {
       </div>
     )
 
-    // Give react-window a chance to render if it can, but jsdom often needs specific mocks.
-    // Let's at least check if rendering doesn't crash and if there's any chevron rendered.
     const chevronIcons = container.querySelectorAll('svg.lucide-chevron-right')
+    expect(chevronIcons.length).toBeGreaterThan(0)
     chevronIcons.forEach(icon => {
       expect(icon).toHaveAttribute('aria-hidden', 'true')
     })
