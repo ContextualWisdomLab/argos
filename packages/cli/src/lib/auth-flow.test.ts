@@ -35,12 +35,14 @@ describe('auth-flow', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     })
   })
 
   it('opens browser using start on win32 safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -60,6 +62,7 @@ describe('auth-flow', () => {
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'darwin',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -75,6 +78,7 @@ describe('auth-flow', () => {
   it('opens browser using xdg-open on linux safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'linux',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -92,5 +96,39 @@ describe('auth-flow', () => {
     mockApiRequest.mockRejectedValueOnce(new Error('Network error'))
 
     await expect(runLoginFlow('http://api')).rejects.toThrow('인증 요청 실패: Network error')
+  })
+
+  it('rejects URLs with invalid protocols', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('잘못된 URL입니다: file:///etc/passwd')
+  })
+
+  it('rejects invalid URLs completely', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not-a-url' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('잘못된 URL입니다: not-a-url')
+  })
+
+  it('properly escapes Windows shell metacharacters', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+      configurable: true,
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/test?a=1&b=2|c=3;d=4<e>5(f)6^7' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      'cmd.exe',
+      ['/c', 'start', '""', 'http://example.com/test?a=1^&b=2^|c=3^;d=4^<e^>5^(f^)6^^7'],
+      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+    )
   })
 })
