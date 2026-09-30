@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { Pagination } from './pagination'
 
@@ -17,6 +17,9 @@ describe('Pagination', () => {
     const { container } = render(
       <Pagination page={2} pageSize={10} total={30} onPageChange={() => {}} />
     )
+
+    expect(screen.getByRole('button', { name: '이전 페이지' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '다음 페이지' })).toBeInTheDocument()
 
     const chevronLeft = container.querySelector('svg.lucide-chevron-left')
     expect(chevronLeft).not.toBeNull()
