@@ -3,3 +3,7 @@
 **Learning:** `Date.parse(value)` returns the timestamp primitive directly, while `new Date(value).getTime()` also constructs a `Date` object. Both use the same ECMAScript string-parsing semantics for these call sites.
 
 **Action:** In frequently executed paths that only need a timestamp primitive, prefer `Date.parse(value)`. Treat the allocation reduction as a bounded micro-optimization unless a committed benchmark establishes a larger runtime effect.
+
+## 2024-05-18 - Avoid O(N log N) Date.parse via Schwartzian Transform
+**Learning:** Parsing dates inside `Array.prototype.sort()` comparators creates an O(N log N) performance bottleneck due to redundant parsing.
+**Action:** Pre-parse the dates in a single O(N) pass (e.g., using `.map()` for a Schwartzian transform) before sorting the dataset, and pass the cached values down the pipeline to fully eliminate redundant computations.
