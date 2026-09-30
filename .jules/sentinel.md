@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2026-09-27 - URL 인코딩 취약점 수정
+**Vulnerability:** `auth-flow.ts`의 CLI 인증 폴링 과정에서 URL 파라미터가 인코딩 없이 사용되는 것을 발견했습니다.
+**Learning:** 상태 변수의 하드코딩된 보간법은 미래에 상태 포맷이 변경될 경우 인젝션을 허용할 수 있습니다.
+**Prevention:** 신뢰할 수 없거나 동적으로 생성되는 상태 변수를 URL에 포함시킬 때는 항상 `encodeURIComponent`를 사용해야 합니다.

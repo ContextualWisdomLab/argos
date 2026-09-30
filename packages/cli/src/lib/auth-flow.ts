@@ -68,7 +68,7 @@ export async function runLoginFlow(apiUrl: string): Promise<LoginResponse> {
 
       try {
         const result = await apiRequest<{ pending?: boolean; denied?: boolean; token?: string }>(
-          `${apiUrl}/api/auth/cli-poll?state=${state}`,
+          `${apiUrl}/api/auth/cli-poll?state=${encodeURIComponent(state)}`,
           { method: 'GET', baseUrl: '' }
         )
 
