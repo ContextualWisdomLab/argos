@@ -1,9 +1,11 @@
 # Product technical gap baseline
 
 Status: Proposed
-Pull request: #713
+Pull request: #723
+Predecessor provenance: #713
 Base reviewed: `developmental@2fa92012bcf80acc1f921a4bafea76b3b1424b46`
-Regression head: `3d54ba11dab1fb73c502e6d320a9c377169200f1`
+Regression heads: `3d54ba11dab1fb73c502e6d320a9c377169200f1`, `a9aab591bd9724ad44515560d22549f9d46d4060`
+Successor source tree: `48bb9feb25485bed3faa4f40e3818b1cb0575723`
 
 ## Goal and boundary
 
@@ -11,7 +13,7 @@ Argos owns the dashboard controls and their presentation semantics. Decorative C
 
 ## Root cause and repair
 
-Commit `3d54ba11dab1fb73c502e6d320a9c377169200f1` corrected TypeScript test-double shapes but also removed the observable role/name/state assertions, the CHANGELOG entry, and this Gap baseline. The ordinary-forward repair preserves the type corrections and restores the event-group `aria-expanded` contract plus week-navigation, pagination, and select-trigger accessible names. No production component or dependency was changed.
+Commits `3d54ba11dab1fb73c502e6d320a9c377169200f1` and `a9aab591bd9724ad44515560d22549f9d46d4060` corrected or retained TypeScript test-double shapes but repeatedly removed the observable role/name/state assertions, the CHANGELOG entry, and this Gap baseline. Direct repair on the shared writer was therefore not durable. Draft successor #723 preserves the complete valid tree, including the type corrections, event-group `aria-expanded`, week-navigation, pagination, and select-trigger accessible names. No production component or dependency was added.
 
 ## Exact-head acceptance matrix
 
