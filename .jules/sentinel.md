@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-19 - [Fix command injection vulnerability in openBrowser]
+**Vulnerability:** Command injection vulnerability in `openBrowser` function when launching URLs on Windows via `cmd.exe` and `windowsVerbatimArguments: true` due to insufficient escaping of shell metacharacters (only `&` was escaped).
+**Learning:** When using `cmd.exe` with `windowsVerbatimArguments: true`, the command string is passed directly to the shell without any Node.js escaping. If an attacker controls the URL (e.g., from an API response), they can append shell metacharacters (`|`, `<`, `>`, etc.) to execute arbitrary commands.
+**Prevention:** Strictly validate URL protocols (e.g., allowing only `http:` and `https:`) and escape all shell metacharacters (`[&|;<>^()]`) when passing user-controlled data to `cmd.exe`.
