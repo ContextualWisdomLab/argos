@@ -2,45 +2,21 @@ const fs = require('fs');
 const path = 'packages/web/src/components/dashboard/event-list.test.tsx';
 let content = fs.readFileSync(path, 'utf8');
 
-// Replace the test implementation to explicitly mock react-window to actually render the Row
-const newContent = content.replace(
-  /const { container } = render\([\s\S]*?\)\s*\/\/.*/,
-  `
-    // Mock react-window to always render the items since jsdom layout is tricky
-    vi.mock('react-window', async () => {
-      const actual = await vi.importActual('react-window');
-      return {
-        ...actual,
-        List: ({ rowCount, rowComponent: Row, rowProps }) => (
-          <div>
-            {Array.from({ length: rowCount }).map((_, index) => (
-              <Row key={index} index={index} style={{}} data={rowProps} {...rowProps} />
-            ))}
-          </div>
-        )
-      };
-    });
+// I previously patched this to be:
+// List: ({ rowCount, rowComponent: Row, rowProps }: { rowCount: number, rowComponent: React.ComponentType<unknown>, rowProps: Record<string, unknown> }) => (
+// ...
+// This actually matched the components/dashboard/event-list.tsx implementation (it imports `List` explicitly).
+// Ah wait! The `react-window` library exports `FixedSizeList` and `VariableSizeList` usually, and someone aliased them maybe?
+// Wait, `react-window` doesn't export `List`. Does it? Let's check `node_modules`.
 
-    const { container } = render(
-      <div style={{ height: '500px', width: '500px' }}>
-        <EventList
-          events={[mockEvent, mockEvent]}
-          groups={[mockGroup]}
-          selectedIdx={-1}
-          onSelect={() => {}}
-          sessionStartedAt="2023-01-01T12:00:00Z"
-          expandedGroups={expandedGroups}
-          onToggleGroup={() => {}}
-        />
-      </div>
-    )
+// But anyway, if the user explicitly said "react-window does not have a List export" but event-list.tsx has "import { List, type RowComponentProps } from 'react-window';"
+// that implies it's a custom fork or an older version or simply FixedSizeList renamed.
+// Wait! `react-window` exported `FixedSizeList as List` maybe in the app?
+// No, the code says: `import { List } from "react-window";` which is wrong unless there's an alias in webpack or something,
+// OR it IS `FixedSizeList` exported as `FixedSizeList` and the `import { List }` is actually invalid and that's why CI is passing? No.
 
-    const chevronIcons = container.querySelectorAll('svg.lucide-chevron-right')
-    expect(chevronIcons.length).toBeGreaterThan(0)
-    chevronIcons.forEach(icon => {
-      expect(icon).toHaveAttribute('aria-hidden', 'true')
-    })
-`
-);
+// Actually, react-window exports FixedSizeList and VariableSizeList.
+// Wait! Is it `import { FixedSizeList as List } from 'react-window'`? Let's look at the source again.
+// It says: `import { List, type RowComponentProps } from "react-window";`
 
-fs.writeFileSync(path, newContent, 'utf8');
+// But my mock is breaking something.

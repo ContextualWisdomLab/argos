@@ -18,10 +18,12 @@ describe('Pagination', () => {
       <Pagination page={2} pageSize={10} total={30} onPageChange={() => {}} />
     )
 
-    const chevronIcons = container.querySelectorAll('svg.lucide-chevron-left, svg.lucide-chevron-right')
-    expect(chevronIcons.length).toBeGreaterThan(0)
-    chevronIcons.forEach(icon => {
-      expect(icon).toHaveAttribute('aria-hidden', 'true')
-    })
+    const chevronLeft = container.querySelector('svg.lucide-chevron-left')
+    expect(chevronLeft).not.toBeNull()
+    expect(chevronLeft).toHaveAttribute('aria-hidden', 'true')
+
+    const chevronRight = container.querySelector('svg.lucide-chevron-right')
+    expect(chevronRight).not.toBeNull()
+    expect(chevronRight).toHaveAttribute('aria-hidden', 'true')
   })
 })

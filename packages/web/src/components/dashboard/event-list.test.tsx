@@ -16,8 +16,8 @@ globalThis.ResizeObserver = class ResizeObserver {
 vi.mock('react-window', async () => {
   const actual = await vi.importActual('react-window');
   return {
-    ...actual as any,
-    List: ({ rowCount, rowComponent: Row, rowProps }: any) => (
+    ...actual as Record<string, unknown>,
+    List: ({ rowCount, rowComponent: Row, rowProps }: { rowCount: number, rowComponent: React.ComponentType<unknown>, rowProps: Record<string, unknown> }) => (
       <div>
         {Array.from({ length: rowCount }).map((_, index) => (
           <Row key={index} index={index} style={{}} data={rowProps} {...rowProps} />
@@ -31,6 +31,11 @@ describe('EventList', () => {
   it('includes aria-hidden="true" on decorative icons within groups', () => {
     const mockEvent: TimelineEvent = {
       kind: 'tool',
+      durationMs: 1000,
+      sequence: 1,
+      toolInput: '{}',
+      skillName: null,
+      agentType: null,
       timestamp: '2023-01-01T12:00:00Z',
       toolName: 'TestTool',
       content: 'tool execution',
@@ -38,7 +43,7 @@ describe('EventList', () => {
       isSkillCall: false,
     }
     const mockGroup: TimelineGroup = {
-      kind: 'consecutive',
+      kind: 'toolRun',
       toolName: 'TestTool',
       items: [
         { idx: 0, event: mockEvent },
