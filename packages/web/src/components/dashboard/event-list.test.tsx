@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom/vitest'
 import { EventList } from './event-list'
 import type { TimelineEvent, TimelineGroup } from '@/lib/timeline-events'
@@ -65,6 +65,8 @@ describe('EventList', () => {
         />
       </div>
     )
+
+    expect(screen.getByRole('button', { name: /Tool TestTool x2/ })).toHaveAttribute('aria-expanded', 'true')
 
     const chevronIcons = container.querySelectorAll('svg.lucide-chevron-right')
     expect(chevronIcons.length).toBeGreaterThan(0)
