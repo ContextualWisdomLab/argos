@@ -399,9 +399,6 @@ export async function getDailyRollupsForProjects(
 
   // date-key 기준으로 병합
   const byDate = new Map<string, DailyRollup>()
-  const userSetsByDate = new Map<string, Set<string>>()
-  const userStatsByDate = new Map<string, Map<string, AggregatedUser>>()
-
   for (const rollups of perProject) {
     for (const r of rollups) {
       const prev = byDate.get(r.date)
@@ -411,7 +408,7 @@ export async function getDailyRollupsForProjects(
           sessionCount: r.sessionCount,
           turnCount: r.turnCount,
           activeUserCount: 0, // 나중에 union 크기로 재계산
-          activeUserIds: [], // 나중에 Set에서 변환
+          activeUserIds: [...r.activeUserIds],
           inputTokens: r.inputTokens,
           outputTokens: r.outputTokens,
           cacheReadTokens: r.cacheReadTokens,
@@ -420,11 +417,8 @@ export async function getDailyRollupsForProjects(
           skillCounts: { ...r.skillCounts },
           agentCounts: { ...r.agentCounts },
           modelTokens: { ...r.modelTokens },
-          userStats: [], // 나중에 Map에서 변환
+          userStats: r.userStats.map((u) => ({ ...u })),
         })
-
-        userSetsByDate.set(r.date, new Set(r.activeUserIds))
-        userStatsByDate.set(r.date, new Map(r.userStats.map((u) => [u.userId, { ...u }])))
       } else {
         prev.sessionCount += r.sessionCount
         prev.turnCount += r.turnCount
@@ -433,25 +427,21 @@ export async function getDailyRollupsForProjects(
         prev.cacheReadTokens += r.cacheReadTokens
         prev.cacheCreationTokens += r.cacheCreationTokens
         prev.estimatedCostUsd += r.estimatedCostUsd
-
-        // activeUserIds: 합집합 (지연된 Set 변환)
-        const userSet = userSetsByDate.get(r.date)!
+        // activeUserIds: 합집합
+        const userSet = new Set(prev.activeUserIds)
         for (const u of r.activeUserIds) userSet.add(u)
-
-        // [Bolt: Performance Optimization] Use Object.keys() instead of Object.entries() in hot paths.
-        // Impact: Avoids array allocation for each key-value pair, significantly reducing GC overhead when aggregating large daily rollups.
-        for (const k of Object.keys(r.skillCounts)) {
-          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + r.skillCounts[k]!
+        prev.activeUserIds = Array.from(userSet)
+        for (const [k, v] of Object.entries(r.skillCounts)) {
+          prev.skillCounts[k] = (prev.skillCounts[k] ?? 0) + v
         }
-        for (const k of Object.keys(r.agentCounts)) {
-          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + r.agentCounts[k]!
+        for (const [k, v] of Object.entries(r.agentCounts)) {
+          prev.agentCounts[k] = (prev.agentCounts[k] ?? 0) + v
         }
-        for (const k of Object.keys(r.modelTokens)) {
-          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + r.modelTokens[k]!
+        for (const [k, v] of Object.entries(r.modelTokens)) {
+          prev.modelTokens[k] = (prev.modelTokens[k] ?? 0) + v
         }
-
-        // userStats: userId 기준 sum (지연된 Map 변환)
-        const userMap = userStatsByDate.get(r.date)!
+        // userStats: userId 기준 sum
+        const userMap = new Map(prev.userStats.map((u) => [u.userId, u]))
         for (const u of r.userStats) {
           const prevU = userMap.get(u.userId)
           if (!prevU) {
@@ -465,15 +455,14 @@ export async function getDailyRollupsForProjects(
             prevU.agentCalls += u.agentCalls
           }
         }
+        prev.userStats = Array.from(userMap.values())
       }
     }
   }
 
-  // 지연된 Set/Map을 Array로 변환하고 activeUserCount 계산
+  // activeUserCount 재계산
   for (const r of byDate.values()) {
-    r.activeUserIds = Array.from(userSetsByDate.get(r.date)!)
     r.activeUserCount = r.activeUserIds.length
-    r.userStats = Array.from(userStatsByDate.get(r.date)!.values())
   }
 
   const result = Array.from(byDate.values())
@@ -622,10 +611,9 @@ export function aggregateSummary(
     totals.cacheCreationTokens += r.cacheCreationTokens
     totals.estimatedCostUsd += r.estimatedCostUsd
     for (const u of r.activeUserIds) activeUsers.add(u)
-    // [Bolt: Performance Optimization] Object.keys() iterations avoid internal array tuples, reducing heap thrashing
-    for (const k of Object.keys(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + r.skillCounts[k]!
-    for (const k of Object.keys(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + r.agentCounts[k]!
-    for (const k of Object.keys(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + r.modelTokens[k]!
+    for (const [k, v] of Object.entries(r.skillCounts)) skillCounts[k] = (skillCounts[k] ?? 0) + v
+    for (const [k, v] of Object.entries(r.agentCounts)) agentCounts[k] = (agentCounts[k] ?? 0) + v
+    for (const [k, v] of Object.entries(r.modelTokens)) modelTokens[k] = (modelTokens[k] ?? 0) + v
   }
 
   // Deterministic tie-break: callCount DESC, skillName ASC (codepoint binary —

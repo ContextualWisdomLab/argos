@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, TooltipProps } from 'recharts'
 import { formatTokens, formatCost } from '@/lib/format'
 import type { UsageSeries } from '@argos/shared'
@@ -44,17 +43,15 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
 }
 
 export function TokenUsageChart({ data }: TokenUsageChartProps) {
-  const chartData = useMemo(() => {
-    return data.map(d => {
-      const date = new Date(d.date)
-      return {
-        date: format(date, 'MMM d'),
-        fullDate: format(date, 'MMM d, yyyy'),
-        input: d.inputTokens,
-        output: d.outputTokens,
-      }
-    })
-  }, [data])
+  const chartData = data.map(d => {
+    const date = new Date(d.date)
+    return {
+      date: format(date, 'MMM d'),
+      fullDate: format(date, 'MMM d, yyyy'),
+      input: d.inputTokens,
+      output: d.outputTokens,
+    }
+  })
 
   return (
     <ResponsiveContainer width="100%" height={300}>

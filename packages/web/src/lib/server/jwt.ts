@@ -1,12 +1,10 @@
 import { randomBytes } from 'crypto'
 import { SignJWT, jwtVerify } from 'jose'
-import { getEnv } from './env'
+import { env } from './env'
 
 const JWT_EXPIRATION = 365 * 24 * 60 * 60 // 1년 (초)
 
-function getSecretKey(): Uint8Array {
-  return new TextEncoder().encode(getEnv().JWT_SECRET)
-}
+const secretKey = new TextEncoder().encode(env.JWT_SECRET)
 
 export async function signJwt(userId: string): Promise<string> {
   const jwt = await new SignJWT({ sub: userId })
@@ -14,14 +12,14 @@ export async function signJwt(userId: string): Promise<string> {
     .setIssuedAt()
     .setExpirationTime(Math.floor(Date.now() / 1000) + JWT_EXPIRATION)
     .setJti(randomBytes(16).toString('hex'))
-    .sign(getSecretKey())
+    .sign(secretKey)
 
   return jwt
 }
 
 export async function verifyJwt(token: string): Promise<{ sub: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecretKey())
+    const { payload } = await jwtVerify(token, secretKey)
 
     if (!payload.sub || typeof payload.sub !== 'string') {
       return null

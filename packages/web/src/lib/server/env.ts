@@ -14,28 +14,10 @@ const EnvSchema = z.object({
   ADMIN_PASSWORD: z.string().min(16).max(512),
 })
 
-type RuntimeEnv = z.infer<typeof EnvSchema> & {
-  ADMIN_COOKIE_SECRET: string
+const _parsed = EnvSchema.parse(process.env)
+
+// Resolve admin cookie secret once so admin-auth.ts has no JWT_SECRET reference.
+export const env = {
+  ..._parsed,
+  ADMIN_COOKIE_SECRET: _parsed.ADMIN_COOKIE_SECRET ?? _parsed.JWT_SECRET,
 }
-
-let cachedEnv: RuntimeEnv | null = null
-
-export function getEnv(): RuntimeEnv {
-  if (!cachedEnv) {
-    const parsed = EnvSchema.parse(process.env)
-
-    // Resolve admin cookie secret once so admin-auth.ts has no JWT_SECRET reference.
-    cachedEnv = {
-      ...parsed,
-      ADMIN_COOKIE_SECRET: parsed.ADMIN_COOKIE_SECRET ?? parsed.JWT_SECRET,
-    }
-  }
-
-  return cachedEnv
-}
-
-export const env = new Proxy({} as RuntimeEnv, {
-  get(_target, prop: keyof RuntimeEnv) {
-    return getEnv()[prop]
-  },
-})

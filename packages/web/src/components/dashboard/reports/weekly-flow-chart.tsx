@@ -12,7 +12,6 @@ import {
   Legend,
   type TooltipProps,
 } from 'recharts'
-import { useMemo } from 'react'
 import { parseISO } from 'date-fns'
 import { formatTokens } from '@/lib/format'
 import type { DailySeriesPoint } from '@/types/reports'
@@ -58,22 +57,18 @@ function sumTokens(p: DailySeriesPoint): number {
 }
 
 export function WeeklyFlowChart({ thisWeek, prevWeek }: WeeklyFlowChartProps) {
-  const data = useMemo(() => {
-    // 요일 기준으로 병합 (월~일 7개 슬롯)
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const result: ChartRow[] = dayNames.map((day) => ({ day, thisWeekTokens: 0, prevWeekTokens: 0 }))
+  // 요일 기준으로 병합 (월~일 7개 슬롯)
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const data: ChartRow[] = dayNames.map((day) => ({ day, thisWeekTokens: 0, prevWeekTokens: 0 }))
 
-    for (const p of thisWeek) {
-      const idx = dayIndex(p.date)
-      if (idx >= 0) result[idx].thisWeekTokens += sumTokens(p)
-    }
-    for (const p of prevWeek) {
-      const idx = dayIndex(p.date)
-      if (idx >= 0) result[idx].prevWeekTokens += sumTokens(p)
-    }
-
-    return result
-  }, [thisWeek, prevWeek])
+  for (const p of thisWeek) {
+    const idx = dayIndex(p.date)
+    if (idx >= 0) data[idx].thisWeekTokens += sumTokens(p)
+  }
+  for (const p of prevWeek) {
+    const idx = dayIndex(p.date)
+    if (idx >= 0) data[idx].prevWeekTokens += sumTokens(p)
+  }
 
   return (
     <ResponsiveContainer width="100%" height={260}>
