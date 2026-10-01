@@ -92,21 +92,21 @@ describe('verifyAdminCredentials', () => {
     expect(createHash).toHaveBeenCalledTimes(2)
   })
 
-  it('short-circuits unknown usernames before hashing attacker-controlled input', async () => {
+  it('does not short-circuit unknown usernames before hashing to prevent timing attacks', async () => {
     const { verifyAdminCredentials } = await importAdminAuth()
     const createHash = await getCreateHashMock()
 
     await expect(
       verifyAdminCredentials({
         username: 'not-admin',
-        password: 'x'.repeat(2048),
+        password: 'x'.repeat(16),
       }),
     ).resolves.toBe(false)
 
-    expect(createHash).not.toHaveBeenCalled()
+    expect(createHash).toHaveBeenCalledTimes(2)
   })
 
-  it('short-circuits overlength passwords before hashing attacker-controlled input', async () => {
+  it('short-circuits overlength passwords before hashing attacker-controlled input, but still hashes a dummy value', async () => {
     const { verifyAdminCredentials } = await importAdminAuth()
     const createHash = await getCreateHashMock()
 
@@ -117,7 +117,7 @@ describe('verifyAdminCredentials', () => {
       }),
     ).resolves.toBe(false)
 
-    expect(createHash).not.toHaveBeenCalled()
+    expect(createHash).toHaveBeenCalledTimes(2)
   })
 })
 

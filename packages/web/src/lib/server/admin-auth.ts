@@ -28,18 +28,21 @@ export async function verifyAdminCredentials(input: {
 }): Promise<boolean> {
   const { username, password: expectedPassword } = getAdminCredentials()
 
-  // Prevent CPU exhaustion (DoS) by short-circuiting on fast check first
-  // and enforcing maximum input length.
-  if (input.username !== username || input.password.length > MAX_PASSWORD_LENGTH) {
-    return false
-  }
+  const isValidUsername = input.username === username
+  const isValidLength = input.password.length <= MAX_PASSWORD_LENGTH
+
+  // Prevent CPU exhaustion (DoS) by hashing a dummy value if the input is too long,
+  // while ensuring we still perform the hash to prevent username enumeration timing attacks.
+  const passwordToHash = isValidLength ? input.password : expectedPassword
 
   // Use fast uniform hash to prevent timing attacks without unnecessary slow derivation
   // on a plaintext in-memory secret.
-  const inputPasswordHash = createHash('sha256').update(input.password).digest()
+  const inputPasswordHash = createHash('sha256').update(passwordToHash).digest()
   const expectedPasswordHash = createHash('sha256').update(expectedPassword).digest()
 
-  return timingSafeEqual(expectedPasswordHash, inputPasswordHash)
+  const hashesMatch = timingSafeEqual(expectedPasswordHash, inputPasswordHash)
+
+  return isValidUsername && isValidLength && hashesMatch
 }
 
 export function createAdminSessionCookieValue(): string {
@@ -80,10 +83,9 @@ export function verifyAdminSessionCookie(value: string | undefined): boolean {
   const signatureBytes = Buffer.from(signature)
   const expectedSignatureBytes = Buffer.from(expectedSignature)
 
-  const signatureHash = createHash('sha256').update(signatureBytes).digest()
-  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
+  if (signatureBytes.length !== expectedSignatureBytes.length) return false
 
-  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return false
+  if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return false
 
   if (username !== getAdminCredentials().username) return false
 
@@ -124,10 +126,9 @@ export function verifyAdminImpersonationToken(token: string): string | null {
   const signatureBytes = Buffer.from(signature)
   const expectedSignatureBytes = Buffer.from(expectedSignature)
 
-  const signatureHash = createHash('sha256').update(signatureBytes).digest()
-  const expectedSignatureHash = createHash('sha256').update(expectedSignatureBytes).digest()
+  if (signatureBytes.length !== expectedSignatureBytes.length) return null
 
-  if (!timingSafeEqual(signatureHash, expectedSignatureHash)) return null
+  if (!timingSafeEqual(signatureBytes, expectedSignatureBytes)) return null
 
   const expiresAt = Number(expiresAtRaw)
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null
