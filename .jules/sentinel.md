@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-03-24 - Username Enumeration Timing Attack
+**Vulnerability:** A short-circuit evaluation (`if (input.username !== username) return false`) before expensive hashing operations in `verifyAdminCredentials` leaked the validity of the username via timing differences.
+**Learning:** Checking username validity before hashing passwords creates a timing attack vector, allowing attackers to enumerate valid usernames by measuring response times.
+**Prevention:** Always perform the expensive cryptographic operations (hashing) regardless of whether the username is valid, and combine the timing-safe password comparison with the username check at the end.

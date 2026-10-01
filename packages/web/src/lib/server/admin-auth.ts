@@ -28,18 +28,21 @@ export async function verifyAdminCredentials(input: {
 }): Promise<boolean> {
   const { username, password: expectedPassword } = getAdminCredentials()
 
-  // Prevent CPU exhaustion (DoS) by short-circuiting on fast check first
-  // and enforcing maximum input length.
-  if (input.username !== username || input.password.length > MAX_PASSWORD_LENGTH) {
+  // Prevent CPU exhaustion (DoS) by short-circuiting on max input length early.
+  if (input.password.length > MAX_PASSWORD_LENGTH) {
     return false
   }
 
   // Use fast uniform hash to prevent timing attacks without unnecessary slow derivation
-  // on a plaintext in-memory secret.
+  // on a plaintext in-memory secret. We hash both even if username is wrong to avoid leaking
+  // username validity via timing.
   const inputPasswordHash = createHash('sha256').update(input.password).digest()
   const expectedPasswordHash = createHash('sha256').update(expectedPassword).digest()
 
-  return timingSafeEqual(expectedPasswordHash, inputPasswordHash)
+  const passwordMatch = timingSafeEqual(expectedPasswordHash, inputPasswordHash)
+  const usernameMatch = input.username === username
+
+  return passwordMatch && usernameMatch
 }
 
 export function createAdminSessionCookieValue(): string {
