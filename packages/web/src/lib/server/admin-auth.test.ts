@@ -92,18 +92,18 @@ describe('verifyAdminCredentials', () => {
     expect(createHash).toHaveBeenCalledTimes(2)
   })
 
-  it('short-circuits unknown usernames before hashing attacker-controlled input', async () => {
+  it('hashes the password even if the username is unknown to prevent timing attacks', async () => {
     const { verifyAdminCredentials } = await importAdminAuth()
     const createHash = await getCreateHashMock()
 
     await expect(
       verifyAdminCredentials({
         username: 'not-admin',
-        password: 'x'.repeat(2048),
+        password: 'correct horse battery staple',
       }),
     ).resolves.toBe(false)
 
-    expect(createHash).not.toHaveBeenCalled()
+    expect(createHash).toHaveBeenCalledTimes(2)
   })
 
   it('short-circuits overlength passwords before hashing attacker-controlled input', async () => {
