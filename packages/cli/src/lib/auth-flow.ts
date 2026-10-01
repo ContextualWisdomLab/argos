@@ -16,20 +16,22 @@ function openBrowser(url: string): void {
     throw new Error(`지원하지 않는 URL 프로토콜입니다: ${parsedUrl.protocol}`)
   }
 
-  const safeUrl = parsedUrl.href
+  // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // Avoid cmd.exe entirely: shell metacharacter escaping is not a safe boundary.
-    const child = spawn(
-      'rundll32.exe',
-      ['url.dll,FileProtocolHandler', safeUrl],
-      { detached: true, stdio: 'ignore' }
-    )
+    // Windows: cmd.exe 빌트인 start 명령어 사용
+    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/([&|;<>^()])/g, '^$1')], {
+      windowsVerbatimArguments: true,
+      detached: true,
+      stdio: 'ignore'
+    })
     child.unref()
   } else if (process.platform === 'darwin') {
-    const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
+    // macOS
+    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
+    // Linux 등
+    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
