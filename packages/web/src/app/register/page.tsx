@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -101,6 +102,7 @@ export default function RegisterPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
               {loading ? 'Creating account...' : 'Sign up'}
             </Button>
           </form>

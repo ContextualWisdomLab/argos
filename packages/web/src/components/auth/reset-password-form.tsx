@@ -8,6 +8,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Loader2 } from 'lucide-react'
 
 type ResetPasswordFormProps = {
   token: string
@@ -110,6 +111,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             </Alert>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />}
             {loading ? 'Updating...' : 'Update password'}
           </Button>
         </form>
