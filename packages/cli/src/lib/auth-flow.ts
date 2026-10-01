@@ -5,22 +5,31 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
-  // Command Injection 방지를 위해 exec 대신 spawn 사용
+  // Fail-closed protocol validation
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(url)
+  } catch {
+    throw new Error('유효하지 않은 URL 형식입니다.')
+  }
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error(`지원하지 않는 URL 프로토콜입니다: ${parsedUrl.protocol}`)
+  }
+
+  const safeUrl = parsedUrl.href
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
-      windowsVerbatimArguments: true,
-      detached: true,
-      stdio: 'ignore'
-    })
+    // Avoid cmd.exe entirely: shell metacharacter escaping is not a safe boundary.
+    const child = spawn(
+      'rundll32.exe',
+      ['url.dll,FileProtocolHandler', safeUrl],
+      { detached: true, stdio: 'ignore' }
+    )
     child.unref()
   } else if (process.platform === 'darwin') {
-    // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
-    // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [safeUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }

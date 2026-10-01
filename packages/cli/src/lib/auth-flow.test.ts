@@ -35,31 +35,51 @@ describe('auth-flow', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('opens browser on win32 without invoking a command shell', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({
+      state: 'state123',
+      authUrl: 'https://example.com/callback?state=a%26b',
+    }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      'rundll32.exe',
+      ['url.dll,FileProtocolHandler', 'https://example.com/callback?state=a%26b'],
+      { detached: true, stdio: 'ignore' }
     )
+  })
+
+  it('throws an error if URL has invalid protocol', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('지원하지 않는 URL 프로토콜입니다: file:')
+  })
+
+  it('throws an error if URL is malformed', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not-a-url' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('유효하지 않은 URL 형식입니다.')
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'darwin',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -75,6 +95,7 @@ describe('auth-flow', () => {
   it('opens browser using xdg-open on linux safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'linux',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
