@@ -30,3 +30,8 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+
+## 2025-02-18 - [Fix Command Injection and SSRF via Safe Protocol Validation]
+**Vulnerability:** The CLI authentication flow (`auth-flow.ts`) previously used a naive URL passing mechanism directly to `spawn` for browser launching. On Windows, it used `url.replace(/&/g, '^&')` with `windowsVerbatimArguments: true`, which left other shell metacharacters (`|`, `;`, `<`, `>`, `^`, `(`, `)`) vulnerable to command injection. Additionally, any URL scheme could be launched.
+**Learning:** `spawn` with `windowsVerbatimArguments: true` bypasses Node.js's normal quoting logic, pushing the escaping responsibility to the application layer. Furthermore, allowing arbitrary URL schemes (like `file://` or `javascript:`) can lead to Local File Inclusion or unauthorized protocol handling when launching user-provided URLs.
+**Prevention:** Strictly enforce a fail-closed validation on URLs before launching them, allowing only safe protocols (`http:` and `https:`). When executing on Windows with `cmd.exe` and `windowsVerbatimArguments`, safely escape the full range of shell metacharacters using a comprehensive regex (e.g., `/([&|;<>^()])/g`).
