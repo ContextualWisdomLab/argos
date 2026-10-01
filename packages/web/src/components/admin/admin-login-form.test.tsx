@@ -42,6 +42,7 @@ describe('AdminLoginForm', () => {
 
   it('shows loading state on submit', async () => {
     // Make fetch promise hanging so we can check loading state
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let resolveFetch: (value: any) => void;
     vi.stubGlobal('fetch', vi.fn().mockImplementation(() => new Promise((resolve) => {
         resolveFetch = resolve;
