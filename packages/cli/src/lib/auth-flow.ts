@@ -5,10 +5,18 @@ import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
 function openBrowser(url: string): void {
+  // URL Protocol Validation
+  // Allow only HTTP/HTTPS to prevent arbitrary protocol vulnerabilities (e.g. file://, javascript://)
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    throw new Error(`지원하지 않는 프로토콜입니다: ${url}`)
+  }
+
   // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
-    const child = spawn('cmd.exe', ['/c', 'start', '""', url.replace(/&/g, '^&')], {
+    // 모든 쉘 특수문자 이스케이프
+    const escapedUrl = url.replace(/([&|;<>^()])/g, '^$1')
+    const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
       windowsVerbatimArguments: true,
       detached: true,
       stdio: 'ignore'
