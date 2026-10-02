@@ -27,7 +27,11 @@ describe('csvField', () => {
     expect(csvField('\tcmd')).toBe("'\tcmd")
     expect(csvField('\rcmd')).toBe('"\'\rcmd"')
     expect(csvField('\ncmd')).toBe('"\'\ncmd"')
-    expect(csvField(' ＝cmd')).toBe("' ＝cmd")
+    expect(csvField(' ＝cmd')).toBe(" '＝cmd")
+  })
+
+  it('places the escape marker next to formulas after leading spaces', () => {
+    expect(csvField('  =cmd')).toBe("  '=cmd")
   })
 
   it('does not prepend single quote to genuine numbers', () => {

@@ -30,8 +30,3 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
-## 2025-02-18 - [CSV Formula Injection 방지 추가]
-**Vulnerability:** 사용자의 입력값(예: `session.title`, `session.messages[0].content`)이 CSV에 포함될 때 CSV Formula Injection(스프레드시트 매크로 인젝션)에 대한 검증이 없었습니다. 사용자가 `=`, `+`, `-`, `@` 등의 문자로 시작하는 입력을 제공하면, 엑셀 등의 프로그램에서 이를 수식(Formula)으로 해석해 악의적인 명령이 실행되거나 데이터가 유출될 위험이 있습니다.
-**Learning:** 데이터가 CSV 문법에 맞게 따옴표로 안전하게 이스케이프되었더라도, 엑셀 등의 프로그램은 문자열의 첫 글자가 특정 수식 기호인 경우 이를 여전히 수식으로 인식하고 실행하려 합니다.
-**Prevention:** 수식 기호로 인식될 수 있는 문자(`=`, `+`, `-`, `@`, `	`, ``, `
-`, 전각 문자 등)로 시작하는 문자열에 대해 맨 앞에 홑따옴표(`'`)를 추가하여 프로그램이 이를 수식이 아닌 단순 텍스트로 처리하게 강제해야 합니다. 숫자 타입에 대해서는 홑따옴표가 추가되지 않도록 해야 합니다.
