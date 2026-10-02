@@ -4,31 +4,37 @@ import ora from 'ora'
 import type { User, LoginResponse } from '@argos/shared'
 import { apiRequest } from './api-client.js'
 
-function openBrowser(url: string): void {
+function openBrowser(targetUrl: string): void {
   // URL Protocol Validation
   // Allow only HTTP/HTTPS to prevent arbitrary protocol vulnerabilities (e.g. file://, javascript://)
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    throw new Error(`지원하지 않는 프로토콜입니다: ${url}`)
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(targetUrl)
+  } catch {
+    throw new Error(`유효하지 않은 URL입니다: ${targetUrl}`)
   }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    throw new Error(`지원하지 않는 프로토콜입니다: ${targetUrl}`)
+  }
+
+  const normalizedUrl = parsedUrl.href
 
   // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
-    // Windows: cmd.exe 빌트인 start 명령어 사용
-    // 모든 쉘 특수문자 이스케이프
-    const escapedUrl = url.replace(/([&|;<>^()])/g, '^$1')
-    const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
-      windowsVerbatimArguments: true,
+    // Windows: cmd.exe 를 피하고 rundll32.exe 를 사용하여 안전하게 URL 열기
+    const child = spawn('rundll32', ['url.dll,FileProtocolHandler', normalizedUrl], {
       detached: true,
       stdio: 'ignore'
     })
     child.unref()
   } else if (process.platform === 'darwin') {
     // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [normalizedUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
     // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [normalizedUrl], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
