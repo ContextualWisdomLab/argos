@@ -3,11 +3,21 @@ import 'server-only'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenSource } from '@prisma/client'
+import { LoginRequestSchema, RegisterRequestSchema } from '@argos/shared'
 import { db } from './db'
 import { signJwt } from './jwt'
 
 const ONBOARD_TOKEN_TTL_MS = 60 * 60 * 1000 // 1시간
 const ONBOARD_TOKEN_PREFIX = 'argos_onb_'
+
+/**
+ * Public, precomputed bcrypt hash used only to equalize unknown-user login work.
+ *
+ * The plaintext is intentionally irrelevant: this value is never used to
+ * authenticate a real account and keeps requests from generating fresh hashes.
+ */
+const UNKNOWN_USER_PASSWORD_HASH =
+  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
 
 export interface AuthResultUser {
   id: string
@@ -61,13 +71,14 @@ export async function loginUser(
   input: { email: string; password: string },
   source: TokenSource = 'WEB',
 ): Promise<AuthResult | null> {
-  const { email, password } = input
+  const parsedInput = LoginRequestSchema.safeParse(input)
+  if (!parsedInput.success) return null
 
+  const { email, password } = parsedInput.data
   const user = await db.user.findUnique({ where: { email } })
-  if (!user) return null
-
-  const valid = await bcrypt.compare(password, user.passwordHash)
-  if (!valid) return null
+  const passwordHash = user?.passwordHash ?? UNKNOWN_USER_PASSWORD_HASH
+  const valid = await bcrypt.compare(password, passwordHash)
+  if (!user || !valid) return null
 
   return issueAuthResultForUser(
     { id: user.id, email: user.email, name: user.name, createdAt: user.createdAt },
@@ -129,7 +140,7 @@ export async function registerUser(input: {
   password: string
   name: string
 }): Promise<AuthResult | 'EMAIL_IN_USE'> {
-  const { email, password, name } = input
+  const { email, password, name } = RegisterRequestSchema.parse(input)
 
   const existingUser = await db.user.findUnique({ where: { email } })
   if (existingUser) return 'EMAIL_IN_USE'
