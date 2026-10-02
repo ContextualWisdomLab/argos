@@ -3,12 +3,21 @@ import 'server-only'
 import bcrypt from 'bcryptjs'
 import { createHash, randomBytes } from 'crypto'
 import type { TokenSource } from '@prisma/client'
+import { LoginRequestSchema, RegisterRequestSchema } from '@argos/shared'
 import { db } from './db'
-import { RegisterRequestSchema } from '@argos/shared'
 import { signJwt } from './jwt'
 
 const ONBOARD_TOKEN_TTL_MS = 60 * 60 * 1000 // 1시간
 const ONBOARD_TOKEN_PREFIX = 'argos_onb_'
+
+/**
+ * Public, precomputed bcrypt hash used only to equalize unknown-user login work.
+ *
+ * The plaintext is intentionally irrelevant: this value is never used to
+ * authenticate a real account and keeps requests from generating fresh hashes.
+ */
+const UNKNOWN_USER_PASSWORD_HASH =
+  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
 
 export interface AuthResultUser {
   id: string
@@ -62,19 +71,13 @@ export async function loginUser(
   input: { email: string; password: string },
   source: TokenSource = 'WEB',
 ): Promise<AuthResult | null> {
-  const { email, password } = input
+  const parsedInput = LoginRequestSchema.safeParse(input)
+  if (!parsedInput.success) return null
 
-  if (password.length > 1024) return null
-
+  const { email, password } = parsedInput.data
   const user = await db.user.findUnique({ where: { email } })
-
-  // Use a constant-time dummy hash comparison to prevent timing attacks.
-  // This uses a fixed 10-round bcrypt hash of an empty string to mimic
-  // the exact workload of a valid comparison without dynamic hashing overhead.
-  const DUMMY_HASH = '$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa';
-  const hashToCompare = user ? user.passwordHash : DUMMY_HASH;
-
-  const valid = await bcrypt.compare(password, hashToCompare)
+  const passwordHash = user?.passwordHash ?? UNKNOWN_USER_PASSWORD_HASH
+  const valid = await bcrypt.compare(password, passwordHash)
   if (!user || !valid) return null
 
   return issueAuthResultForUser(
@@ -132,15 +135,12 @@ export async function exchangeOnboardToken(
  * 이메일 중복 시 'EMAIL_IN_USE' 반환, 그 외에는 AuthResult.
  * user 생성과 cliToken 생성을 트랜잭션으로 묶어 orphan user를 방지한다.
  */
-export async function registerUser(rawInput: {
+export async function registerUser(input: {
   email: string
   password: string
   name: string
 }): Promise<AuthResult | 'EMAIL_IN_USE'> {
-  // Enforce schema validation (including 72 UTF-8 byte bcrypt limit) at the function boundary.
-  // This throws a Zod error on oversized input rather than returning 'EMAIL_IN_USE'.
-  const input = RegisterRequestSchema.parse(rawInput)
-  const { email, password, name } = input
+  const { email, password, name } = RegisterRequestSchema.parse(input)
 
   const existingUser = await db.user.findUnique({ where: { email } })
   if (existingUser) return 'EMAIL_IN_USE'
