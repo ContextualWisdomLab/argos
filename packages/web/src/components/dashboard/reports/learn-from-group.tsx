@@ -13,7 +13,7 @@ export function LearnFromGroup({ topUsers }: LearnFromGroupProps) {
     return (
       <div className="rounded-xl bg-card ring-1 ring-foreground/10 p-6">
         <div className="flex items-center gap-2 mb-2 text-brand">
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-4 w-4" aria-hidden="true" />
           <span className="text-sm font-medium">배울 대상</span>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -26,33 +26,33 @@ export function LearnFromGroup({ topUsers }: LearnFromGroupProps) {
   return (
     <div>
       <div className="flex items-center gap-2 mb-3 text-brand">
-        <Trophy className="h-4 w-4" />
+        <Trophy className="h-4 w-4" aria-hidden="true" />
         <h3 className="text-sm font-medium">배울 대상</h3>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         <TopUserCard
-          icon={<Trophy className="h-4 w-4" />}
+          icon={<Trophy className="h-4 w-4" aria-hidden="true" />}
           label="스킬 활용 최다"
           leader={learnFrom.skillUsage}
           formatValue={(n) => `${n.toLocaleString()}회`}
           description="재사용 자산(스킬)을 가장 많이 호출"
         />
         <TopUserCard
-          icon={<Layers className="h-4 w-4" />}
+          icon={<Layers className="h-4 w-4" aria-hidden="true" />}
           label="스킬 다양성"
           leader={learnFrom.skillDiversity}
           formatValue={(n) => `${n}종`}
           description="고유 스킬을 가장 넓게 활용"
         />
         <TopUserCard
-          icon={<Wand2 className="h-4 w-4" />}
+          icon={<Wand2 className="h-4 w-4" aria-hidden="true" />}
           label="위임 최다"
           leader={learnFrom.delegation}
           formatValue={(n) => `${n.toLocaleString()}회`}
           description="Task/Agent 도구로 서브에이전트 위임"
         />
         <TopUserCard
-          icon={<MessageSquare className="h-4 w-4" />}
+          icon={<MessageSquare className="h-4 w-4" aria-hidden="true" />}
           label="간결 세션 마스터"
           leader={learnFrom.conciseSession}
           formatValue={(n) => `${n.toFixed(1)}회`}
