@@ -63,8 +63,13 @@ export async function loginUser(
 ): Promise<AuthResult | null> {
   const { email, password } = input
 
+  if (password.length > 1024) return null
+
   const user = await db.user.findUnique({ where: { email } })
-  if (!user) return null
+  if (!user) {
+    await bcrypt.hash(password, 10)
+    return null
+  }
 
   const valid = await bcrypt.compare(password, user.passwordHash)
   if (!valid) return null
@@ -130,6 +135,8 @@ export async function registerUser(input: {
   name: string
 }): Promise<AuthResult | 'EMAIL_IN_USE'> {
   const { email, password, name } = input
+
+  if (password.length > 1024) return 'EMAIL_IN_USE'
 
   const existingUser = await db.user.findUnique({ where: { email } })
   if (existingUser) return 'EMAIL_IN_USE'
