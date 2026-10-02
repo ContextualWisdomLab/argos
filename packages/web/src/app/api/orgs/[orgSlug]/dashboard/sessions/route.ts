@@ -78,7 +78,9 @@ export function csvField(value: string | number | null | undefined) {
 
   // Prevent CSV Formula Injection (Spreadsheet Macro Injection)
   if (typeof value !== 'number') {
-    text = text.replace(/^([^\S\t\r\n]*)(?=[=+\-@\t\r\n＝＋－＠])/, "$1'")
+    if (/^\s*[=+\-@\t\r\n＝＋－＠]/.test(text)) {
+      text = "'" + text
+    }
   }
 
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
