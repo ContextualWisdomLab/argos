@@ -38,7 +38,6 @@ vi.mock('./jwt.js', () => ({
 describe('auth-actions password boundaries', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(bcrypt.compare).mockResolvedValue(false)
   })
 
   it('rejects bcrypt-truncated login input before database or crypto work', async () => {
@@ -88,7 +87,10 @@ describe('auth-actions password boundaries', () => {
       email: 'existing@example.com',
       name: 'Existing User',
       passwordHash: 'stored-password-hash',
+      avatarUrl: null,
+      claudePlan: null,
       createdAt: new Date('2026-01-01T00:00:00Z'),
+      updatedAt: new Date('2026-01-01T00:00:00Z'),
     })
 
     const result = await loginUser({
