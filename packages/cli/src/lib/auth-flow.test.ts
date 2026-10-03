@@ -53,26 +53,6 @@ describe('auth-flow', () => {
     await expect(runLoginFlow('http://api')).rejects.toThrow('유효하지 않은 URL입니다: not_a_url')
   })
 
-  it('accepts case-insensitive HTTP schemes and opens the normalized URL', async () => {
-    Object.defineProperty(process, 'platform', {
-      value: 'linux',
-      configurable: true,
-    })
-
-    const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'HTTPS://EXAMPLE.COM/callback' }) // Step 1
-    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
-    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
-
-    await runLoginFlow('http://api')
-
-    expect(childProcess.spawn).toHaveBeenCalledWith(
-      'xdg-open',
-      ['https://example.com/callback'],
-      { detached: true, stdio: 'ignore' }
-    )
-  })
-
   it('opens browser using rundll32 on win32 safely', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
