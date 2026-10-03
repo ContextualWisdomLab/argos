@@ -35,31 +35,70 @@ describe('auth-flow', () => {
   afterEach(() => {
     Object.defineProperty(process, 'platform', {
       value: originalPlatform,
+      configurable: true,
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('throws an error for unsupported protocols', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'file:///etc/passwd' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('지원하지 않는 프로토콜입니다: file:///etc/passwd')
+  })
+
+  it('throws an error for invalid URLs', async () => {
+    const mockApiRequest = vi.mocked(apiRequest)
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'not_a_url' }) // Step 1
+
+    await expect(runLoginFlow('http://api')).rejects.toThrow('유효하지 않은 URL입니다: not_a_url')
+  })
+
+  it('accepts case-insensitive HTTP schemes and opens the normalized URL', async () => {
     Object.defineProperty(process, 'platform', {
-      value: 'win32',
+      value: 'linux',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc' }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'HTTPS://EXAMPLE.COM/callback' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
     expect(childProcess.spawn).toHaveBeenCalledWith(
-      'cmd.exe',
-      ['/c', 'start', '""', 'http://example.com/^&calc'],
-      { windowsVerbatimArguments: true, detached: true, stdio: 'ignore' }
+      'xdg-open',
+      ['https://example.com/callback'],
+      { detached: true, stdio: 'ignore' }
+    )
+  })
+
+  it('opens browser using rundll32 on win32 safely', async () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+      configurable: true,
+    })
+
+    const mockApiRequest = vi.mocked(apiRequest)
+    const testUrl = 'http://example.com/?a=1&b=2|calc;echo<test>%APPDATA%'
+    const normalizedUrl = new URL(testUrl).href
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: testUrl }) // Step 1
+    mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
+    mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
+
+    await runLoginFlow('http://api')
+
+    expect(childProcess.spawn).toHaveBeenCalledWith(
+      'rundll32',
+      ['url.dll,FileProtocolHandler', normalizedUrl],
+      { detached: true, stdio: 'ignore' }
     )
   })
 
   it('opens browser using open on darwin safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'darwin',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
@@ -75,6 +114,7 @@ describe('auth-flow', () => {
   it('opens browser using xdg-open on linux safely with spawn', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'linux',
+      configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
