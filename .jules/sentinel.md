@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2024-10-03 - [CSV Formula Injection Fix]
+**Vulnerability:** CSV 추출 시 사용자 입력값이 포함된 문자열 필드에서 매크로 삽입 (Formula Injection) 공격 취약점 발견.
+**Learning:** CSV로 추출되는 필드가 =,+,-,@ 등으로 시작할 때 따옴표(')를 추가하여 이스케이프해야 안전하게 사용할 수 있음.
+**Prevention:** CSV 생성 시 필드 값을 이스케이프하는 로직을 공통 유틸리티에 추가하고, 숫자 형식이 아닐 때만 처리하도록 필터링.
