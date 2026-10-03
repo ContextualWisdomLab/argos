@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { List, type RowComponentProps } from "react-window";
+import { List, type RowComponentProps, areEqual } from "react-window";
+import { memo } from "react";
 import { User, Bot, Wrench, ChevronRight } from "lucide-react";
 import { formatElapsedHms } from "@/lib/format";
 import {
@@ -202,7 +203,7 @@ type RowProps = {
   onToggleGroup: (firstIdx: number) => void;
 };
 
-function Row({
+const Row = memo(function Row({
   index,
   style,
   rows,
@@ -250,7 +251,7 @@ function Row({
       />
     </div>
   );
-}
+}, areEqual);
 
 export function EventList({
   events,
@@ -273,6 +274,14 @@ export function EventList({
     [groups, expandedGroups, selectedIdx],
   );
 
+  const rowProps = useMemo(() => ({
+    rows,
+    selectedIdx,
+    sessionStartedAtMs,
+    onSelect,
+    onToggleGroup,
+  }), [rows, selectedIdx, sessionStartedAtMs, onSelect, onToggleGroup]);
+
   if (events.length === 0) {
     return (
       <div className="p-6 text-center text-sm text-muted-foreground">
@@ -286,13 +295,7 @@ export function EventList({
       rowComponent={Row}
       rowCount={rows.length}
       rowHeight={ROW_HEIGHT}
-      rowProps={{
-        rows,
-        selectedIdx,
-        sessionStartedAtMs,
-        onSelect,
-        onToggleGroup,
-      }}
+      rowProps={rowProps}
       overscanCount={8}
       style={{ height: "100%", width: "100%" }}
     />
