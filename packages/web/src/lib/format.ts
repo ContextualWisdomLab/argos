@@ -67,9 +67,11 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
+  // 성능 개선: Date 객체 생성 없이 원시값만 사용 (객체 할당 방지)
+  const timestampMs = Date.parse(timestamp)
+  const baseMs = Date.parse(baseTimestamp)
+  if (Number.isNaN(timestampMs) || Number.isNaN(baseMs)) return timestamp
+  const diffMs = timestampMs - baseMs
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {
