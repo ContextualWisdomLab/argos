@@ -113,6 +113,11 @@ describe('formatRelativeTime (baseTimestamp 오프셋 모드)', () => {
       formatRelativeTime('2026-06-01T00:00:00Z', '2026-06-01T00:00:30Z'),
     ).toBe('+-1m')
   })
+
+  it('invalid date string returns original string without offset', () => {
+    expect(formatRelativeTime('not-a-date')).toBe('not-a-date')
+    expect(formatRelativeTime('not-a-date', 'not-a-date')).toBe('not-a-date')
+  })
 })
 
 describe('formatElapsedHms', () => {
