@@ -67,11 +67,10 @@ export function formatRelativeTime(timestamp: string, baseTimestamp?: string): s
     }
   }
 
-  // 성능 개선: Date 객체 생성 오버헤드를 제거하기 위해 Date.parse 사용
+  // 성능 개선: Date 객체 생성 없이 원시값만 사용 (객체 할당 방지)
   const timestampMs = Date.parse(timestamp)
   const baseMs = Date.parse(baseTimestamp)
   if (Number.isNaN(timestampMs) || Number.isNaN(baseMs)) return timestamp
-
   const diffMs = timestampMs - baseMs
   const totalMinutes = Math.floor(diffMs / 60000)
 
