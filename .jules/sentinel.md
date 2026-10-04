@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-12 - [Command Injection via cmd.exe on Windows]
+**Vulnerability:** URL handling using `spawn('cmd.exe', [...], { windowsVerbatimArguments: true })` was vulnerable to command injection because only the `&` character was escaped (`url.replace(/&/g, '^&')`), allowing other shell metacharacters like `|`, `;`, `<`, `>`, `^`, `(`, `)` to execute arbitrary commands. Furthermore, there was no URL protocol validation, which could allow arbitrary files or schemas to be opened.
+**Learning:** When using `windowsVerbatimArguments: true` with `cmd.exe`, Node.js does not escape arguments automatically, meaning all CMD metacharacters must be manually escaped (e.g., `replace(/([&|;<>^()])/g, '^$1')`). Also, always implement a fail-closed validation for protocols (e.g. `url.startsWith('http://')` || `url.startsWith('https://')`) before passing strings to shell environments.
+**Prevention:** Always use fail-closed protocol allowlisting before handling URLs, and if `windowsVerbatimArguments` is absolutely necessary for `cmd.exe`, ensure comprehensive escaping of all shell metacharacters `([&|;<>^()])` using the `^` escape character.
