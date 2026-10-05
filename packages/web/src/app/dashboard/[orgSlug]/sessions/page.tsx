@@ -214,7 +214,7 @@ function SessionsContent({
         onClick={downloadCsv}
         disabled={isCsvDownloading || !authSession?.argosToken}
       >
-        <Download data-icon="inline-start" className="size-4" />
+        <Download data-icon="inline-start" className="size-4" aria-hidden="true" />
         {isCsvDownloading ? 'Downloading...' : 'Download CSV'}
       </Button>
       <DateRangePicker />
@@ -343,7 +343,7 @@ function SessionsContent({
                           'opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100',
                         )}
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </button>
                     </td>
                   </tr>
