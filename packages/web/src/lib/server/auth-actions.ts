@@ -64,7 +64,11 @@ export async function loginUser(
   const { email, password } = input
 
   const user = await db.user.findUnique({ where: { email } })
-  if (!user) return null
+  if (!user) {
+    // mitigate timing attacks
+    await bcrypt.hash(password, 10)
+    return null
+  }
 
   const valid = await bcrypt.compare(password, user.passwordHash)
   if (!valid) return null
