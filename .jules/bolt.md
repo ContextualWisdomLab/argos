@@ -1,5 +1,3 @@
-## 2026-08-11 - Use `Date.parse` for timestamp primitives
-
-**Learning:** `Date.parse(value)` returns the timestamp primitive directly, while `new Date(value).getTime()` also constructs a `Date` object. Both use the same ECMAScript string-parsing semantics for these call sites.
-
-**Action:** In frequently executed paths that only need a timestamp primitive, prefer `Date.parse(value)`. Treat the allocation reduction as a bounded micro-optimization unless a committed benchmark establishes a larger runtime effect.
+## 2024-10-26 - React useMemo 렌더링 최적화
+**Learning:** 리스트를 렌더링하는 React 컴포넌트에서 매 렌더링마다 최대값을 찾기 위해 `reduce`와 같은 집계 연산을 수행하면, 리스트 크기가 커질수록 불필요한 성능 저하가 발생할 수 있습니다.
+**Action:** props로 전달된 배열의 축소(reduction)와 같이 비용이 많이 드는 동기식 데이터 파생 작업은 항상 `useMemo`로 감싸서, 매 렌더링 주기가 아닌 기본 데이터가 변경될 때만 다시 계산되도록 해야 합니다.
