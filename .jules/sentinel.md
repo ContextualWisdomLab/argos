@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-18 - [Fix timing attack in login user enumeration]
+**Vulnerability:** The login logic returned immediately if an email was not found in the database, while it performed an expensive bcrypt comparison if the email was found. This timing discrepancy allowed attackers to enumerate valid email addresses based on response times.
+**Learning:** Returning early on authentication checks without simulating the processing time of the password hashing function creates a timing side-channel. Attackers can use this to harvest valid user emails.
+**Prevention:** Always simulate the hashing delay (e.g. using `bcrypt.hash(password, 10)`) when a user is not found, to ensure the response time remains constant regardless of whether the user exists or not. Do not use hardcoded bcrypt hashes for `bcrypt.compare` as it flags SAST rules.
