@@ -1,6 +1,7 @@
 'use client'
 
-import { Suspense } from 'react'
+import React, { Suspense } from 'react'
+
 import { useParams, useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { subDays, format, differenceInDays } from 'date-fns'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
@@ -49,6 +50,9 @@ function SkillsContent({
   const rangeDays = differenceInDays(new Date(to), new Date(from)) + 1
   const rangeLabel = `last ${rangeDays} day${rangeDays === 1 ? '' : 's'}`
 
+  const skills = React.useMemo(() => data?.skills ?? [], [data?.skills])
+  const totalInvocations = React.useMemo(() => skills.reduce((sum, s) => sum + s.callCount, 0), [skills])
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -89,9 +93,6 @@ function SkillsContent({
       </div>
     )
   }
-
-  const skills = data?.skills ?? []
-  const totalInvocations = skills.reduce((sum, s) => sum + s.callCount, 0)
 
   if (skills.length === 0) {
     return (
