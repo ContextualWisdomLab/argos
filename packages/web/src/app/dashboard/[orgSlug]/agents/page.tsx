@@ -1,6 +1,7 @@
 'use client'
 
-import { Suspense } from 'react'
+import React, { Suspense } from 'react'
+
 import { useParams, useSearchParams } from 'next/navigation'
 import { subDays, format, differenceInDays } from 'date-fns'
 import { DateRangePicker } from '@/components/dashboard/date-range-picker'
@@ -36,6 +37,9 @@ function AgentsContent({
 
   const rangeDays = differenceInDays(new Date(to), new Date(from)) + 1
   const rangeLabel = `last ${rangeDays} day${rangeDays === 1 ? '' : 's'}`
+
+  const agents = React.useMemo(() => data?.agents ?? [], [data?.agents])
+  const totalInvocations = React.useMemo(() => agents.reduce((sum, a) => sum + a.callCount, 0), [agents])
 
   if (isLoading) {
     return (
@@ -77,9 +81,6 @@ function AgentsContent({
       </div>
     )
   }
-
-  const agents = data?.agents ?? []
-  const totalInvocations = agents.reduce((sum, a) => sum + a.callCount, 0)
 
   if (agents.length === 0) {
     return (
