@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -65,7 +66,10 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">
+                Name <span className="text-destructive" aria-hidden="true">*</span>
+                <span className="sr-only">(필수)</span>
+              </Label>
               <Input
                 id="name"
                 type="text"
@@ -76,7 +80,10 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">
+                Email <span className="text-destructive" aria-hidden="true">*</span>
+                <span className="sr-only">(필수)</span>
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -87,7 +94,10 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">
+                Password <span className="text-destructive" aria-hidden="true">*</span>
+                <span className="sr-only">(필수)</span>
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -101,6 +111,7 @@ export default function RegisterPage() {
               <p className="text-sm text-destructive">{error}</p>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
               {loading ? 'Creating account...' : 'Sign up'}
             </Button>
           </form>
