@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -80,7 +81,10 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="new-password">New password</Label>
+            <Label htmlFor="new-password">
+              New password <span className="text-destructive" aria-hidden="true">*</span>
+              <span className="sr-only">(필수)</span>
+            </Label>
             <Input
               id="new-password"
               type="password"
@@ -92,7 +96,10 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="new-password-confirmation">Confirm new password</Label>
+            <Label htmlFor="new-password-confirmation">
+              Confirm new password <span className="text-destructive" aria-hidden="true">*</span>
+              <span className="sr-only">(필수)</span>
+            </Label>
             <Input
               id="new-password-confirmation"
               type="password"
@@ -110,6 +117,7 @@ export function ResetPasswordForm({ token, email }: ResetPasswordFormProps) {
             </Alert>
           )}
           <Button type="submit" className="w-full" disabled={loading}>
+            {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
             {loading ? 'Updating...' : 'Update password'}
           </Button>
         </form>
