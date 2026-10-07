@@ -71,9 +71,12 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
+export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
-  const text = String(value)
+  let text = String(value)
+  if (typeof value !== 'number' && /^[=+\-@\uFF1D\uFF0B\uFF0D\uFF20]/.test(text.trimStart())) {
+    text = "'" + text
+  }
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
 

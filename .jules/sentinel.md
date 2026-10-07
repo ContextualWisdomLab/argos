@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-18 - [CSV Formula Injection (Spreadsheet Macro Injection) 방지]
+**Vulnerability:** `@argos/web`의 `csvField` 함수에서 사용자의 입력값(예: 세션의 첫 번째 프롬프트)을 CSV로 내보낼 때 엑셀 수식 실행을 방지하는 검증이 누락되어 CSV Formula Injection 취약점이 존재했습니다.
+**Learning:** 사용자가 입력한 데이터가 `=`, `+`, `-`, `@` 등의 문자로 시작할 경우, 이를 CSV로 내보내어 스프레드시트 프로그램(Excel 등)에서 열면 매크로나 수식으로 해석되어 임의의 코드 실행이나 데이터 유출이 발생할 수 있습니다.
+**Prevention:** CSV를 생성할 때 문자열 값이 수식 트리거 문자로 시작하는 경우, 앞에 작은따옴표(`'`)를 추가하여 일반 텍스트로 인식되도록 처리해야 합니다. 단, 원본 타입이 숫자(`number`)인 경우는 포맷팅 유지를 위해 제외합니다.
