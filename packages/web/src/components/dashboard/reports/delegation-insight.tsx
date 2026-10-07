@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { useMemo } from 'react'
 import { Wand2, ArrowUpRight } from 'lucide-react'
 import { ChartCard } from '@/components/dashboard/chart-card'
 import { StatList, StatListRow } from '@/components/dashboard/stat-list'
@@ -10,6 +11,8 @@ interface DelegationInsightProps {
 }
 
 export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) {
+  const maxCount = useMemo(() => insight.topAgents.reduce((m, a) => Math.max(m, a.callCount), 1), [insight.topAgents])
+
   if (insight.taskCount === 0) {
     return (
       <ChartCard
@@ -27,8 +30,6 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
       </ChartCard>
     )
   }
-
-  const maxCount = Math.max(1, ...insight.topAgents.map((a) => a.callCount))
 
   return (
     <ChartCard
