@@ -39,19 +39,21 @@ describe('auth-flow', () => {
     })
   })
 
-  it('opens browser using start on win32 safely with spawn', async () => {
+  it('opens browser using start on win32 safely with spawn and uses normalized href to prevent newline injection', async () => {
     Object.defineProperty(process, 'platform', {
       value: 'win32',
       configurable: true,
     })
 
     const mockApiRequest = vi.mocked(apiRequest)
-    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&calc|rm' }) // Step 1
+    // URL with raw newlines and unescaped spaces/metacharacters to test normalization and escaping
+    mockApiRequest.mockResolvedValueOnce({ state: 'state123', authUrl: 'http://example.com/&\ncalc|\rrm' }) // Step 1
     mockApiRequest.mockResolvedValueOnce({ token: 'token123' }) // Step 3
     mockApiRequest.mockResolvedValueOnce({ user: { id: 'u1', name: 'User1' } }) // Step 5
 
     await runLoginFlow('http://api')
 
+    // new URL(...) completely removes '\n' and '\r' internally so the resulting href won't have them
     expect(childProcess.spawn).toHaveBeenCalledWith(
       'cmd.exe',
       ['/c', 'start', '""', 'http://example.com/^&calc^|rm'],

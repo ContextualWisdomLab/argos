@@ -20,7 +20,8 @@ function openBrowser(url: string): void {
   // Command Injection 방지를 위해 exec 대신 spawn 사용
   if (process.platform === 'win32') {
     // Windows: cmd.exe 빌트인 start 명령어 사용
-    const escapedUrl = url.replace(/([&|;<>^()])/g, '^$1')
+    // 줄바꿈 등 URL 파싱 시 정규화된 값을 사용하여 이스케이프
+    const escapedUrl = parsedUrl.href.replace(/([&|;<>^()])/g, '^$1')
     const child = spawn('cmd.exe', ['/c', 'start', '""', escapedUrl], {
       windowsVerbatimArguments: true,
       detached: true,
@@ -29,11 +30,11 @@ function openBrowser(url: string): void {
     child.unref()
   } else if (process.platform === 'darwin') {
     // macOS
-    const child = spawn('open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('open', [parsedUrl.href], { detached: true, stdio: 'ignore' })
     child.unref()
   } else {
     // Linux 등
-    const child = spawn('xdg-open', [url], { detached: true, stdio: 'ignore' })
+    const child = spawn('xdg-open', [parsedUrl.href], { detached: true, stdio: 'ignore' })
     child.unref()
   }
 }
