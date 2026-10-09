@@ -83,7 +83,7 @@ function MembersTable({
   const removeMember = useRemoveMember(orgSlug)
   const [errorByUser, setErrorByUser] = useState<Record<string, string>>({})
 
-  const maxCost = Math.max(...members.map((m) => m.sevenDayCostUsd), 0)
+  const maxCost = members.reduce((max, m) => Math.max(max, m.sevenDayCostUsd), 0)
   const canChangeToOwner = currentRole === 'OWNER'
   const adminCount = members.filter(
     (m) => m.role === 'OWNER' || m.role === 'MANAGER'
