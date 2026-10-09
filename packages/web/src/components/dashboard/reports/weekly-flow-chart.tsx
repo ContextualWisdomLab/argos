@@ -13,7 +13,6 @@ import {
   type TooltipProps,
 } from 'recharts'
 import { useMemo } from 'react'
-import { parseISO } from 'date-fns'
 import { formatTokens } from '@/lib/format'
 import type { DailySeriesPoint } from '@/types/reports'
 
@@ -120,12 +119,9 @@ export function WeeklyFlowChart({ thisWeek, prevWeek }: WeeklyFlowChartProps) {
 
 /** YYYY-MM-DD → 0(Mon) ~ 6(Sun). 파싱 실패 -1 */
 function dayIndex(isoDate: string): number {
-  try {
-    const d = parseISO(isoDate)
-    const jsDay = d.getUTCDay()  // 0=Sun ... 6=Sat
-    return (jsDay + 6) % 7         // 0=Mon ... 6=Sun
-  } catch {
-    return -1
-  }
+  const timestamp = Date.parse(isoDate)
+  if (Number.isNaN(timestamp)) return -1
+  const jsDay = new Date(timestamp).getUTCDay()  // 0=Sun ... 6=Sat
+  return (jsDay + 6) % 7         // 0=Mon ... 6=Sun
 }
 
