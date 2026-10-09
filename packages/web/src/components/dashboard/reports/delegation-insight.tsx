@@ -28,7 +28,7 @@ export function DelegationInsight({ insight, orgSlug }: DelegationInsightProps) 
     )
   }
 
-  const maxCount = Math.max(1, ...insight.topAgents.map((a) => a.callCount))
+  const maxCount = insight.topAgents.reduce((max, a) => Math.max(max, a.callCount), 1)
 
   return (
     <ChartCard
