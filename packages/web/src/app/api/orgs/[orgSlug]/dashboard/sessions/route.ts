@@ -71,8 +71,20 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
+export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
+
+  if (typeof value !== 'number') {
+    const text = String(value)
+    const trimmed = text.trimStart()
+    if (trimmed.length > 0) {
+      const firstChar = trimmed.charAt(0)
+      if (['=', '+', '-', '@', '\t', '\r', '\n', '＝', '＋', '－', '＠'].includes(firstChar)) {
+        value = "'" + text
+      }
+    }
+  }
+
   const text = String(value)
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text
 }
