@@ -1,0 +1,3 @@
+## 2023-10-24 - Added aria-hidden="true" to decorative icons
+**Learning:** Decorative icons from libraries like lucide-react (such as `ChevronRight`, `ChevronLeft`, `ChevronUp`, `ChevronDown`, `X`, etc) used within focusable or interactive elements that already have text or an `aria-label` attribute can cause redundancy or confusion for screen readers if not explicitly hidden.
+**Action:** When adding or auditing decorative icons in interactive components (especially `button` or `Link` elements), always ensure they are marked with `aria-hidden="true"` to prevent redundant screen reader announcements.
