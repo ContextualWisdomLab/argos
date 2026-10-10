@@ -23,7 +23,8 @@ export function formatCost(usd: number): string {
 
 export function formatDate(s: string): string {
   try {
-    const date = new Date(s)
+    const date = Date.parse(s)
+    if (Number.isNaN(date)) return s
     return dateFnsFormat(date, 'MMM d')
   } catch {
     return s
@@ -32,8 +33,8 @@ export function formatDate(s: string): string {
 
 export function formatDateTime(s: string): string {
   try {
-    const date = new Date(s)
-    if (Number.isNaN(date.getTime())) return s
+    const date = Date.parse(s)
+    if (Number.isNaN(date)) return s
     return dateFnsFormat(date, 'MM/dd/yyyy h:mm:ss a')
   } catch {
     return s
@@ -43,8 +44,8 @@ export function formatDateTime(s: string): string {
 // 2026-04-13 16:29:29 형태
 export function formatDateTimeFull(s: string): string {
   try {
-    const date = new Date(s)
-    if (Number.isNaN(date.getTime())) return s
+    const date = Date.parse(s)
+    if (Number.isNaN(date)) return s
     return dateFnsFormat(date, 'yyyy-MM-dd HH:mm:ss')
   } catch {
     return s
@@ -61,15 +62,17 @@ export function formatRelativeTime(timestamp: string, baseTimestamp: string): st
 export function formatRelativeTime(timestamp: string, baseTimestamp?: string): string {
   if (baseTimestamp === undefined) {
     try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: ko })
+      const date = Date.parse(timestamp)
+      if (Number.isNaN(date)) return timestamp
+      return formatDistanceToNow(date, { addSuffix: true, locale: ko })
     } catch {
       return timestamp
     }
   }
 
-  const timestampDate = new Date(timestamp)
-  const baseDate = new Date(baseTimestamp)
-  const diffMs = timestampDate.getTime() - baseDate.getTime()
+  const timestampDate = Date.parse(timestamp)
+  const baseDate = Date.parse(baseTimestamp)
+  const diffMs = timestampDate - baseDate
   const totalMinutes = Math.floor(diffMs / 60000)
 
   if (totalMinutes < 60) {

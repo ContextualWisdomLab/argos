@@ -133,19 +133,18 @@ export function parseDateRange(from?: string, to?: string): DateRange {
   let toDate: Date
 
   if (from) {
-    fromDate = new Date(from)
-    if (isNaN(fromDate.getTime())) {
-      fromDate = defaultFrom
-    }
+    const fromTime = Date.parse(from)
+    fromDate = isNaN(fromTime) ? defaultFrom : new Date(fromTime)
   } else {
     fromDate = defaultFrom
   }
 
   if (to) {
-    toDate = new Date(to)
-    if (isNaN(toDate.getTime())) {
+    const toTime = Date.parse(to)
+    if (isNaN(toTime)) {
       toDate = now
     } else {
+      toDate = new Date(toTime)
       // "2026-04-16" → UTC 00:00:00 이므로 해당 날짜의 끝(23:59:59.999)으로 보정
       toDate.setUTCHours(23, 59, 59, 999)
     }
