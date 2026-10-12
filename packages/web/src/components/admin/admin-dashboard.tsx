@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
+import { Check, Copy, Link2, LogIn, LogOut, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -147,6 +147,7 @@ export function AdminDashboard() {
     if (!resetLink) return
     await navigator.clipboard.writeText(resetLink.url)
     setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -278,9 +279,15 @@ export function AdminDashboard() {
                         <Label htmlFor="reset-link">Generated link</Label>
                         <Input id="reset-link" value={resetLink.url} readOnly />
                       </div>
-                      <Button variant="outline" className="w-full" onClick={handleCopy}>
-                        <Copy className="size-4" aria-hidden="true" />
-                        {copied ? 'Copied' : 'Copy link'}
+                      <Button variant="outline" className="w-full" onClick={handleCopy} aria-pressed={copied}>
+                        {copied ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : (
+                          <Copy className="size-4" aria-hidden="true" />
+                        )}
+                        <span aria-live="polite">
+                          {copied ? 'Copied' : 'Copy link'}
+                        </span>
                       </Button>
                       <p className="text-xs text-muted-foreground">
                         Expires {new Date(resetLink.expiresAt).toLocaleString()}
