@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-03-09 - [Fix User Enumeration via Timing Attack]
+**Vulnerability:** User enumeration timing attack in the login route where non-existent users return immediately while existent users incur a ~100ms bcrypt overhead.
+**Learning:** Early returns before expensive operations like bcrypt allow attackers to enumerate valid users based on response times. When mitigating this, hardcoding a dummy hash for bcrypt.compare triggers SAST rules (detected-bcrypt-hash).
+**Prevention:** Use await bcrypt.hash(password, 10) for non-existent users to safely simulate the required processing delay without failing SAST checks.
