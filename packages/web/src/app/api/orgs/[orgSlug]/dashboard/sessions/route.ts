@@ -196,9 +196,11 @@ export async function GET(
             include: sessionInclude,
           })
           const byId = new Map(rows.map((s) => [s.id, s]))
-          csvSessions = ids
-            .map((id) => byId.get(id))
-            .filter((s): s is SessionWithInclude => !!s)
+          csvSessions = ids.reduce((acc, id) => {
+            const s = byId.get(id)
+            if (s) acc.push(s)
+            return acc
+          }, [] as SessionWithInclude[])
         }
       } else {
         csvSessions = await db.claudeSession.findMany({
@@ -245,9 +247,11 @@ export async function GET(
           include: sessionInclude,
         })
         const byId = new Map(rows.map((s) => [s.id, s]))
-        sessions = ids
-          .map((id) => byId.get(id))
-          .filter((s): s is SessionWithInclude => !!s)
+        sessions = ids.reduce((acc, id) => {
+          const s = byId.get(id)
+          if (s) acc.push(s)
+          return acc
+        }, [] as SessionWithInclude[])
       }
     } else {
       const [rows, countResult] = await Promise.all([
