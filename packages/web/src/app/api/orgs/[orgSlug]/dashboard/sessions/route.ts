@@ -71,7 +71,7 @@ function mapSessionItem(session: SessionWithInclude): SessionItem {
   }
 }
 
-function csvField(value: string | number | null | undefined) {
+export function csvField(value: string | number | null | undefined) {
   if (value === null || value === undefined) return ''
   let text = String(value)
   if (typeof value !== 'number' && /^[=+\-@\t\r\n]|^[＝＋－＠]/.test(text)) {
