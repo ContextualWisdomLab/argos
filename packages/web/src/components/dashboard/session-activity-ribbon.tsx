@@ -158,13 +158,21 @@ export function SessionActivityRibbon({
   const [hover, setHover] = useState<HoverState | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const trackMouse = useCallback((e: React.MouseEvent) => {
+  const trackMouse = useCallback((e: React.MouseEvent | React.FocusEvent) => {
     const rect = containerRef.current?.getBoundingClientRect()
-    if (!rect) return e.clientX
-    return e.clientX - rect.left
+    if (!rect) {
+      if ('clientX' in e) return e.clientX
+      return 0
+    }
+    if ('clientX' in e) {
+      return e.clientX - rect.left
+    }
+    // For focus events, calculate the center of the focused element relative to the container
+    const targetRect = (e.target as HTMLElement).getBoundingClientRect()
+    return targetRect.left - rect.left + targetRect.width / 2
   }, [])
 
-  const handleEventHover = useCallback((idx: number) => (e: React.MouseEvent) => {
+  const handleEventHover = useCallback((idx: number) => (e: React.MouseEvent | React.FocusEvent) => {
     setHover({ kind: 'event', idx, x: trackMouse(e) })
   }, [trackMouse])
 
@@ -173,7 +181,7 @@ export function SessionActivityRibbon({
     toolName: string,
     count: number,
     firstEvent: TimelineEvent,
-  ) => (e: React.MouseEvent) => {
+  ) => (e: React.MouseEvent | React.FocusEvent) => {
     setHover({
       kind: 'merged',
       firstIdx,
@@ -200,6 +208,8 @@ export function SessionActivityRibbon({
             onMouseEnter={handleEventHover(idx)}
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
+            onFocus={handleEventHover(idx)}
+            onBlur={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
             aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
@@ -225,6 +235,8 @@ export function SessionActivityRibbon({
             onMouseEnter={handleEventHover(idx)}
             onMouseMove={handleEventHover(idx)}
             onMouseLeave={() => setHover(null)}
+            onFocus={handleEventHover(idx)}
+            onBlur={() => setHover(null)}
             aria-label={`Event ${idx + 1}`}
             aria-current={selected ? 'true' : undefined}
             className={`h-full ${bg} transition-opacity ${
@@ -288,6 +300,13 @@ export function SessionActivityRibbon({
             group.items[0].event,
           )}
           onMouseLeave={() => setHover(null)}
+          onFocus={handleMergedHover(
+            firstIdx,
+            group.toolName,
+            group.items.length,
+            group.items[0].event,
+          )}
+          onBlur={() => setHover(null)}
           aria-label={`Expand ${group.toolName} group, ${group.items.length} events`}
           className={`relative h-full ${segmentVisuals(group.items[0].event).bg} transition-opacity hover:opacity-70`}
         >
