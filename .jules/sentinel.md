@@ -30,3 +30,7 @@
 **Vulnerability:** Known high-severity vulnerabilities discovered by the audit in `js-yaml` and `nanoid` packages.
 **Learning:** Deeply nested dependencies (`js-yaml` via `eslint`, `nanoid` via `vitest/vite`) may expose the application to DoS or logic loops.
 **Prevention:** Use `pnpm.overrides` in the root `package.json` to enforce patched versions across all transitive paths in a pnpm workspace.
+## 2025-02-14 - 인증(Authentication) 단계에서의 타이밍 공격(Timing Attack) 방지
+**Vulnerability:** 로그인 시 사용자가 존재하지 않을 경우 즉시 반환하지만, 사용자가 존재하면 암호 해시 검증을 수행(약 100ms 소요)하여 응답 시간 차이로 사용자 존재 여부를 유추할 수 있는 타이밍 공격 취약점이 있었습니다.
+**Learning:** 인증 흐름에서 값비싼 암호 연산을 수행하기 전에 조기 반환하면 응답 시간 차이를 통해 사용자 존재 여부가 노출됩니다. 또한, 이미 존재 여부가 명시적으로 노출되는 경로(예: 회원가입 시 'EMAIL_IN_USE' 반환)에서는 DoS 공격의 빌미를 주지 않도록 값비싼 연산을 추가하지 않아야 함을 배웠습니다.
+**Prevention:** 사용자 조회 실패 시에도 동일하게 `bcrypt.hash` 같은 값비싼 암호 연산을 수행하여 응답 시간을 정규화하되, 이미 존재 여부가 노출된 경로에서는 연산을 피해야 합니다.
